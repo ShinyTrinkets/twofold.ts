@@ -246,18 +246,18 @@ test("all parse tests", () => {
   }
 });
 
-// test("weird parse tests", () => {
-//   let lex, ast;
+test("weird parse tests", () => {
+  let lex, ast;
 
-//   lex = new Lexer().lex("");
-//   ast = parse(lex);
-//   expect(ast).toStrictEqual([]);
+  lex = new Lexer().lex("");
+  ast = parse(lex);
+  expect(ast).toStrictEqual([]);
 
-//   lex = [{}];
-//   ast = parse(lex);
-//   expect(ast).toStrictEqual([]);
+  lex = [{}];
+  ast = parse(lex);
+  expect(ast).toStrictEqual([]);
 
-//   lex = [{ rawText: "1" }, { rawText: "2" }];
-//   ast = parse(lex);
-//   expect(ast).toStrictEqual([{ rawText: "12" }]);
-// });
+  lex = [{ rawText: "1" }, { rawText: "2" }];
+  ast = parse(lex);
+  expect(ast).toStrictEqual([{ rawText: "12" }]);
+});

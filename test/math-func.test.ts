@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import * as math from "../src/functions/math.ts";
+import math from "../src/functions/index.ts";
 
 test("math increment function", () => {
   const nr = 999;
