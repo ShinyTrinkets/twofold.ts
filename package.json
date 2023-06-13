@@ -1,0 +1,63 @@
+{
+  "name": "twofold",
+  "description": "Glorified curly bubbly templates",
+  "keywords": [
+    "✂",
+    "app",
+    "cli",
+    "tags",
+    "tool",
+    "util",
+    "2fold",
+    "template"
+  ],
+  "version": "0.6.0",
+  "license": "MIT",
+  "authors": [
+    "Cristi Constantin"
+  ],
+  "contributors": [],
+  "homepage": "https://github.com/ShinyTrinkets/twofold.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShinyTrinkets/twofold.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ShinyTrinkets/twofold.js/issues"
+  },
+  "type": "module",
+  "main": "./src/index.ts",
+  "bin": {
+    "2fold": "./src/cli.ts"
+  },
+  "scripts": {
+    "fmt": "npx prettier --write ./src/{*,*/}*.js",
+    "test": "npx nyc ava test/*.test.js"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "dependencies": {
+    "chokidar": "3.x",
+    "cosmiconfig": "8.x",
+    "execa": "7.x",
+    "mri": "1.x",
+    "node-fetch": "3.x",
+    "picomatch": "2.x",
+    "readdirp": "3.x"
+  },
+  "devDependencies": {
+    "bun-types": "^0.6.0"
+  },
+  "peerDependencies": {
+    "typescript": ""
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "printWidth": 120,
+    "semi": false,
+    "singleQuote": true,
+    "tabWidth": 4,
+    "trailingComma": "es5"
+  }
+}
