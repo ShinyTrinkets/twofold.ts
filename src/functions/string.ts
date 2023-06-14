@@ -19,7 +19,7 @@ export function sortLines({ text }, { caseSensitive = false } = {}): string {
 
   const lines = [];
   const group = [];
-  for (let line of text.split(/[\r\n]/)) {
+  for (const line of text.split(/[\r\n]/)) {
     group.push(line);
     if (!line) {
       group.sort(sortFunc);

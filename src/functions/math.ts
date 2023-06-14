@@ -2,7 +2,7 @@
  * Super basic math functions.
  */
 
-function parseNumber(text: any): number {
+function parseNumber(text: string | number): number {
   if (typeof text !== 'string') {
     return text;
   }

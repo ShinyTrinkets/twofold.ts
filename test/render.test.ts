@@ -136,6 +136,7 @@ test("custom single tag", async () => {
   const mumu = () => "ok";
   tmp = await twofold.renderText("<mumu />", {}, { mumu });
   expect(tmp).toBe("ok");
+
   // Test open and close tag for single
   tmp = await twofold.renderText("<mumu />", {}, { mumu }, {
     openTag: "{",
@@ -147,6 +148,7 @@ test("custom single tag", async () => {
     closeTag: "}",
   });
   expect(tmp).toBe("ok");
+
   // Test last stopper for single
   tmp = await twofold.renderText("<mumu />", {}, { mumu }, {
     lastStopper: "?",
@@ -156,11 +158,16 @@ test("custom single tag", async () => {
     lastStopper: "?",
   });
   expect(tmp).toBe("ok");
-  // Full test
-  const cfg = { openTag: "{", closeTag: "}", lastStopper: "?" };
+  tmp = await twofold.renderText("<mumu #>", {}, { mumu }, {
+    lastStopper: "#",
+  });
+  expect(tmp).toBe("ok");
+
+  // Full config test
+  const cfg = { openTag: "{", closeTag: "}", lastStopper: "!!" };
   tmp = await twofold.renderText("<mumu />", {}, { mumu }, cfg);
   expect(tmp).toBe("<mumu />");
-  tmp = await twofold.renderText("{mumu ?}", {}, { mumu }, cfg);
+  tmp = await twofold.renderText("{mumu !}", {}, { mumu }, cfg);
   expect(tmp).toBe("ok");
 });
 
@@ -169,31 +176,33 @@ test("custom double tag", async () => {
   const mumu = () => "ok";
   tmp = await twofold.renderText("<mumu></mumu>", {}, { mumu });
   expect(tmp).toBe("<mumu>ok</mumu>");
+
   // Test open and close tag
   cfg = { openTag: "{", closeTag: "}" };
   tmp = await twofold.renderText("<mumu></mumu>", {}, { mumu }, cfg);
   expect(tmp).toBe("<mumu></mumu>");
   tmp = await twofold.renderText("{mumu}{/mumu}", {}, { mumu }, cfg);
   expect(tmp).toBe("{mumu}ok{/mumu}");
+
   // Test last stopper for double
   cfg = { lastStopper: "?" };
   tmp = await twofold.renderText("<mumu></mumu>", {}, { mumu }, cfg);
   expect(tmp).toBe("<mumu></mumu>");
   tmp = await twofold.renderText("<mumu><?mumu>", {}, { mumu }, cfg);
   expect(tmp).toBe("<mumu>ok<?mumu>");
-  // Full test
-  cfg = { openTag: "{", closeTag: "}", lastStopper: "<" };
+
+  // Full config test
+  cfg = { openTag: "{", closeTag: "}", lastStopper: "#" };
   tmp = await twofold.renderText("<mumu></mumu>", {}, { mumu }, cfg);
   expect(tmp).toBe("<mumu></mumu>");
-  tmp = await twofold.renderText("{mumu} {<mumu}", {}, { mumu }, cfg);
-  expect(tmp).toBe("{mumu}ok{<mumu}");
+  tmp = await twofold.renderText("{mumu} {#mumu}", {}, { mumu }, cfg);
+  expect(tmp).toBe("{mumu}ok{#mumu}");
 });
 
 test("deep increment consume render", async () => {
   const nr = 997;
-  let txt =
-    "qwerty <increment consume=true><increment consume=true><increment consume=true>";
-  txt += `${nr}</increment></increment></increment>`;
+  let txt = "qwerty <increment consume=true><increment consume=true>";
+  txt += `<increment consume=true>${nr}</increment></increment></increment>`;
   let tmp = await twofold.renderText(txt);
   expect(tmp).not.toBe(txt);
   expect(tmp).toBe(`qwerty ${nr + 3}`);

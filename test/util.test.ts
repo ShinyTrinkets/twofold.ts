@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { toCamelCase } from "../src/util.ts";
+import { importAny, toCamelCase } from "../src/util.ts";
 
 test("camel case", () => {
   let text = "blah blah";
@@ -13,9 +13,9 @@ test("camel case", () => {
   expect(toCamelCase(text)).toBe(expected);
 });
 
-// test("import any", async (t) => {
-//   const importedFile = await importAny("./test/fixtures/funcs.js");
-//   const expected = ["magic", "now"];
-//   t.deepEqual(expected, Object.keys(importedFile));
-//   t.is(importedFile.magic(), "magic");
-// });
+test("import any", async () => {
+  const importedFile = await importAny("./test/fixtures/funcs.js");
+  const expected = ["magic", "now"];
+  expect(Object.keys(importedFile)).toEqual(expected);
+  expect(importedFile.magic()).toBe("magic");
+});

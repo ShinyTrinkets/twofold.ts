@@ -3,7 +3,7 @@
  * More functions are available in twofold-extras.
  */
 
-function getDate(text: any) {
+function getDate(text) {
   if (text && typeof text === 'string') {
     return new Date(text);
   } else if (!text || typeof text !== 'object') {

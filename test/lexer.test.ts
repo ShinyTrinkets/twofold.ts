@@ -315,10 +315,16 @@ const TESTS = [
 ];
 
 test("all lex tests", () => {
+  let chunkLen = 1;
   for (const [text, expected] of TESTS) {
     const o = new Lexer();
-    for (const chunk of chunkText(text, 5)) {
+    for (const chunk of chunkText(text, chunkLen)) {
       o.push(chunk);
+      // vary chunks, to simulate slow streaming
+      chunkLen += 2;
+      if (chunkLen > 9) {
+        chunkLen = 1;
+      }
     }
     const lex = o.finish();
     // console.log('--- LEXED ::', lex, '\n')

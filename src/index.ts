@@ -4,6 +4,7 @@ import globby from 'fast-glob';
 
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
+import * as config from './config.ts';
 import functions from './functions/index.ts';
 import { isFunction, toCamelCase } from './util.ts';
 import { getText, isDoubleTag, isSingleTag, optRenderOnce, optShouldConsume, unParse } from './tags.ts';
@@ -89,22 +90,22 @@ async function flattenDoubleTag(tag, data, allFunctions, config) {
   }
 }
 
-export async function renderText(text, data = {}, customFunctions = {}, customConfig = {}): string {
+export async function renderText(text, data = {}, customFunctions = {}, cfg: config.Config = {}): Promise<string> {
   /**
    * TwoFold render text string.
    */
   const allFunctions = { ...functions, ...customFunctions };
   // const label = 'tf-' + (Math.random() * 100 * Math.random()).toFixed(6)
   // console.time(label)
-  const ast = parse(new Lexer(customConfig).lex(text), customConfig);
+  const ast = parse(new Lexer(cfg).lex(text), cfg);
 
   let final = '';
   // Convert single tags into raw text and deep flatten double tags
   for (const t of ast) {
     if (isDoubleTag(t)) {
-      await flattenDoubleTag(t, data, allFunctions, customConfig);
+      await flattenDoubleTag(t, data, allFunctions, cfg);
     } else if (isSingleTag(t)) {
-      await flattenSingleTag(t, data, allFunctions, customConfig);
+      await flattenSingleTag(t, data, allFunctions, cfg);
     }
     final += unParse(t);
   }
@@ -113,7 +114,7 @@ export async function renderText(text, data = {}, customFunctions = {}, customCo
   return final;
 }
 
-export async function renderStream(stream, data = {}, customFunctions = {}, customConfig = {}): Promise<string> {
+export function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Config = {}): Promise<string> {
   /**
    * TwoFold render stream.
    */
@@ -122,7 +123,7 @@ export async function renderStream(stream, data = {}, customFunctions = {}, cust
   return new Promise(resolve => {
     // const label = 'tf-' + (Math.random() * 100 * Math.random()).toFixed(6)
     // console.time(label)
-    const lex = new Lexer(customConfig);
+    const lex = new Lexer(cfg);
 
     stream.on('data', text => {
       lex.push(text);
@@ -130,15 +131,15 @@ export async function renderStream(stream, data = {}, customFunctions = {}, cust
 
     stream.on('close', async () => {
       console.log('close!');
-      const ast = parse(lex.finish(), customConfig);
+      const ast = parse(lex.finish(), cfg);
       let final = '';
 
       // Convert single tags into raw text and deep flatten double tags
       for (const t of ast) {
         if (isDoubleTag(t)) {
-          await flattenDoubleTag(t, data, allFunctions, customConfig);
+          await flattenDoubleTag(t, data, allFunctions, cfg);
         } else if (isSingleTag(t)) {
-          await flattenSingleTag(t, data, allFunctions, customConfig);
+          await flattenSingleTag(t, data, allFunctions, cfg);
         }
         final += unParse(t);
       }
@@ -149,7 +150,7 @@ export async function renderStream(stream, data = {}, customFunctions = {}, cust
   });
 }
 
-export async function renderFile(fname: string, data = {}, customFunctions = {}, config = {}): string {
+export async function renderFile(fname: string, data = {}, customFunctions = {}, config = {}): Promise<string> {
   const stream = createReadStream(fname, { encoding: 'utf8' });
   const result = await renderStream(stream, data, customFunctions, config);
   if (config.write) {
@@ -159,7 +160,10 @@ export async function renderFile(fname: string, data = {}, customFunctions = {},
   return result;
 }
 
-export async function renderFolder(dir: string, data = {}, customFunctions = {}, config = {}): number {
+/**
+ * This is the most high level function, so it needs extra safety.
+ */
+export async function renderFolder(dir: string, data = {}, customFunctions = {}, config = {}): Promise<number> {
   if (!data) {
     data = {};
   }

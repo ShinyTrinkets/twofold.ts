@@ -1,22 +1,29 @@
-import fs from 'node:fs';
+import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import globby from 'fast-glob';
 
 import { ParseToken } from './types.ts';
-import * as config from './config.ts';
+import { Config } from './config.ts';
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
 import functions from './functions/index.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
 
+interface ScanToken {
+  name: string;
+  tag: string;
+  single?: boolean;
+  double?: boolean;
+}
+
 /**
  * Scan files and return info about them.
  */
-export async function scanFile(fname: string, customFunctions = {}, customConfig: config.Config = {}) {
+export function scanFile(fname: string, customFunctions = {}, customConfig: Config = {}) {
   const allFunctions = { ...functions, ...customFunctions };
-  const nodes = [];
+  const nodes: ScanToken[] = [];
 
-  const walk = tag => {
+  const walk = (tag: ParseToken) => {
     // Deep walk into tag and list all tags
     if (isDoubleTag(tag)) {
       nodes.push({
@@ -44,7 +51,7 @@ export async function scanFile(fname: string, customFunctions = {}, customConfig
 
     let len = 0;
     const p = new Lexer(customConfig);
-    const stream = fs.createReadStream(fname, { encoding: 'utf8' });
+    const stream = createReadStream(fname, { encoding: 'utf8' });
 
     stream.on('data', data => {
       len += data.length;
@@ -62,13 +69,13 @@ export async function scanFile(fname: string, customFunctions = {}, customConfig
       for (const tag of nodes) {
         console.log(allFunctions[tag.name] ? '✓' : '✗', tag);
       }
-      resolve();
+      resolve(nodes);
       console.log('-------');
     });
   });
 }
 
-export async function scanFolder(dir: string, customFunctions = {}, config: config.Config = {}) {
+export async function scanFolder(dir: string, customFunctions = {}, config: Config = {}) {
   const label = 'scan-' + dir;
   console.time(label);
 

@@ -41,24 +41,24 @@ test("some blocks found", async () => {
   expect(isDoubleTag(ast[5]) && ast[5].name === "replaceSort").toBeTruthy();
 });
 
-// test("render file no tags", async () => {
-//   const fname = __dirname + "/fixtures/text0.md";
-//   const txt = fs.readFileSync(fname, { encoding: "utf8" });
-//   const final = await twofold.renderFile(fname);
-//   expect(final).toBe(txt);
-// });
+test("render file no tags", async () => {
+  const fname = __dirname + "/fixtures/text0.md";
+  const txt = fs.readFileSync(fname, { encoding: "utf8" });
+  const final = await twofold.renderFile(fname);
+  expect(final).toBe(txt);
+});
 
-// test("render file some tags", async () => {
-//   const fname = __dirname + "/fixtures/text1.md";
-//   const txt = fs.readFileSync(fname, { encoding: "utf8" });
-//   const final = await twofold.renderFile(fname);
-//   expect(final).toBe(txt);
-// });
+test("render file some tags", async () => {
+  const fname = __dirname + "/fixtures/text1.md";
+  const txt = fs.readFileSync(fname, { encoding: "utf8" });
+  const final = await twofold.renderFile(fname);
+  expect(final).toBe(txt);
+});
 
-// test("render folder", async () => {
-//   const folder = __dirname + "/fixtures/";
-//   let result = await twofold.renderFolder(folder);
-//   expect(result).toBe(3);
-//   result = await twofold.renderFolder(folder, {}, {}, { glob: "*.js" });
-//   expect(result).toBe(1);
-// });
+test("render folder", async () => {
+  const folder = __dirname + "/fixtures/";
+  let result = await twofold.renderFolder(folder);
+  expect(result).toBe(3);
+  result = await twofold.renderFolder(folder, {}, {}, { glob: "*.js" });
+  expect(result).toBe(1);
+});

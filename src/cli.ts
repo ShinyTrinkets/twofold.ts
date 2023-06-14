@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import twofold from './index.ts';
 import tags from './functions/index.ts';
 
-import * as conf from './config.ts';
+import { userCfg } from './config.ts';
 import * as scan from './scan.ts';
 import * as util from './util.ts';
 import pkg from '../package.json';
@@ -14,7 +14,6 @@ import pkg from '../package.json';
 import mri from 'mri';
 import chokidar from 'chokidar';
 import micromatch from 'micromatch';
-import { cosmiconfig } from 'cosmiconfig';
 
 const options = {
   boolean: ['help', 'version', 'tags', 'initialRender'],
@@ -73,8 +72,8 @@ you can use pipes:
   if (args.funcs) {
     console.debug('(2✂︎f) Funcs:', args.funcs);
     try {
-      funcs = require(args.funcs);
-    } catch (err) {
+      funcs = await import(args.funcs);
+    } catch {
       funcs = util.importAny(args.funcs);
     }
   }
@@ -85,27 +84,14 @@ you can use pipes:
     return;
   }
 
-  // Explore all possible config locations
-  let config_name = 'twofold';
-  if (args.config) {
-    config_name = args.config;
-  }
-  const explorer = cosmiconfig(config_name);
-  let config = await explorer.search();
-  if (config) {
-    config = config.config;
-    conf.validate(config);
-  } else {
-    config = {};
-  }
-
+  // Load all possible config locations
+  const config = await userCfg();
   if (args.glob) {
-    config = { ...config, glob: args.glob };
+    config.glob = args.glob;
   }
   if (args.depth) {
-    config = { ...config, depth: args.depth };
+    config.depth = args.depth;
   }
-  console.debug('(2✂︎f) Config:', config);
 
   if (args.scan) {
     const fname = args.scan;
@@ -116,7 +102,7 @@ you can use pipes:
       console.error(err);
       return;
     }
-    console.log('(2✂︎f) Scan:', fname, config.glob ? config.glob : '');
+    console.log('(2✂︎f) Scan:', fname, config.glob);
     if (fstat.isFile()) {
       await scan.scanFile(fname, funcs, config);
     } else if (fstat.isDirectory()) {
@@ -202,6 +188,8 @@ you can use pipes:
     }
 
     let text = '';
+    // In Bun, the console object can be used as an AsyncIterable
+    // to sequentially read lines from process.stdin
     // https://bun.sh/docs/api/console
     for await (const line of console) {
       text += line;

@@ -1,36 +1,53 @@
-// This is the default config
-
 export interface Config {
   openTag?: string;
   closeTag?: string;
   lastStopper?: string;
   depth?: number;
+  glob?: string;
 }
 
-// Currently, openTag, closeTag and lastStopper must be strings
-// of length 1.
+export const defaultCfg: Config = {
+  // Currently, openTag, closeTag and lastStopper must be
+  // strings of length 1.
 
-// In <random-int />
-// If you change open-tag to "{" and close-tag to "}"
-// the tag will become: {random-int /}
-// It's a good idea to match both the open and close tag
-export const openTag = '<';
-export const closeTag = '>';
+  // In <random-int />
+  // If you change open-tag to "{" and close-tag to "}"
+  // the tag will become: {random-int /}
+  // It's a good idea to match both the open and close tag
+  openTag: '<',
+  closeTag: '>',
 
-// In single tag: <random-int />
-// If you change last stopper to "?", it will become: <random-int ?>
-// In single tag, the stopper only affects the end of the tag
-// In double tag: <random-int></random-int>
-// If you change it to "?", it will become: <random-int><?random-int>
-// In double tags, the stopper only affects the start of the last tag
-export const lastStopper = '/';
-const ALLOWED_LAST_STOPPER = /^[\/\?\!#]{1,2}$/;
+  // In single tag: <random-int />
+  // If you change last stopper to "?", it will become: <random-int ?>
+  // In single tag, the stopper only affects the end of the tag
+  // In double tag: <random-int></random-int>
+  // If you change it to "?", it will become: <random-int><?random-int>
+  // In double tags, the stopper only affects the start of the last tag
+  lastStopper: '/',
 
-export class ConfigError extends Error {
-  /* ... */
+  // walk-dir scan depth
+  depth: 3,
+
+  // walk-dir scan files
+  glob: '*.*',
+};
+
+export async function userCfg(): Promise<Config> {
+  const cosmic = await import('cosmiconfig');
+  const explorer = cosmic.cosmiconfig('twofold');
+  // Explore all possible config locations
+  const cfg = await explorer.search();
+  if (cfg && cfg.config) {
+    validateCfg(cfg.config);
+    console.debug('(2✂︎f) User config:', cfg.config);
+    return { ...defaultCfg, ...config };
+  }
+  return { ...defaultCfg };
 }
 
-export function validate(cfg: Config) {
+const ALLOWED_LAST_STOPPER = /^[\/\?\!#]$/;
+
+export function validateCfg(cfg: Config) {
   if (cfg.openTag && cfg.openTag.length !== 1) {
     throw new ConfigError('Open tag validation error');
   }
@@ -40,4 +57,11 @@ export function validate(cfg: Config) {
   if (cfg.lastStopper && !ALLOWED_LAST_STOPPER.test(cfg.lastStopper)) {
     throw new ConfigError('Last stopper validation error');
   }
+  if (typeof cfg.depth !== 'number') {
+    throw new ConfigError('Depth validation error');
+  }
+}
+
+export class ConfigError extends Error {
+  /* ... */
 }

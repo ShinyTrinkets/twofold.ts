@@ -2,7 +2,7 @@
  * Functions for generating randomness, available as tags.
  */
 
-function randomChoice(choices): any {
+function randomChoice(choices) {
   const index = Math.floor(Math.random() * choices.length);
   return choices[index];
 }

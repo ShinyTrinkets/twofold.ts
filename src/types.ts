@@ -3,7 +3,7 @@ export interface LexToken {
   name?: string;
   single?: boolean;
   double?: boolean;
-  params?: any;
+  params?: Record<string, any>;
   param_key?: string;
   param_value?: string;
 }

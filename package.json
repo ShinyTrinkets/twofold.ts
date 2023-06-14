@@ -33,16 +33,18 @@
   },
   "scripts": {
     "fmt": "bunx prettier --write ./src/{*,*/}*.ts",
-    "check": "tsc -noEmit -allowImportingTsExtensions src/*.ts"
+    "lint": "tsc -noEmit -allowImportingTsExtensions -esModuleInterop src/*.ts"
   },
   "dependencies": {
     "chokidar": "3.x",
     "cosmiconfig": "8.x",
     "fast-glob": "3.x",
     "micromatch": "4.x",
-    "mri": "1.x"
+    "mri": "1.x",
+    "shell-quote": "1.x"
   },
   "devDependencies": {
+    "@types/node": "20.x",
     "bun-types": "0.x",
     "typescript": "5.x"
   },

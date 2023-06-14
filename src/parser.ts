@@ -2,7 +2,7 @@ import { LexToken, ParseToken } from './types.ts';
 import * as config from './config.ts';
 import { isDoubleTag, isFullDoubleTag, isRawText, isSingleTag } from './tags.ts';
 
-function addChild(parent: ParseToken, child: ParseToken) {
+function addChild(parent: ParseToken, child: ParseToken): void {
   if (!parent.children) {
     parent.children = [];
   }
@@ -20,8 +20,8 @@ function addChild(parent: ParseToken, child: ParseToken) {
  * If the tag is double, it will have children of type raw text,
  * or other single or double tags.
  */
-export default function parse(tokens: LexToken[], customConfig: config.Config = {}) {
-  const { openTag, lastStopper } = { ...config, ...customConfig };
+export default function parse(tokens: LexToken[], cfg: config.Config = {}): ParseToken[] {
+  const { openTag, lastStopper } = { ...config.defaultCfg, ...cfg };
   const RE_FIRST_START = new RegExp(`^${openTag[0]}[ ]*[a-z]`);
   const RE_SECOND_START = new RegExp(`^${openTag[0]}[${lastStopper[0]}][ ]*[a-z]`);
 
@@ -30,7 +30,7 @@ export default function parse(tokens: LexToken[], customConfig: config.Config = 
   const getTopAst = (): ParseToken => ast[ast.length - 1];
   const getTopStack = (): ParseToken => stack[stack.length - 1];
 
-  const commitToken = function (token: ParseToken) {
+  const commitToken = function (token: ParseToken): void {
     const topAst = getTopAst();
     const topStack = getTopStack();
     const parent = topStack || topAst;
@@ -93,7 +93,7 @@ export default function parse(tokens: LexToken[], customConfig: config.Config = 
     commitToken(token);
   }
 
-  const finalCommit = function (token: LexToken) {
+  const finalCommit = function (token: LexToken): void {
     const topAst = getTopAst();
     if (isRawText(topAst) && isRawText(token)) {
       topAst.rawText += token.rawText;

@@ -2,7 +2,7 @@ import path from 'node:path';
 import { homedir } from 'node:os';
 import { types } from 'node:util';
 
-export const isFunction = (f: any) => typeof f === 'function' || types.isAsyncFunction(f);
+export const isFunction = f => typeof f === 'function' || types.isAsyncFunction(f);
 
 // Credit: https://stackoverflow.com/a/32604073/498361
 export function toCamelCase(str: string) {
@@ -26,7 +26,7 @@ export function toCamelCase(str: string) {
 
 export function unTildify(pth: string) {
   if (pth[0] === '~') {
-    const homeDir = os.homedir();
+    const homeDir = homedir();
     return pth.replace(/^~(?=$|\/|\\)/, homeDir);
   }
   return pth;
