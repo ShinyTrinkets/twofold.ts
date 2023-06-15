@@ -131,15 +131,23 @@ const TESTS = [
     [{ name: "a", params: { 0: " " }, rawText: "<a ` ` />", single: true }],
   ],
   [
+    '<a "1" "2" />',
+    [{ rawText: '<a "1" "2" />' }],
+  ],
+  [
+    '<a "1" "" />',
+    [{ rawText: '<a "1" "" />' }],
+  ],
+  [
     "<a '' /> <ls `` /> <ping \"\" />",
     [{ rawText: "<a '' /> <ls `` /> <ping \"\" />" }], // ZERO tags with empty value not allowed
   ],
   [
-    '< ls "-la" />',
+    '< ls "-la" extra="h" />',
     [{
       name: "ls",
-      params: { 0: "-la" },
-      rawText: '< ls "-la" />',
+      params: { 0: "-la", extra: "h" },
+      rawText: '< ls "-la" extra="h" />',
       single: true,
     }],
   ],
@@ -363,18 +371,18 @@ test("all lex tests", () => {
   }
 });
 
-// test("lexer crash", () => {
-//   const p = new Lexer();
-//   p.push("");
-//   const lex = p.finish();
-//   expect(lex).toEqual([{ rawText: "" }]);
-//   expect(() => {
-//     p.push("");
-//   }).toThrow();
-//   expect(() => {
-//     p.finish();
-//   }).toThrow();
-// });
+test("lexer crash", () => {
+  const p = new Lexer();
+  p.push("");
+  const lex = p.finish();
+  expect(lex).toEqual([{ rawText: "" }]);
+  expect(() => {
+    p.push("");
+  }).toThrow();
+  expect(() => {
+    p.finish();
+  }).toThrow();
+});
 
 function chunkText(txt, len) {
   let t = "";

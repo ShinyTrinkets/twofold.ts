@@ -8,7 +8,7 @@ defined).
 For example, the `increment()` function looks like this:
 
 ```js
-// math.js file
+// functions/math.ts file
 function increment(text, { nr = 1 } = {}): number {
     return parseNumber(text) + parseNumber(nr)
 }
@@ -85,7 +85,7 @@ Example: `<sortLines consume=true>some text here<//sortLines>`
 
 "Consume" is a built-in option that tells TwoFold to consume a double tag after
 it's rendered, basically to convert it into a single tag.<br/> It works only
-with _double tags_.
+with **double tags**.
 
 #### text
 
@@ -93,14 +93,15 @@ Example: `<multiply text=9 nr=5 //>`
 
 "Text" is a built-in option that allows single tags to receive text, just like
 double tags.<br/> They will still be consumed after the first use. This option
-works only with _single tags_.
+works only with **single tags**.
 
 #### "zero" prop
 
 Example: `<eval "1.2 * (2 + 4.5)" //>`
 
-"Zero" prop. They will still be consumed after the first use. This option works
-only with _single tags_.
+"Zero" prop. It's like a prop, but without a name. Only 1 is allowed per tag.
+The tag will still be consumed after the first use. This option works only with
+**single tags**.
 
 ## Built-in tags
 
@@ -146,6 +147,6 @@ line switch.
 
 #### dir pth li='\*' space=' '
 
-### req url headers
+#### req url headers
 
-### cmd cmd
+#### cmd cmd

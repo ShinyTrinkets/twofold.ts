@@ -137,7 +137,7 @@ export default class Lexer {
     };
 
     for (const char of text) {
-      // console.log(`CHAR :: ${char} ;; STATE :: ${this.state}`)
+      // console.log(`CHAR :: ${char} ;; STATE :: ${this.state}`);
 
       if (this.state === STATE_RAW_TEXT) {
         // Is this the beginning of a new tag?
@@ -224,7 +224,8 @@ export default class Lexer {
           this._pendingState.double = true;
           commitAndTransition(STATE_RAW_TEXT);
         } // Is this the start of a ZERO param value?
-        else if (QUOTE_LETTERS.test(char)) {
+        // Only one is allowed, and it must be first
+        else if (QUOTE_LETTERS.test(char) && !this._pendingState.params) {
           this._pendingState.rawText += char;
           this._pendingState.params = {};
           this._pendingState.param_key = '0';
