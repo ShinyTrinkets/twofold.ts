@@ -16,9 +16,9 @@ test("no blocks found", () => {
     encoding: "utf8",
   });
   const lex = o.lex(txt);
-  expect(lex.length).toBe(1);
+  expect(lex).toHaveLength(1);
   const ast = parse(lex);
-  expect(ast.length).toBe(1);
+  expect(ast).toHaveLength(1);
   expect(isRawText(ast[0])).toBeTruthy();
 });
 
@@ -28,10 +28,10 @@ test("some blocks found", async () => {
     encoding: "utf8",
   });
   const lex = o.lex(txt);
-  expect(lex.length).toBe(14);
+  expect(lex).toHaveLength(14);
   expect(isRawText(lex[0])).toBeTruthy();
   const ast = parse(lex);
-  expect(ast.length).toBe(7);
+  expect(ast).toHaveLength(7);
 
   expect(isRawText(ast[0])).toBeTruthy();
   expect(isDoubleTag(ast[1]) && ast[1].name === "open1").toBeTruthy();

@@ -92,21 +92,21 @@ test("separated sort render", async () => {
   let txt = `... <sort>\n${blob}\n</sort> ...`;
   let tmp = await twofold.renderText(txt, {}, { sort: helpers.sortLines });
   expect(tmp).not.toBe(txt);
-  expect(tmp.length).toBe(txt.length);
+  expect(tmp).toHaveLength(txt.length);
   expect(tmp.indexOf("...")).toBe(0);
 
   blob += "\n\n";
   txt = `??? <sort>\n${blob}</sort> ???`;
   tmp = await twofold.renderText(txt, {}, { sort: helpers.sortLines });
   expect(tmp).not.toBe(txt);
-  expect(tmp.length).toBe(txt.length);
+  expect(tmp).toHaveLength(txt.length);
   expect(tmp.indexOf("???")).toBe(0);
 
   blob = "\r\n" + blob;
   txt = `!!! <sort>\n${blob}</sort> !!!`;
   tmp = await twofold.renderText(txt, {}, { sort: helpers.sortLines });
   expect(tmp).not.toBe(txt);
-  expect(tmp.length).toBe(txt.length);
+  expect(tmp).toHaveLength(txt.length);
   expect(tmp.indexOf("!!!")).toBe(0);
 });
 

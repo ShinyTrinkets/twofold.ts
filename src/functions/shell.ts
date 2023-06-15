@@ -10,19 +10,39 @@ export async function cmd(txtCmd, { cmd, args = [] } = {}, { double = false } = 
    */
 
   cmd = txtCmd || cmd;
-
+  txtCmd = null;
   if (!cmd) return;
 
-  let proc;
+  const xs = args && args.length ? [cmd, ...parse(args)] : parse(cmd);
 
-  if (args && args.length) {
-    proc = Bun.spawn([cmd, ...parse(args)]);
-  } else {
+  args = [];
+  let proc = null;
+  let stdout = null;
+
+  const launch = async () => {
     // Select shell ??
-    proc = Bun.spawn(parse(cmd));
-  }
+    if (stdout) {
+      proc = Bun.spawn(args, { stdin: stdout });
+    } else {
+      proc = Bun.spawn(args);
+    }
+    const buff = await Bun.readableStreamToArrayBuffer(proc.stdout);
+    stdout = new Uint8Array(buff);
+  };
 
-  const stdout = await new Response(proc.stdout).text();
+  for (const x of xs) {
+    if (typeof x === 'string') {
+      args.push(x);
+    } else if (x.op === '|') {
+      await launch();
+      args = [];
+    } else {
+      throw Error(`Shell operator NOT supported: "${x.op}"`);
+    }
+  }
+  await launch();
+
+  stdout = new TextDecoder().decode(stdout);
 
   if (double) {
     return `\n${stdout.trim()}\n`;
