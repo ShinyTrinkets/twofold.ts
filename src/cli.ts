@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 
 import fs from 'node:fs';
-import { createHash } from 'node:crypto';
 
 import twofold from './index.ts';
 import tags from './functions/index.ts';
@@ -9,19 +8,16 @@ import tags from './functions/index.ts';
 import { userCfg } from './config.ts';
 import * as scan from './scan.ts';
 import * as util from './util.ts';
-import pkg from '../package.json';
 
+import pkg from '../package.json';
 import mri from 'mri';
-import chokidar from 'chokidar';
-import micromatch from 'micromatch';
 
 const options = {
-  boolean: ['help', 'version', 'tags', 'initialRender'],
+  boolean: ['help', 'version', 'tags'],
   alias: {
     c: 'config',
     f: 'funcs',
     s: 'scan',
-    w: 'watch',
     // 'glob',
     // 'depth',
   },
@@ -39,19 +35,15 @@ without processing the files:
 
   $ 2fold -s|--scan <file|folder>
 
-Watch or folder to render everytime the files change:
+For scan or render, you can load a folder with extra
+functions (tags):
 
-  $ 2fold -w|--watch <file|folder>
-
-For scan, render and watch you can load a folder
-with extra functions (tags):
-
-  $ 2fold -f|--funcs <folder> --scan|--watch <file>
+  $ 2fold -f|--funcs <folder> --scan <file>
 
 To test tags, or chain multiple CLI apps together,
 you can use pipes:
 
-  $ echo "yes or no: <yes_or_no />" | 2fold
+  $ echo "yes or no: No" | 2fold
   $ cat my-file.md | 2fold
 `;
 (async function main() {
@@ -110,49 +102,6 @@ you can use pipes:
     } else {
       console.error('Unknown path type:', fstat);
     }
-    return;
-  }
-
-  if (args.watch) {
-    const locks = {};
-    const hashes = {};
-    const callback = async fname => {
-      // ignore files that don't match the pattern
-      if (
-        config.glob &&
-        !micromatch.isMatch(fname, config.glob, {
-          basename: true,
-        })
-      ) {
-        return;
-      }
-      // console.log(`File ${fname} is changed`)
-      if (locks[fname]) {
-        // disable writing lock
-        locks[fname] = false;
-        return false;
-      }
-      const result = await twofold.renderFile(fname, {}, funcs, config);
-      const hash = createHash('sha224').update(result).digest('hex');
-      // compare hashes and skip writing if the file is not changed
-      if (hashes[fname] === hash) {
-        return false;
-      }
-      console.log('(2✂︎f)', fname);
-      fs.writeFileSync(fname, result, { encoding: 'utf8' });
-      locks[fname] = true;
-      hashes[fname] = hash;
-    };
-
-    const depth = args.depth ? args.depth : 3;
-    const ignoreInitial = !args.initialRender;
-    const watcher = chokidar.watch(args.watch, {
-      depth,
-      ignoreInitial,
-      persistent: true,
-      followSymlinks: true,
-    });
-    watcher.on('add', callback).on('change', callback);
     return;
   }
 

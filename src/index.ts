@@ -118,7 +118,7 @@ export async function renderText(text, data = {}, customFunctions = {}, cfg: con
   return final;
 }
 
-export function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Config = {}): Promise<string> {
+function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Config = {}): Promise {
   /**
    * TwoFold render stream.
    */
@@ -135,6 +135,14 @@ export function renderStream(stream, data = {}, customFunctions = {}, cfg: confi
 
     stream.on('close', async () => {
       const ast = parse(lex.finish(), cfg);
+      // Save time and IO if the file doesn't have TwoFold tags
+      if (ast.length === 1) {
+        return resolve({
+          ast,
+          changed: false,
+          text: ast[0].rawText,
+        });
+      }
       let final = '';
 
       // Convert single tags into raw text and deep flatten double tags
@@ -148,7 +156,11 @@ export function renderStream(stream, data = {}, customFunctions = {}, cfg: confi
       }
 
       // console.timeEnd(label)
-      resolve(final);
+      resolve({
+        ast,
+        changed: true,
+        text: final,
+      });
     });
   });
 }
@@ -156,11 +168,12 @@ export function renderStream(stream, data = {}, customFunctions = {}, cfg: confi
 export async function renderFile(fname: string, data = {}, customFunctions = {}, config = {}): Promise<string> {
   const stream = createReadStream(fname, { encoding: 'utf8' });
   const result = await renderStream(stream, data, customFunctions, config);
-  if (config.write) {
-    await writeFile(fname, result, { encoding: 'utf8' });
+  if (config.write && result.changed) {
+    console.log('Writing file:', fname);
+    await writeFile(fname, result.text, { encoding: 'utf8' });
     return '';
   }
-  return result;
+  return result.text;
 }
 
 /**
@@ -189,4 +202,4 @@ export async function renderFolder(dir: string, data = {}, customFunctions = {},
   return index;
 }
 
-export default { renderText, renderStream, renderFile, renderFolder };
+export default { renderText, renderFile, renderFolder };

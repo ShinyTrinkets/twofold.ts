@@ -73,7 +73,7 @@ export default class Lexer {
       self.state = newState;
     };
 
-    const commitAndTransition = function (newState: string, joinState: boolean = false) {
+    const commitAndTransition = function (newState: string, joinState = false) {
       /*
        * Commit old state in the processed list
        * and transition to a new state.

@@ -36,7 +36,6 @@
     "lint": "tsc -noEmit -allowImportingTsExtensions -esModuleInterop src/*.ts"
   },
   "dependencies": {
-    "chokidar": "3.x",
     "cosmiconfig": "8.x",
     "fast-glob": "3.x",
     "micromatch": "4.x",
