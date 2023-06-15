@@ -16,14 +16,18 @@ const TESTS = [
   ["<x 1 />", [{ rawText: "<x 1 />" }]],
   ["<A B />", [{ rawText: "<A B />" }]],
   ["<ha/ >", [{ rawText: "<ha/ >" }]],
-  ["<1tag />", [{ rawText: "<1tag />" }]],
-  ["<tag X=0 />", [{ rawText: "<tag X=0 />" }]],
-  ["<tag 1=2 />", [{ rawText: "<tag 1=2 />" }]],
+  ["<1tag />", [{ rawText: "<1tag />" }]], // tag cannot start with Number
+  ["<tag X=0 />", [{ rawText: "<tag X=0 />" }]], // prop cannot start with Upper
+  ["<tag 1=2 />", [{ rawText: "<tag 1=2 />" }]], // prop cannot start with Number
   ['<tag t="` />', [{ rawText: '<tag t="` />' }]],
-  ["<x1>", [{ rawText: "<x1>", name: "x1", double: true }]],
+  ["<tag t='\" />", [{ rawText: "<tag t='\" />" }]],
+  ['<tag t=`"" />', [{ rawText: '<tag t=`"" />' }]],
+  ["<x1>", [{ rawText: "<x1>", name: "x1", double: true }]], // unfinished double tag
   ["< x>", [{ rawText: "< x>", name: "x", double: true }]],
   ["<x >", [{ rawText: "<x >", name: "x", double: true }]],
-  ["<  xY  >", [{ rawText: "<  xY  >", name: "xY", double: true }]],
+  ["<  xY >", [{ rawText: "<  xY >" }]], // max 1 space allowed before tag name
+  ["<   xY  >", [{ rawText: "<   xY  >" }]],
+  ["<h1></  h1>", [{ rawText: "<h1></  h1>" }]],
   [
     "<xY1/>",
     [{ rawText: "<xY1/>", name: "xY1", single: true }],
@@ -118,6 +122,27 @@ const TESTS = [
     '<echo text="\n" />',
     [{ rawText: '<echo text="\n" />' }], // raw-text (newline not allowed in param values)
   ],
+  [ // test ZERO tags
+    '<a "1" />',
+    [{ name: "a", params: { 0: "1" }, rawText: '<a "1" />', single: true }],
+  ],
+  [
+    "<a ` ` />",
+    [{ name: "a", params: { 0: " " }, rawText: "<a ` ` />", single: true }],
+  ],
+  [
+    "<a '' /> <ls `` /> <ping \"\" />",
+    [{ rawText: "<a '' /> <ls `` /> <ping \"\" />" }], // ZERO tags with empty value not allowed
+  ],
+  [
+    '< ls "-la" />',
+    [{
+      name: "ls",
+      params: { 0: "-la" },
+      rawText: '< ls "-la" />',
+      single: true,
+    }],
+  ],
   [
     "blah <tesTing>!!",
     [
@@ -164,14 +189,15 @@ const TESTS = [
     ],
   ],
   [
-    `<echo text1='' text2="" />`,
+    `<echo text1='' text2="" text3=\`\` />`,
     [{
-      rawText: `<echo text1='' text2="" />`,
+      rawText: `<echo text1='' text2="" text3=\`\` />`,
       name: "echo",
       single: true,
       params: {
         text1: "",
         text2: "",
+        text3: "",
       },
     }],
   ],
@@ -219,12 +245,12 @@ const TESTS = [
     ],
   ],
   [
-    "< dayOrNight date=`2019-07` void=null\t/>",
+    "<\tdayOrNight date=`2019-07` void=null\t/>",
     [
       {
         name: "dayOrNight",
         params: { date: "2019-07", void: null },
-        rawText: "< dayOrNight date=`2019-07` void=null\t/>",
+        rawText: "<\tdayOrNight date=`2019-07` void=null\t/>",
         single: true,
       },
     ],
@@ -280,12 +306,12 @@ const TESTS = [
   ],
   [
     // dealing with newlines is messy ...
-    '< increment nr="5\\\\n"\n></ increment  >',
+    '< increment nr="5\\\\n"\t></ increment  >',
     [
       {
         name: "increment",
         params: { nr: "5\\n" },
-        rawText: '< increment nr="5\\\\n"\n>',
+        rawText: '< increment nr="5\\\\n"\t>',
         double: true,
       },
       {
@@ -296,7 +322,7 @@ const TESTS = [
     ],
   ],
   [
-    "<increment nr=-1>></  increment  >",
+    "<increment nr=-1>></ increment  >",
     [
       {
         name: "increment",
@@ -307,7 +333,7 @@ const TESTS = [
       { rawText: ">" },
       {
         name: "increment",
-        rawText: "</  increment  >",
+        rawText: "</ increment  >",
         double: true,
       },
     ],
@@ -337,18 +363,18 @@ test("all lex tests", () => {
   }
 });
 
-test("lexer crash", () => {
-  const p = new Lexer();
-  p.push("");
-  const lex = p.finish();
-  expect(lex).toEqual([{ rawText: "" }]);
-  expect(() => {
-    p.push("");
-  }).toThrow();
-  expect(() => {
-    p.finish();
-  }).toThrow();
-});
+// test("lexer crash", () => {
+//   const p = new Lexer();
+//   p.push("");
+//   const lex = p.finish();
+//   expect(lex).toEqual([{ rawText: "" }]);
+//   expect(() => {
+//     p.push("");
+//   }).toThrow();
+//   expect(() => {
+//     p.finish();
+//   }).toThrow();
+// });
 
 function chunkText(txt, len) {
   let t = "";

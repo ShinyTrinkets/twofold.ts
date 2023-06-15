@@ -11,11 +11,11 @@ const STATE_EQUAL = 's__equal';
 const STATE_VALUE = 's__value';
 const STATE_FINAL = 's__final';
 
-const SPACE_LETTERS = /[ \t\n]/;
+const SPACE_LETTERS = /[ \t]/;
 const QUOTE_LETTERS = /['"`]/;
 const LOWER_LETTERS = /[a-z]/;
 const ALLOWED_ALPHA = /[_0-9a-zA-Z]/;
-const MAYBE_JSON_OBJ = /"[{\[].*[}\]]"$/;
+const MAYBE_JSON_VAL = /['"`][{\[].*[}\]]['"`]$/;
 
 /**
  * A lexer is a state machine.
@@ -55,6 +55,8 @@ export default class Lexer {
     // This will consume the block of text completely.
     // If the text represents half of a state,
     // like an open tag, the half of text is kept in pending state.
+    // This allows any number of characters to be pushed into the machine,
+    // and peeking is not allowed.
     if (this.state === STATE_FINAL) {
       throw new Error('The lexing is finished!');
     } else if (!text) {
@@ -97,7 +99,9 @@ export default class Lexer {
       /*
        * Commit pending tag key + value as a dict
        * and delete the temporary variables.
+       * quote=t is for wrapping in a JSON compatible quote.
        */
+      // console.log('Commit TAG:', quote, self.state, self._pendingState)
       const pending = self._pendingState;
       let value = pending.param_value;
       if (quote && value && value.length > 2) {
@@ -106,12 +110,14 @@ export default class Lexer {
         value = '""';
       }
       try {
-        // Try to convert string into Object
+        // Try to convert string value into Object
         // @ts-ignore
         value = JSON.parse(value);
       } catch {
-        if (MAYBE_JSON_OBJ.test(value)) {
+        if (MAYBE_JSON_VAL.test(value)) {
           try {
+            // Remove quotes and try again
+            // @ts-ignore
             value = JSON.parse(value.slice(1, -1));
           } catch {}
         }
@@ -122,11 +128,11 @@ export default class Lexer {
       delete pending.param_value;
     };
 
-    const hasParamValueQuote = function () {
+    const hasParamValueQuote = () => {
       return QUOTE_LETTERS.test(self._pendingState.param_value[0]);
     };
 
-    const getParamValueQuote = function () {
+    const getParamValueQuote = () => {
       return self._pendingState.param_value[0];
     };
 
@@ -154,7 +160,11 @@ export default class Lexer {
           this._pendingState.rawText += char;
           this._pendingState.double = true;
         } // Is this a space before the tag name?
-        else if (char === ' ' && !this._pendingState.name) {
+        else if (
+          SPACE_LETTERS.test(char) &&
+          !this._pendingState.name &&
+          !SPACE_LETTERS.test(this._pendingState.rawText.at(-1))
+        ) {
           this._pendingState.rawText += char;
         } // Abandon current state, back to raw text
         else {
@@ -180,7 +190,7 @@ export default class Lexer {
           this._pendingState.rawText += char;
           this._pendingState.name += char;
         } // Is this a space after the tag name?
-        else if (char === ' ') {
+        else if (SPACE_LETTERS.test(char)) {
           this._pendingState.rawText += char;
           transition(STATE_INSIDE_TAG);
         } // Is this a tag stopper?
@@ -208,14 +218,21 @@ export default class Lexer {
           this._pendingState.rawText += char;
           this._pendingState.single = true;
           transition(STATE_CLOSE_TAG);
-        } // Is this a space char inside the tag?
-        else if (SPACE_LETTERS.test(char) && this._pendingState.name) {
-          this._pendingState.rawText += char;
         } // Is this the end of the First tag from a Double tag?
         else if (char === closeTag[0]) {
           this._pendingState.rawText += char;
           this._pendingState.double = true;
           commitAndTransition(STATE_RAW_TEXT);
+        } // Is this the start of a ZERO param value?
+        else if (QUOTE_LETTERS.test(char)) {
+          this._pendingState.rawText += char;
+          this._pendingState.params = {};
+          this._pendingState.param_key = '0';
+          this._pendingState.param_value = char;
+          transition(STATE_VALUE);
+        } // Is this a space char inside the tag?
+        else if (SPACE_LETTERS.test(char) && this._pendingState.name) {
+          this._pendingState.rawText += char;
         } // Is this the beginning of a param name?
         // Only lower letters allowed here
         else if (LOWER_LETTERS.test(char)) {
@@ -270,7 +287,19 @@ export default class Lexer {
           delete this._pendingState.param_value;
           this._pendingState.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
-        } // Is this a closing quote?
+        } // Empty ZERO param values not allowed
+        // Eg: {cmd ""}, {exec ""}, or {ping ""} doesn't make sense
+        else if (
+          QUOTE_LETTERS.test(char) &&
+          this._pendingState.param_key === '0' &&
+          this._pendingState.param_value.length === 1
+        ) {
+          delete this._pendingState.params;
+          delete this._pendingState.param_key;
+          delete this._pendingState.param_value;
+          this._pendingState.rawText += char;
+          commitAndTransition(STATE_RAW_TEXT, true);
+        } // Is this a valid closing quote?
         else if (QUOTE_LETTERS.test(char) && char === getParamValueQuote()) {
           this._pendingState.rawText += char;
           this._pendingState.param_value += char;

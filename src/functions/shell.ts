@@ -1,6 +1,6 @@
 import parse from 'shell-quote/parse';
 
-export async function cmd(_, { cmd, args = [] } = {}, { double = false } = {}) {
+export async function cmd(txtCmd, { cmd, args = [] } = {}, { double = false } = {}) {
   /**
    * Execute a system command and return the output.
    *
@@ -9,10 +9,18 @@ export async function cmd(_, { cmd, args = [] } = {}, { double = false } = {}) {
    * https://bun.sh/docs/api/spawn
    */
 
-  const xs = parse(args);
+  cmd = txtCmd || cmd;
 
-  // Select shell?
-  const proc = Bun.spawn([cmd, ...xs]);
+  if (!cmd) return;
+
+  let proc;
+
+  if (args && args.length) {
+    proc = Bun.spawn([cmd, ...parse(args)]);
+  } else {
+    // Select shell ??
+    proc = Bun.spawn(parse(cmd));
+  }
 
   const stdout = await new Response(proc.stdout).text();
 

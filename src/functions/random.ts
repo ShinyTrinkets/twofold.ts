@@ -7,25 +7,25 @@ function randomChoice(choices) {
   return choices[index];
 }
 
-export function randomFloat(_, { min = 1, max = 100, decimals = 2 } = {}): number {
+export function randomFloat(txtMax, { min = 1, max = 100, decimals = 2 } = {}): number {
   /**
    * Generate a random float number.
    * Returns a pseudo-random float in the range min–max (inclusive of min, but not max).
    */
   const precision = parseInt(decimals);
   min = Math.ceil(parseInt(min));
-  max = Math.floor(parseInt(max));
+  max = Math.floor(parseInt(txtMax || max));
   const nr = max - Math.random() * (max - min);
   return nr.toFixed(precision);
 }
 
-export function randomInt(_, { min = 1, max = 100 } = {}): number {
+export function randomInt(txtMax, { min = 1, max = 100 } = {}): number {
   /**
    * Generate a random integer number.
    * Returns a pseudo-random integer in the range min–max (inclusive of min, but not max).
    */
   min = Math.ceil(parseInt(min));
-  max = Math.floor(parseInt(max));
+  max = Math.floor(parseInt(txtMax || max));
   return Math.floor(max - Math.random() * (max - min));
 }
 

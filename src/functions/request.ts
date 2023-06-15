@@ -1,4 +1,4 @@
-export async function req(_, { url, headers = {} }, { double = false }) {
+export async function req(txtUrl, { url, headers = {} }, { double = false }) {
   /**
    * Make a HTTP request.
    *
@@ -7,6 +7,10 @@ export async function req(_, { url, headers = {} }, { double = false }) {
    * Bun already has support for it
    * https://bun.sh/docs/api/globals
    */
+
+  url = txtUrl || url;
+
+  if (!url) return;
 
   if (url.slice(0, 4) !== 'http') {
     url = 'http://' + url;

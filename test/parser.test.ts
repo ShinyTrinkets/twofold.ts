@@ -31,7 +31,11 @@ const TESTS = [
   ["less < and >", [{ rawText: "less < and >" }]],
   [
     " <a_b></b_c>",
-    [{ rawText: " <a_b></b_c>" }], // this is raw-text
+    [{ rawText: " <a_b></b_c>" }], // non matching tags
+  ],
+  [
+    "<ping 'x.y'></pink>",
+    [{ rawText: "<ping 'x.y'></pink>" }], // non matching tags
   ],
   [
     "\n<I am doing>some</stuff>\n",
@@ -75,11 +79,25 @@ const TESTS = [
     ],
   ],
   [
-    '<httpGet url="https://httpbin.org/uuid" />',
+    '<curl "https://httpbin.org/uuid" t=5 />',
     [
       {
-        rawText: '<httpGet url="https://httpbin.org/uuid" />',
-        name: "httpGet",
+        rawText: '<curl "https://httpbin.org/uuid" t=5 />',
+        name: "curl",
+        single: true,
+        params: {
+          "0": "https://httpbin.org/uuid",
+          t: 5,
+        },
+      },
+    ],
+  ],
+  [
+    '<httpx url="https://httpbin.org/uuid" />',
+    [
+      {
+        rawText: '<httpx url="https://httpbin.org/uuid" />',
+        name: "httpx",
         single: true,
         params: {
           url: "https://httpbin.org/uuid",
@@ -88,14 +106,14 @@ const TESTS = [
     ],
   ],
   [
-    "<temp type=f deep=no null=null>0</temp>",
+    "<temp type=f deep=no nr=3 null=null>0</temp>",
     [
       {
         double: true,
-        firstTagText: "<temp type=f deep=no null=null>",
+        firstTagText: "<temp type=f deep=no nr=3 null=null>",
         secondTagText: "</temp>",
         name: "temp",
-        params: { type: "f", deep: "no", null: null },
+        params: { type: "f", deep: "no", nr: 3, null: null },
         children: [{ rawText: "0" }],
       },
     ],

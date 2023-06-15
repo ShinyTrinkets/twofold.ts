@@ -40,7 +40,7 @@ export async function userCfg(): Promise<Config> {
   if (cfg && cfg.config) {
     validateCfg(cfg.config);
     console.debug('(2✂︎f) User config:', cfg.config);
-    return { ...defaultCfg, ...config };
+    return { ...defaultCfg, ...cfg.config };
   }
   return { ...defaultCfg };
 }

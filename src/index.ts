@@ -24,12 +24,14 @@ async function flattenSingleTag(tag, data, allFunctions, config) {
   if (config.tags && typeof config.tags[tag.name] === 'object') {
     params = { ...config.tags[tag.name], ...params };
   }
-  // Text inside the single tag?
-  const text = params.text ? params.text : '';
+  // Zero param text from the single tag
+  const text = params['0'] || '';
   let result = tag.rawText;
   try {
+    //
     // Execute the tag function with params
-    result = await func({ text }, params, { single: true });
+    //
+    result = await func(text, params, { single: true });
     delete tag.name;
     delete tag.single;
     tag.rawText = result.toString();
@@ -72,8 +74,10 @@ async function flattenDoubleTag(tag, data, allFunctions, config) {
   }
   let result = text;
   try {
+    //
     // Execute the tag function with params
-    result = await func({ text }, params, { double: true });
+    //
+    result = await func(text, params, { double: true });
     if (optShouldConsume(tag)) {
       delete tag.name;
       delete tag.double;
@@ -130,7 +134,6 @@ export function renderStream(stream, data = {}, customFunctions = {}, cfg: confi
     });
 
     stream.on('close', async () => {
-      console.log('close!');
       const ast = parse(lex.finish(), cfg);
       let final = '';
 

@@ -46,6 +46,7 @@
   "devDependencies": {
     "@types/node": "20.x",
     "bun-types": "0.x",
+    "prettier": "2.x",
     "typescript": "5.x"
   },
   "prettier": {

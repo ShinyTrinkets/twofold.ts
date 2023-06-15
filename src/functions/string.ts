@@ -1,4 +1,4 @@
-export function sortLines({ text }, { caseSensitive = false } = {}): string {
+export function sortLines(text, { caseSensitive = false } = {}): string {
   /**
    * Sort lines of text alphabetically.
    * By default, the sorting is case insensitive.

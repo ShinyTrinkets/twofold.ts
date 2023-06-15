@@ -21,6 +21,7 @@ tamen, natus abdita falli triumphos excidit. Solet spatiarer, in funesto rumpo
 missisque nocuit tumulis ingentia secreta. Nomina domum; tibi praebuerat Lyaeus
 dubia decuit tabo!
 
+    // <  sed  />
     var shortcut = kilohertz(exbibyte);
     if (white_finder(cisc + mcaKindleSector, megabyteRuntimeDownload,
             dvd_gpu_manet(lpi_metal, 3)) == swappable) {
@@ -136,6 +137,7 @@ guttura de tamen Cinyran, pereat adhuc. Auctam iuvenem rerum testarique retinens
 nocebant provida, nec sunt tanta dixit. Ultroque flores palmite ducere
 Naryciusque Medusae per curvata illos.
 
+    // <aba bac>
     if (tiffDesktopMenu / cut + core_interface) {
         activex_computer_matrix(restore(79, pcmcia), 619004,
                 ciscGigahertzAvatar(cc, cybersquatterReimageStorage,

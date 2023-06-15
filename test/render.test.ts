@@ -131,6 +131,23 @@ test("mixed tags", async () => {
   expect(lines[3].indexOf("rand int ")).toBe(0);
 });
 
+test("deep mixed tags", async () => {
+  const txt = "<cmd>echo Up or Down <upOrDown /></cmd>";
+  const tmp = await twofold.renderText(txt);
+  expect(tmp).not.toBe(txt);
+  expect(tmp.startsWith("<cmd>\nUp or Down ")).toBeTruthy();
+  expect(tmp.endsWith("\n</cmd>")).toBeTruthy();
+});
+
+test("deep mixed HTML tags", async () => {
+  let txt = "";
+  txt += '<div><span class="title">Hello</span> <br />\n';
+  txt += '<span class="text">Workd</span> <leftOrRight /></div>';
+  const tmp = await twofold.renderText(txt);
+  expect(tmp).not.toBe(txt);
+  expect(tmp.indexOf('<div><span class="title">Hello</span> <br />')).toBe(0);
+});
+
 test("custom single tag", async () => {
   let tmp;
   const mumu = () => "ok";
@@ -249,15 +266,6 @@ test("deep unknown function render", async () => {
     "<mumu><mumu><mumu>\n<increment consume=true>0</increment></mumu></mumu></mumu>",
   );
   expect(tmp).toBe("<mumu><mumu><mumu>\n1</mumu></mumu></mumu>");
-});
-
-test("deep mix render", async () => {
-  let txt = "";
-  txt += '<div><span class="title">Hello</span> <br />\n';
-  txt += '<span class="text">Workd</span> <leftOrRight /></div>';
-  const tmp = await twofold.renderText(txt);
-  expect(tmp).not.toBe(txt);
-  expect(tmp.indexOf('<div><span class="title">Hello</span> <br />')).toBe(0);
 });
 
 test("single tag not found", async () => {

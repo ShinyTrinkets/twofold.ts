@@ -7,6 +7,7 @@ test("day or night time", () => {
   expect(func.dayOrNight(0, d)).toBe("day");
   expect(func.emojiSunMoon(0, d)).toBe("☀️");
   expect(func.emojiDayNight(0, d)).toBe("🏙");
+
   d = { date: "01 Dec 2012 21:21 GMT" };
   expect(func.dayOrNight(0, d)).toBe("night");
   expect(func.emojiSunMoon(0, d)).toBe("🌙");

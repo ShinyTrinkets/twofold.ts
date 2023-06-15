@@ -1,5 +1,5 @@
 /**
- * Super basic math functions.
+ * Super silly/ basic math functions.
  */
 
 function parseNumber(text: string | number): number {
@@ -13,7 +13,7 @@ function parseNumber(text: string | number): number {
   }
 }
 
-export function multiply({ text }, { nr = 1 } = {}): number {
+export function multiply(text, { nr = 1 } = {}): number {
   /**
    * Multiply the input with a number.
    * The number can be any integer, or float.
@@ -21,7 +21,7 @@ export function multiply({ text }, { nr = 1 } = {}): number {
   return parseNumber(text) * parseNumber(nr);
 }
 
-export function increment({ text }, { nr = 1 } = {}): number {
+export function increment(text, { nr = 1 } = {}): number {
   /**
    * Increment the input with a number.
    * The increment can be any integer, or float, positive or negative.
