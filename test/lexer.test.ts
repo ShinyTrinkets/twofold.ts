@@ -22,6 +22,12 @@ const TESTS = [
   ['<tag t="` />', [{ rawText: '<tag t="` />' }]],
   ['<tag t=\'" />', [{ rawText: '<tag t=\'" />' }]],
   ['<tag t=`"" />', [{ rawText: '<tag t=`"" />' }]],
+  ['<tag123456789012345678901234567890A123456789 />', [{
+    rawText: '<tag123456789012345678901234567890A123456789 />',
+  }]],
+  ['<tag ab123456789012345678901234567890A1234567890=1 />', [{
+    rawText: '<tag ab123456789012345678901234567890A1234567890=1 />',
+  }]],
   ['<x1>', [{ rawText: '<x1>', name: 'x1', double: true }]], // unfinished double tag
   ['< x>', [{ rawText: '< x>', name: 'x', double: true }]],
   ['<x >', [{ rawText: '<x >', name: 'x', double: true }]],

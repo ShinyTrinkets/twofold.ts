@@ -16,6 +16,7 @@ const SPACE_LETTERS = /[ \t]/;
 const QUOTE_LETTERS = /['"`]/;
 const LOWER_LETTERS = /[a-z]/;
 const ALLOWED_ALPHA = /[_0-9a-zA-Z]/;
+const MAX_NAME_LEN = 42;
 const MAYBE_JSON_VAL = /['"`][{\[].*[}\]]['"`]$/;
 
 /**
@@ -195,7 +196,7 @@ export default class Lexer {
       } // --
       else if (this.state === STATE_TAG_NAME && this._pendingState.name) {
         // Is this the middle of a tag name?
-        if (ALLOWED_ALPHA.test(char)) {
+        if (ALLOWED_ALPHA.test(char) && this._pendingState.name.length < MAX_NAME_LEN) {
           this._pendingState.rawText += char;
           this._pendingState.name += char;
         } // Is this a space after the tag name?
@@ -261,7 +262,7 @@ export default class Lexer {
       } // --
       else if (this.state === STATE_PARAM && this._pendingState.param_key) {
         // Is this the middle of a param name?
-        if (ALLOWED_ALPHA.test(char)) {
+        if (ALLOWED_ALPHA.test(char) && this._pendingState.param_key.length < MAX_NAME_LEN) {
           this._pendingState.rawText += char;
           this._pendingState.param_key += char;
         } // Is this the equal between key and value?

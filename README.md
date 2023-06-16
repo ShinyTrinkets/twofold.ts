@@ -1,4 +1,4 @@
-# TwoFold.ts (2✂︎f)
+# TwoFold (2✂︎f)
 
 [![Project name][project-img]][project-url]
 

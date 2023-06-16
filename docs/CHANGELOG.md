@@ -1,4 +1,4 @@
-# TwoFold.js (2✂︎f) changelog
+# TwoFold (2✂︎f) changelog
 
 ## v0.6 WIP
 

@@ -1,4 +1,4 @@
-# TwoFold.js (2✂︎f) tags
+# TwoFold (2✂︎f) tags
 
 The TwoFold tags are just regular Javascript functions, there's nothing special
 about them.<br/> They can receive as input the text inside the tags (in case of

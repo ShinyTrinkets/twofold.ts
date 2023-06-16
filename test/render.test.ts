@@ -135,8 +135,8 @@ test('deep mixed tags', async () => {
   const txt = '<cmd>echo Up or Down <upOrDown /></cmd>';
   const tmp = await twofold.renderText(txt);
   expect(tmp).not.toBe(txt);
-  expect(tmp.startsWith('<cmd>\nUp or Down ')).toBeTruthy();
-  expect(tmp.endsWith('\n</cmd>')).toBeTruthy();
+  expect(tmp.startsWith('<cmd>Up or Down ')).toBeTruthy();
+  expect(tmp.endsWith('</cmd>')).toBeTruthy();
 });
 
 test('deep mixed HTML tags', async () => {
