@@ -6,6 +6,10 @@ export function upper(text): string {
   return text.toUpperCase();
 }
 
+export function title(text): string {
+  return text.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+}
+
 export function sortLines(text, { caseSensitive = false } = {}): string {
   /**
    * Sort lines of text alphabetically.

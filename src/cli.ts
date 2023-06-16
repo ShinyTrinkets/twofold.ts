@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import fs from 'node:fs';
+import path from 'node:path';
 
 import twofold from './index.ts';
 import tags from './functions/index.ts';
@@ -107,9 +108,10 @@ you can use pipes:
 
   if (args.fromWatch) {
     const changeDir = process.env.WATCHEXEC_COMMON_PATH;
-    const fname = process.env.WATCHEXEC_WRITTEN_PATH;
-    if (changeDir && fname) {
-      console.log('(2✂︎f) WatchExec:', fname);
+    const changePth = process.env.WATCHEXEC_WRITTEN_PATH;
+    if (changeDir && changePth) {
+      console.log('(2✂︎f) WatchExec:', changePth);
+      const fname = path.join(changeDir, changePth);
       await twofold.renderFile(fname, {}, funcs, { ...config, write: true });
       return;
     }

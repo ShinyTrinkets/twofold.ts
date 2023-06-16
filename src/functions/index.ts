@@ -7,13 +7,10 @@ import * as fs from './fs.ts';
 import * as shell from './shell.ts';
 import * as request from './request.ts';
 
-function jsEval(zeroExpr, args = {}, { double = false } = {}) {
+function jsEval(zeroExpr, args = {}) {
   const expr = zeroExpr || args.expr;
   if (!expr || !expr.trim()) return;
   const result = eval(expr);
-  if (double) {
-    return `\n${result.toString().trim()}\n`;
-  }
   return result;
 }
 

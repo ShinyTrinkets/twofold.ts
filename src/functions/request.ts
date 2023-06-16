@@ -21,10 +21,5 @@ export async function req(txtUrl, { url, headers = {} }, { double = false }) {
   text = text.trim();
 
   if (!resp.ok) text = `ERROR code ${resp.status}: ${text}`;
-
-  if (double) {
-    return `\n${text}\n`;
-  }
-
   return text;
 }

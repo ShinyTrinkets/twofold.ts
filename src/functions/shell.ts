@@ -43,10 +43,5 @@ export async function cmd(txtCmd, { cmd, args = [] } = {}, { double = false } = 
   await launch();
 
   stdout = new TextDecoder().decode(stdout);
-
-  if (double) {
-    return `\n${stdout.trim()}\n`;
-  }
-
   return stdout.trim();
 }

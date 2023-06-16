@@ -11,8 +11,7 @@
 
 TwoFold, but in Bun/ TypeScript.
 
-
-## ⌨️ Development
+## Development
 
 Check the [Changelog](/docs/CHANGELOG.md) (the past) and the [Roadmap](/docs/ROADMAP.md) (the future).
 
