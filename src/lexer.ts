@@ -110,7 +110,9 @@ export default class Lexer {
       const pending = self._pendingState;
       let value = pending.param_value;
       if (quote && value && value.length > 2) {
-        value = JSON.stringify(value.slice(1, -1));
+        if (MAYBE_JSON_VAL.test(value)) {
+          value = '"' + value.slice(1, -1) + '"';
+        } else value = JSON.stringify(value.slice(1, -1));
       } else if (quote) {
         value = '""';
       }

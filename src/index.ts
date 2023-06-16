@@ -27,7 +27,7 @@ async function flattenSingleTag(tag, data, allFunctions, config) {
   }
   // Zero param text from the single tag &
   // text prop, built-in option that allows single tags to receive text, just like double tags
-  const text = params['0'] || params.text || '';
+  const text = params['0'] || '';
   let result = tag.rawText;
   try {
     //
