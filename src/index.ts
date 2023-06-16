@@ -194,7 +194,12 @@ export async function renderFolder(dir: string, data = {}, customFunctions = {},
   const depth = config.depth || 3;
 
   let index = 0;
-  const files = await globby(glob, { cwd: dir, deep: depth, baseNameMatch: true, onlyFiles: true });
+  const files = await globby(glob, {
+    cwd: dir,
+    deep: depth,
+    onlyFiles: true,
+    baseNameMatch: true,
+  });
   for (const pth of files) {
     const fname = `${dir}/${pth}`;
     await renderFile(fname, data, customFunctions, config);

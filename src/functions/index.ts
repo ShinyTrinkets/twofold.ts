@@ -17,4 +17,13 @@ function jsEval(zeroExpr, args = {}, { double = false } = {}) {
   return result;
 }
 
-export default { ...math, ...string, ...random, ...time, ...fs, ...shell, ...request, eval: jsEval };
+export default {
+  ...math,
+  ...string,
+  ...random,
+  ...time,
+  ...fs,
+  ...shell,
+  ...request,
+  eval: jsEval,
+};

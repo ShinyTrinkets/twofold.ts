@@ -82,7 +82,12 @@ export async function scanFolder(dir: string, customFunctions = {}, config: Conf
   const glob = config.glob || ['*.*'];
   const depth = config.depth || 3;
 
-  const files = await globby(glob, { cwd: dir, deep: depth, baseNameMatch: true, onlyFiles: true });
+  const files = await globby(glob, {
+    cwd: dir,
+    deep: depth,
+    onlyFiles: true,
+    baseNameMatch: true,
+  });
   for (const pth of files) {
     try {
       const fname = path.join(dir, pth);

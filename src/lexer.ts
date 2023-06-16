@@ -1,5 +1,6 @@
 import { LexToken } from './types.ts';
 import * as config from './config.ts';
+import { isRawText } from './tags.ts';
 
 const STATE_RAW_TEXT = 's__text';
 const STATE_OPEN_TAG = 's_<_tag';
@@ -80,8 +81,11 @@ export default class Lexer {
        */
       // console.log('Commit STATE:', self.state, self._pendingState)
       if (self._pendingState.rawText) {
-        if (joinState && self.state !== STATE_RAW_TEXT && newState === STATE_RAW_TEXT) {
-          let lastProcessed: LexToken = { rawText: '' };
+        let lastProcessed: LexToken = { rawText: '' };
+        if (self._processed.length) {
+          lastProcessed = self._processed.at(-1);
+        }
+        if (joinState && newState === STATE_RAW_TEXT && !lastProcessed.single) {
           if (self._processed.length) {
             lastProcessed = self._processed.pop();
           }
@@ -105,7 +109,7 @@ export default class Lexer {
       const pending = self._pendingState;
       let value = pending.param_value;
       if (quote && value && value.length > 2) {
-        value = '"' + value.slice(1, -1) + '"';
+        value = JSON.stringify(value.slice(1, -1));
       } else if (quote) {
         value = '""';
       }
@@ -137,10 +141,10 @@ export default class Lexer {
     };
 
     for (const char of text) {
-      // console.log(`CHAR :: ${char} ;; STATE :: ${this.state}`);
+      // console.log(`STATE :: ${this.state} ;; new CHAR :: ${char}`)
 
       if (this.state === STATE_RAW_TEXT) {
-        // Is this the beginning of a new tag?
+        // Could this be the beginning of a new tag?
         if (char === openTag[0]) {
           commitAndTransition(STATE_OPEN_TAG);
         }
@@ -165,6 +169,11 @@ export default class Lexer {
           !this._pendingState.name &&
           !SPACE_LETTERS.test(this._pendingState.rawText.at(-1))
         ) {
+          this._pendingState.rawText += char;
+        } // it was a fake open tag, so maybe
+        // this be the beginning of a real tag?
+        else if (char === openTag[0]) {
+          commitAndTransition(STATE_OPEN_TAG);
           this._pendingState.rawText += char;
         } // Abandon current state, back to raw text
         else {
@@ -335,7 +344,7 @@ export default class Lexer {
       else {
         console.error('Lexer ERROR! This is probably a BUG!');
         console.error(`Char: ${char}; State: ${this.state}; PriorState: ${this.priorState}`);
-        commitAndTransition(STATE_RAW_TEXT, true);
+        return;
       }
     }
   }
@@ -354,7 +363,7 @@ export default class Lexer {
     }
 
     if (this._pendingState.rawText) {
-      const lastProcessed = this._processed[this._processed.length - 1];
+      const lastProcessed = this._processed.at(-1);
       // If the last processed state was a Tag, create a new raw-text
       if (lastProcessed.name) {
         this._processed.push({ rawText: this._pendingState.rawText });
@@ -365,6 +374,19 @@ export default class Lexer {
     }
 
     this._pendingState = { rawText: '' };
+
+    // compact all raw text tags
+    let final = [];
+    for (const tok of this._processed) {
+      const lastProcessed = final.at(-1);
+      if (lastProcessed && isRawText(tok) && isRawText(lastProcessed)) {
+        lastProcessed.rawText += tok.rawText;
+      } else {
+        final.push(tok);
+      }
+    }
+
+    this._processed = final;
     this.state = STATE_FINAL;
     return this._processed;
   }
