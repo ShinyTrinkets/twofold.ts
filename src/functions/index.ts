@@ -12,7 +12,7 @@ function jsEval(zeroExpr, args = {}, { double = false } = {}) {
   if (!expr || !expr.trim()) return;
   const result = eval(expr);
   if (double) {
-    return `\n${result.trim()}\n`;
+    return `\n${result.toString().trim()}\n`;
   }
   return result;
 }

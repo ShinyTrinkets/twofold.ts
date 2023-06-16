@@ -1,5 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
+import crypto from 'node:crypto';
 import globby from 'fast-glob';
 
 import Lexer from './lexer.ts';
@@ -16,7 +17,7 @@ async function flattenSingleTag(tag, data, allFunctions, config) {
    */
   const func = allFunctions[toCamelCase(tag.name)];
   if (!isFunction(func)) {
-    console.warn(`Unknown single tag "${tag.name}"!`);
+    console.debug(`Unknown single tag "${tag.name}"!`);
     return;
   }
   // Params for the tag come from custom data, parsed params and config
@@ -26,13 +27,15 @@ async function flattenSingleTag(tag, data, allFunctions, config) {
   }
   // Zero param text from the single tag &
   // text prop, built-in option that allows single tags to receive text, just like double tags
-  const text = params['0'] || params.text || '';
+  const text = params['0'] || params.text;
+  if (text === undefined || text === null) return;
   let result = tag.rawText;
   try {
     //
     // Execute the tag function with params
     //
     result = await func(text, params, { single: true });
+    if (!result) result = '';
     delete tag.name;
     delete tag.single;
     tag.rawText = result.toString();
@@ -61,7 +64,7 @@ async function flattenDoubleTag(tag, data, allFunctions, config) {
   // At this point all children are flat
   const func = allFunctions[toCamelCase(tag.name)];
   if (!isFunction(func)) {
-    console.warn(`Unknown double tag "${tag.name}"!`);
+    console.debug(`Unknown double tag "${tag.name}"!`);
     return;
   }
   // Params for the tag come from custom data, parsed params and config
@@ -79,6 +82,7 @@ async function flattenDoubleTag(tag, data, allFunctions, config) {
     // Execute the tag function with params
     //
     result = await func(text, params, { double: true });
+    if (!result) result = '';
     if (optShouldConsume(tag)) {
       delete tag.name;
       delete tag.double;
@@ -130,8 +134,11 @@ function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Confi
     // console.time(label)
     const lex = new Lexer(cfg);
 
-    stream.on('data', text => {
-      lex.push(text);
+    // calc a text hash to see if it has changed
+    const streamHash = crypto.createHash('sha224');
+    stream.on('data', chunk => {
+      streamHash.update(chunk);
+      lex.push(chunk);
     });
 
     stream.on('close', async () => {
@@ -144,7 +151,9 @@ function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Confi
           text: ast[0].rawText,
         });
       }
+
       let final = '';
+      const resultHash = crypto.createHash('sha224');
 
       // Convert single tags into raw text and deep flatten double tags
       for (const t of ast) {
@@ -153,13 +162,15 @@ function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Confi
         } else if (isSingleTag(t)) {
           await flattenSingleTag(t, data, allFunctions, cfg);
         }
-        final += unParse(t);
+        const chunk = unParse(t);
+        resultHash.update(chunk);
+        final += chunk;
       }
 
       // console.timeEnd(label)
       resolve({
         ast,
-        changed: true,
+        changed: streamHash.digest('hex') !== resultHash.digest('hex'),
         text: final,
       });
     });

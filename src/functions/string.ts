@@ -1,3 +1,11 @@
+export function lower(text): string {
+  return text.toLowerCase();
+}
+
+export function upper(text): string {
+  return text.toUpperCase();
+}
+
 export function sortLines(text, { caseSensitive = false } = {}): string {
   /**
    * Sort lines of text alphabetically.
