@@ -2,6 +2,7 @@ import path from 'node:path';
 import { homedir } from 'node:os';
 import { types } from 'node:util';
 
+// TODO ? types.isGeneratorFunction(f) ?
 export const isFunction = f => typeof f === 'function' || types.isAsyncFunction(f);
 
 // Credit: https://stackoverflow.com/a/32604073/498361

@@ -12,10 +12,20 @@ function getDate(text) {
   return text;
 }
 
+export function now(txtDate: string, { date = null } = {}): string {
+  date = getDate(txtDate || date);
+  return date.toISOString().split('.')[0].replace('T', ' ');
+}
+
+export function date(txtDate: string, { date = null } = {}): string {
+  date = getDate(txtDate || date);
+  return date.toISOString().split('T')[0];
+}
+
 /**
  * Helper that returns day or night.
  */
-export function dayOrNight(txtDate, { date = null, splitHour = 6 } = {}): string {
+export function dayOrNight(txtDate: string, { date = null, splitHour = 6 } = {}): string {
   date = getDate(txtDate || date);
   const h = date.getHours();
   if (h > splitHour && h <= splitHour + 12) {
@@ -29,7 +39,7 @@ export function dayOrNight(txtDate, { date = null, splitHour = 6 } = {}): string
  * Returns an emoji representing day or night.
  * Day=☀️ ; Night=🌙 ;
  */
-export function emojiSunMoon(txtDate, { date = null, splitHour = 6 } = {}): string {
+export function emojiSunMoon(txtDate: string, { date = null, splitHour = 6 } = {}): string {
   const dn = dayOrNight(txtDate, { date, splitHour });
   if (dn === 'day') {
     return '☀️';
@@ -42,7 +52,7 @@ export function emojiSunMoon(txtDate, { date = null, splitHour = 6 } = {}): stri
  * Returns an emoji representing day or night.
  * Day=🏙 ; Night=🌃 ;
  */
-export function emojiDayNight(txtDate, { date = null, splitHour = 6 } = {}): string {
+export function emojiDayNight(txtDate: string, { date = null, splitHour = 6 } = {}): string {
   const dn = dayOrNight(txtDate, { date, splitHour });
   if (dn === 'day') {
     return '🏙';

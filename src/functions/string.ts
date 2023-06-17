@@ -1,16 +1,22 @@
-export function lower(text): string {
+export function lower(text: string): string {
   return text.toLowerCase();
 }
 
-export function upper(text): string {
+export function upper(text: string): string {
   return text.toUpperCase();
 }
 
-export function title(text): string {
+export function title(text: string): string {
   return text.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
 
-export function sortLines(text, { caseSensitive = false } = {}): string {
+export function line(len: string, { c = '-' } = {}): string {
+  if (!len) return;
+  const nr = parseInt(len);
+  return c.repeat(nr);
+}
+
+export function sortLines(text: string, { caseSensitive = false } = {}): string {
   /**
    * Sort lines of text alphabetically.
    * By default, the sorting is case insensitive.
