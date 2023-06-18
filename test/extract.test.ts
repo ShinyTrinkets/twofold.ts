@@ -59,6 +59,6 @@ test('render folder', async () => {
   const folder = __dirname + '/fixtures/';
   let result = await twofold.renderFolder(folder);
   expect(result).toBe(3);
-  result = await twofold.renderFolder(folder, {}, {}, { glob: '*.js' });
+  result = await twofold.renderFolder(folder, {}, { glob: '*.js' });
   expect(result).toBe(1);
 });

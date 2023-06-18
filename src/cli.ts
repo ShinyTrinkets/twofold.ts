@@ -112,11 +112,12 @@ you can use pipes:
     if (changeDir && changePth) {
       console.log('(2✂︎f) WatchExec:', changePth);
       const fname = path.join(changeDir, changePth);
-      await twofold.renderFile(fname, {}, funcs, { ...config, write: true });
+      await twofold.renderFile(fname, funcs, config, { fname, root: changeDir, write: true });
       return;
     }
   }
 
+  // render paths from args
   if (args._ && args._.length) {
     for (const fname of args._) {
       if (!fname) {
@@ -131,18 +132,17 @@ you can use pipes:
       }
       if (fstat.isFile()) {
         console.log('(2✂︎f)', fname);
-        await twofold.renderFile(fname, {}, funcs, { ...config, write: true });
+        await twofold.renderFile(fname, funcs, config, { write: true });
       } else if (fstat.isDirectory()) {
-        await twofold.renderFolder(fname, {}, funcs, {
-          ...config,
-          write: true,
-        });
+        await twofold.renderFolder(fname, funcs, config, { write: true });
       } else {
         console.error('Unknown path type:', fstat);
         continue;
       }
     }
-  } else {
+  }
+  // render text from STDIN
+  else {
     if (process.stdin.isTTY) {
       console.error('(2✂︎f) Nothing to to!');
       process.exit();

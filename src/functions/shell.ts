@@ -1,6 +1,6 @@
 import parse from 'shell-quote/parse';
 
-export async function cmd(txtCmd, { cmd, args = [] } = {}, { double = false } = {}) {
+export async function cmd(txtCmd, { cmd, args = [] }, _meta = {}) {
   /**
    * Execute a system command and return the output, without a shell.
    * You probably want to use Bash, or Zsh instead of this.
@@ -46,27 +46,32 @@ export async function cmd(txtCmd, { cmd, args = [] } = {}, { double = false } = 
   return stdout.trim();
 }
 
-export async function bash(cmd: string, { args = [] } = {}) {
+export async function bash(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promise<string> {
   /**
    * Spawn Bash and execute command, with options.
    * Example: <bash "ps aux | grep bash | grep -v grep" //>
    * Is this Bash ? <bash "echo $0" //>
    */
+  cmd = (txtCmd || cmd || '').trim();
   if (!(cmd || args.length)) return;
-  return await spawnShell('bash', cmd, args);
+  return await spawnShell('bash', cmd, args, t, meta);
 }
 
-export async function zsh(cmd: string, { args = [] } = {}) {
+export async function zsh(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promise<string> {
   /**
    * Spawn ZSH and execute command, with options.
    * Example: <zsh "ps aux | grep zsh | grep -v grep" //>
    * The version of ZSH : <zsh args="--version" //>
    */
+  cmd = (txtCmd || cmd || '').trim();
   if (!(cmd || args.length)) return;
-  return await spawnShell('zsh', cmd, args);
+  return await spawnShell('zsh', cmd, args, t, meta);
 }
 
-async function spawnShell(name: string, cmd: string, args: string[]) {
+async function spawnShell(name: string, cmd: string, args: string[], timeout = 5, meta): Promise<string> {
+  //
+  console.log('Received META ::', meta);
+  //
   const xs = [name];
   if (cmd) {
     xs.push('-c');
@@ -76,6 +81,15 @@ async function spawnShell(name: string, cmd: string, args: string[]) {
     args = parse(args);
   }
   const proc = Bun.spawn([...xs, ...args]);
+
+  let timeoutID = setTimeout(() => {
+    if (!proc.killed || proc.exitCode === null) {
+      console.log(`Shell timeout [${timeout}s], killing...`);
+      proc.kill();
+    }
+  }, timeout * 1000);
+
   const text = await new Response(proc.stdout).text();
+  clearTimeout(timeoutID);
   return text.trim();
 }

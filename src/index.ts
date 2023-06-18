@@ -2,28 +2,32 @@ import { writeFile } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import crypto from 'node:crypto';
 import globby from 'fast-glob';
+import path from 'node:path';
+
+import * as config from './config.ts';
+import { ParseToken } from './types.ts';
 
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
-import * as config from './config.ts';
 import functions from './functions/index.ts';
 import { isFunction, toCamelCase } from './util.ts';
 import { getText, isDoubleTag, isSingleTag, optRenderOnce, optShouldConsume, unParse } from './tags.ts';
 
-async function flattenSingleTag(tag, data, allFunctions, config) {
-  /**
-   * Convert a single tag into raw text,
-   * by evaluating the tag function.
-   */
+/**
+ * Convert a single tag into raw text,
+ * by evaluating the tag function.
+ */
+async function flattenSingleTag(tag: ParseToken, customData, allFunctions, cfg: config.Config, meta = {}) {
   const func = allFunctions[toCamelCase(tag.name)];
   if (!isFunction(func)) {
-    console.debug(`Unknown single tag "${tag.name}"!`);
+    // console.debug(`Unknown single tag "${tag.name}"!`);
     return;
   }
-  // Params for the tag come from custom data, parsed params and config
-  let params = { ...data, ...tag.params };
-  if (config.tags && typeof config.tags[tag.name] === 'object') {
-    params = { ...config.tags[tag.name], ...params };
+  // Params for the tag come from parsed params and config
+  let params = { ...customData, ...tag.params };
+  // Config tag params could contain API tokens, or CLI args
+  if (cfg.tags && typeof cfg.tags[tag.name] === 'object') {
+    params = { ...cfg.tags[tag.name], ...params };
   }
   // Zero param text from the single tag &
   // text prop, built-in option that allows single tags to receive text, just like double tags
@@ -33,7 +37,7 @@ async function flattenSingleTag(tag, data, allFunctions, config) {
     //
     // Execute the tag function with params
     //
-    result = await func(text, params, { single: true });
+    result = await func(text, params, { single: true, ...meta });
     if (!result) result = '';
     delete tag.name;
     delete tag.single;
@@ -43,33 +47,33 @@ async function flattenSingleTag(tag, data, allFunctions, config) {
   }
 }
 
-async function flattenDoubleTag(tag, data, allFunctions, config) {
-  /*
-   * Deep evaluate all tags, by calling the tag function.
-   * If the double tag has param consume=true, it will be destroyed
-   * after render, just like a single tag.
-   * If the double tag has param once=true, it will not be evaluated,
-   * if it contains any text inside.
-   */
+/*
+ * Deep evaluate all tags, by calling the tag function.
+ * If the double tag has param consume=true, it will be destroyed
+ * after render, just like a single tag.
+ * If the double tag has param once=true, it will not be evaluated,
+ * if it contains any text inside.
+ */
+async function flattenDoubleTag(tag: ParseToken, customData, allFunctions, cfg: config.Config, meta = {}) {
   if (tag.children) {
     for (const c of tag.children) {
       if (isDoubleTag(c)) {
-        await flattenDoubleTag(c, data, allFunctions, config);
+        await flattenDoubleTag(c, customData, allFunctions, cfg, meta);
       } else if (isSingleTag(c)) {
-        await flattenSingleTag(c, data, allFunctions, config);
+        await flattenSingleTag(c, customData, allFunctions, cfg, meta);
       }
     }
   }
   // At this point all children are flat
   const func = allFunctions[toCamelCase(tag.name)];
   if (!isFunction(func)) {
-    console.debug(`Unknown double tag "${tag.name}"!`);
+    // console.debug(`Unknown double tag "${tag.name}"!`);
     return;
   }
-  // Params for the tag come from custom data, parsed params and config
-  let params = { ...data, ...tag.params };
-  if (config.tags && typeof config.tags[tag.name] === 'object') {
-    params = { ...config.tags[tag.name], ...params };
+  // Params for the tag come from parsed params and config
+  let params = { ...customData, ...tag.params };
+  if (cfg.tags && typeof cfg.tags[tag.name] === 'object') {
+    params = { ...cfg.tags[tag.name], ...params };
   }
   const text = getText(tag);
   if (text && optRenderOnce(tag)) {
@@ -80,7 +84,7 @@ async function flattenDoubleTag(tag, data, allFunctions, config) {
     //
     // Execute the tag function with params
     //
-    result = await func(text, params, { double: true });
+    result = await func(text, params, { double: true, ...meta });
     if (!result) result = '';
     if (optShouldConsume(tag)) {
       delete tag.name;
@@ -91,6 +95,7 @@ async function flattenDoubleTag(tag, data, allFunctions, config) {
       delete tag.secondTagText;
       tag.rawText = result.toString();
     } else {
+      // IDEA :: is it possible to keep all deep tags ??
       tag.children = [{ rawText: result.toString() }];
     }
   } catch (err) {
@@ -98,11 +103,26 @@ async function flattenDoubleTag(tag, data, allFunctions, config) {
   }
 }
 
-export async function renderText(text, data = {}, customFunctions = {}, cfg: config.Config = {}): Promise<string> {
-  /**
-   * TwoFold render text string.
-   */
-  const allFunctions = { ...functions, ...customFunctions };
+/**
+ * Render a text string. Used for rendering STDIN, and for tests.
+ * For rendering a file, it's more performant to use renderFile.
+ *
+ * @param {string} text The text to parse and render with TwoFold
+ * @param {object} customData Key-value pairs to send to all tags in the text
+ *                 customData comes from CLI, library calls, or tests
+ * @param {object} customTags Extra tags/ functions to send to TwoFold eval
+ * @param {object} config Config options, eg: openTag, closeTag, etc
+ *                 Mostly used by the Lexer and Parser
+ * @param {object} meta Extra data about this text string, to send to TwoFold eval
+ */
+export async function renderText(
+  text: string,
+  customData = {},
+  customTags = {},
+  cfg: config.Config = {},
+  meta = {}
+): Promise<string> {
+  const allFunctions = { ...functions, ...customTags };
   // const label = 'tf-' + (Math.random() * 100 * Math.random()).toFixed(6)
   // console.time(label)
   const ast = parse(new Lexer(cfg).lex(text), cfg);
@@ -111,9 +131,9 @@ export async function renderText(text, data = {}, customFunctions = {}, cfg: con
   // Convert single tags into raw text and deep flatten double tags
   for (const t of ast) {
     if (isDoubleTag(t)) {
-      await flattenDoubleTag(t, data, allFunctions, cfg);
+      await flattenDoubleTag(t, customData, allFunctions, cfg, meta);
     } else if (isSingleTag(t)) {
-      await flattenSingleTag(t, data, allFunctions, cfg);
+      await flattenSingleTag(t, customData, allFunctions, cfg, meta);
     }
     final += unParse(t);
   }
@@ -122,11 +142,8 @@ export async function renderText(text, data = {}, customFunctions = {}, cfg: con
   return final;
 }
 
-function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Config = {}): Promise {
-  /**
-   * TwoFold render stream.
-   */
-  const allFunctions = { ...functions, ...customFunctions };
+function renderStream(stream, customTags = {}, cfg: config.Config = {}, meta = {}): Promise {
+  const allFunctions = { ...functions, ...customTags };
 
   return new Promise(resolve => {
     // const label = 'tf-' + (Math.random() * 100 * Math.random()).toFixed(6)
@@ -157,9 +174,9 @@ function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Confi
       // Convert single tags into raw text and deep flatten double tags
       for (const t of ast) {
         if (isDoubleTag(t)) {
-          await flattenDoubleTag(t, data, allFunctions, cfg);
+          await flattenDoubleTag(t, {}, allFunctions, cfg, meta);
         } else if (isSingleTag(t)) {
-          await flattenSingleTag(t, data, allFunctions, cfg);
+          await flattenSingleTag(t, {}, allFunctions, cfg, meta);
         }
         const chunk = unParse(t);
         resultHash.update(chunk);
@@ -176,10 +193,27 @@ function renderStream(stream, data = {}, customFunctions = {}, cfg: config.Confi
   });
 }
 
-export async function renderFile(fname: string, data = {}, customFunctions = {}, config = {}): Promise<string> {
+/**
+ * Render a single file. By default, the result is not written on disk, unless write=true.
+ *
+ * @param {string} fname The file name to parse and render with TwoFold
+ * @param {object} customTags Extra tags/ functions to send to TwoFold eval
+ * @param {object} config Config options, eg: openTag, closeTag, etc
+ * @param {object} meta Extra data about this text string, to send to TwoFold eval
+ */
+export async function renderFile(fname: string, customTags = {}, cfg: config.Config = {}, meta = {}): Promise<string> {
+  if (!fname) {
+    throw new Error('Invalid renderFile options!');
+  }
+  if (meta.fname === undefined) {
+    meta.fname = fname;
+  }
+  const persist = meta.write;
+  delete meta.write;
+
   const stream = createReadStream(fname, { encoding: 'utf8' });
-  const result = await renderStream(stream, data, customFunctions, config);
-  if (config.write && result.changed) {
+  const result = await renderStream(stream, customTags, cfg, meta);
+  if (persist && result.changed) {
     console.log('Writing file:', fname);
     await writeFile(fname, result.text, { encoding: 'utf8' });
     return '';
@@ -188,20 +222,20 @@ export async function renderFile(fname: string, data = {}, customFunctions = {},
 }
 
 /**
- * This is the most high level function, so it needs extra safety.
+ * This is the most high level function, so it needs extra safety checks.
  */
-export async function renderFolder(dir: string, data = {}, customFunctions = {}, config = {}): Promise<number> {
-  if (!data) {
-    data = {};
+export async function renderFolder(dir: string, customTags = {}, cfg: config.Config = {}, meta = {}): Promise<number> {
+  if (!cfg) {
+    cfg = {};
   }
-  if (!config) {
-    config = {};
+  if (!customTags) {
+    customTags = {};
   }
-  if (!customFunctions) {
-    customFunctions = {};
+  const glob = cfg.glob || ['*.*'];
+  const depth = cfg.depth || 3;
+  if (meta.write === undefined) {
+    meta.write = true;
   }
-  const glob = config.glob || ['*.*'];
-  const depth = config.depth || 3;
 
   let index = 0;
   const files = await globby(glob, {
@@ -212,7 +246,7 @@ export async function renderFolder(dir: string, data = {}, customFunctions = {},
   });
   for (const pth of files) {
     const fname = `${dir}/${pth}`;
-    await renderFile(fname, data, customFunctions, config);
+    await renderFile(fname, customTags, cfg, { ...meta, root: dir });
     index++;
   }
   return index;

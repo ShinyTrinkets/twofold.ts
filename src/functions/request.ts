@@ -1,4 +1,4 @@
-export async function req(txtUrl, { url, headers = {} }, { double = false }) {
+export async function req(txtUrl, { url, headers = {} }, _meta = {}) {
   /**
    * Make a HTTP request.
    *

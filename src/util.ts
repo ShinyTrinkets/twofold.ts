@@ -33,10 +33,10 @@ export function unTildify(pth: string) {
   return pth;
 }
 
+/**
+ * Import any local file, module, or all JS files from a folder.
+ */
 export async function importAny(dir: string) {
-  /**
-   * Import any local file, module, or all JS files from a folder.
-   */
   dir = unTildify(dir);
   dir = dir[0] === '/' ? dir : path.join(process.cwd(), dir);
   try {

@@ -53,12 +53,14 @@ export default class Lexer {
   }
 
   push(text: string | Buffer): void {
-    // Push some text and move the lexing machine.
-    // This will consume the block of text completely.
-    // If the text represents half of a state,
-    // like an open tag, the half of text is kept in pending state.
-    // This allows any number of characters to be pushed into the machine,
-    // and peeking is not allowed.
+    /**
+     * Push some text and move the lexing machine.
+     * This will consume the block of text completely.
+     * If the text represents half of a state,
+     * like an open tag, the half of text is kept in pending state.
+     * This allows any number of characters to be pushed into the machine,
+     * and peeking is not allowed.
+     */
     if (this.state === STATE_FINAL) {
       throw new Error('The lexing is finished!');
     } else if (!text) {
@@ -353,7 +355,7 @@ export default class Lexer {
   }
 
   finish(): LexToken[] {
-    /*
+    /**
      * Move the machine to drop all the pending states
      * and convert any remaining state to raw-text.
      */

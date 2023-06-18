@@ -2,6 +2,7 @@ export interface Config {
   openTag?: string;
   closeTag?: string;
   lastStopper?: string;
+  tags?: Record<string, any>;
   depth?: number;
   glob?: string;
 }

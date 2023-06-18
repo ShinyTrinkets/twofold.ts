@@ -7,6 +7,16 @@ import * as fs from './fs.ts';
 import * as shell from './shell.ts';
 import * as request from './request.ts';
 
+function noop(text) {
+  return text;
+}
+
+function tfDebug(text, args, meta) {
+  args = JSON.stringify(args, null, ' ');
+  meta = JSON.stringify(meta, null, ' ');
+  return `---\n${text}\nArgs: ${args}\nMeta: ${meta}\n---`;
+}
+
 function jsEval(zeroExpr, args = {}) {
   const expr = zeroExpr || args.expr;
   if (!expr || !expr.trim()) return;
@@ -22,5 +32,7 @@ export default {
   ...fs,
   ...shell,
   ...request,
+  noop,
+  tfDebug,
   eval: jsEval,
 };

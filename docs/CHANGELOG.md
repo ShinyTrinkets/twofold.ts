@@ -2,9 +2,10 @@
 
 ## v0.6 WIP
 
-- completele re-written for Bun, in TypeScript
+- completele re-written for Bun, in TypeScript, which makes it 2x faster
 - can now compile a standalone CLI executable from Bun
 - also thanks to Bun, added `cmd` and `req` core tags
+- created lots of new core tags
 - zero prop values for single tags (eg: {ping "1.1.1.1" /})
 - fixed writing files even if they don't have any TwoFold tags
 

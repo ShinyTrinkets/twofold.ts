@@ -7,7 +7,7 @@ function randomChoice(choices) {
   return choices[index];
 }
 
-export function randomFloat(txtMax, { min = 1, max = 100, decimals = 2 } = {}): number {
+export function randomFloat(txtMax, { min = 1, max = 100, decimals = 2 }): string {
   /**
    * Generate a random float number.
    * Returns a pseudo-random float in the range min–max (inclusive of min, but not max).
@@ -19,7 +19,7 @@ export function randomFloat(txtMax, { min = 1, max = 100, decimals = 2 } = {}): 
   return nr.toFixed(precision);
 }
 
-export function randomInt(txtMax, { min = 1, max = 100 } = {}): number {
+export function randomInt(txtMax, { min = 1, max = 100 }): number {
   /**
    * Generate a random integer number.
    * Returns a pseudo-random integer in the range min–max (inclusive of min, but not max).

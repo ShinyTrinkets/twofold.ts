@@ -9,10 +9,10 @@ export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagTe
 export const optRenderOnce = (t: LexToken) => !!(t && t.params && t.params.once === true);
 export const optShouldConsume = (t: LexToken) => !!(t && t.params && t.params.consume === true);
 
+/**
+ * Deep extract text from a node and all its children.
+ */
 export function getText(node: ParseToken): string {
-  /*
-   * Deep extract text from a node and all its children.
-   */
   let text = '';
   if (!node.children) {
     if (isRawText(node)) {
@@ -31,10 +31,10 @@ export function getText(node: ParseToken): string {
   return text;
 }
 
+/**
+ * Deeply convert a node and all its children into text.
+ */
 export function unParse(node: ParseToken): string {
-  /*
-   * Deeply convert a node and all its children into text.
-   */
   let text = '';
   if (node.children) {
     text = node.firstTagText;
