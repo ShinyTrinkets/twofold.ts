@@ -9,6 +9,9 @@ export async function cat(txtFile, { file, start = 0, limit = 250 }) {
   return buffer.toString();
 }
 
+// export async function head( ...
+// export async function tail( ...
+
 export async function dir(txtDir, { dir = '.', li = '*', space = ' ' }) {
   let result = '';
   dir = path.normalize(txtDir || dir);

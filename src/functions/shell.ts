@@ -2,7 +2,7 @@ import parse from 'shell-quote/parse';
 
 export async function cmd(txtCmd, { cmd, args = [] }, _meta = {}) {
   /**
-   * Execute a system command and return the output, without a shell.
+   * Execute a system command and return the output, without spawning a shell.
    * You probably want to use Bash, or Zsh instead of this.
    *
    * In Node.js, this could be done with execa, zx, child_process, etc.
@@ -48,7 +48,7 @@ export async function cmd(txtCmd, { cmd, args = [] }, _meta = {}) {
 
 export async function bash(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promise<string> {
   /**
-   * Spawn Bash and execute command, with options.
+   * Spawn Bash and execute command, with options and timeout.
    * Example: <bash "ps aux | grep bash | grep -v grep" //>
    * Is this Bash ? <bash "echo $0" //>
    */
@@ -59,7 +59,7 @@ export async function bash(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promis
 
 export async function zsh(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promise<string> {
   /**
-   * Spawn ZSH and execute command, with options.
+   * Spawn ZSH and execute command, with options and timeout.
    * Example: <zsh "ps aux | grep zsh | grep -v grep" //>
    * The version of ZSH : <zsh args="--version" //>
    */
@@ -69,9 +69,6 @@ export async function zsh(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promise
 }
 
 async function spawnShell(name: string, cmd: string, args: string[], timeout = 5, meta): Promise<string> {
-  //
-  console.log('Received META ::', meta);
-  //
   const xs = [name];
   if (cmd) {
     xs.push('-c');

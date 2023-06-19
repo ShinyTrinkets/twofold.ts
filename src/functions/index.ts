@@ -7,22 +7,9 @@ import * as fs from './fs.ts';
 import * as shell from './shell.ts';
 import * as request from './request.ts';
 
-function noop(text) {
-  return text;
-}
-
-function tfDebug(text, args, meta) {
-  args = JSON.stringify(args, null, ' ');
-  meta = JSON.stringify(meta, null, ' ');
-  return `---\n${text}\nArgs: ${args}\nMeta: ${meta}\n---`;
-}
-
-function jsEval(zeroExpr, args = {}) {
-  const expr = zeroExpr || args.expr;
-  if (!expr || !expr.trim()) return;
-  const result = eval(expr);
-  return result;
-}
+import * as fmt from './fmt.ts';
+import * as xeval from './xeval.ts';
+import * as tfold from './tfold.ts';
 
 export default {
   ...math,
@@ -30,9 +17,9 @@ export default {
   ...random,
   ...time,
   ...fs,
+  ...fmt,
   ...shell,
   ...request,
-  noop,
-  tfDebug,
-  eval: jsEval,
+  ...xeval,
+  ...tfold,
 };
