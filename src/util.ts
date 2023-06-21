@@ -5,24 +5,31 @@ import { types } from 'node:util';
 // TODO ? types.isGeneratorFunction(f) ?
 export const isFunction = f => typeof f === 'function' || types.isAsyncFunction(f);
 
-// Credit: https://stackoverflow.com/a/32604073/498361
+// Credits:
+// - https://stackoverflow.com/a/32604073
+// - https://stackoverflow.com/a/35976812
 export function toCamelCase(str: string) {
-  return (
-    str
-      // Replace any - or _ characters with a space
-      .replace(/[-_]+/g, ' ')
-      // Remove any non alphanumeric characters
-      .replace(/[^\w\s]/g, '')
-      // Remove space from the start and the end
-      .trim()
-      // Uppercase the first character in each group immediately following a space
-      // (delimited by spaces)
-      .replace(/ (.)/g, function ($1) {
-        return $1.toUpperCase();
-      })
-      // Remove all spaces
-      .replace(/ /g, '')
-  );
+  str = str
+    // Replace any - or _ characters with a space
+    .replace(/[-_]+/g, ' ')
+    // Remove any non alphanumeric characters
+    .replace(/[^\w\s]/g, '')
+    // Remove space from the start and the end
+    .trim();
+
+  const split = str.split(' ');
+  if (split.length === 1) return str;
+
+  return split
+    .map((word, index) => {
+      // If it's the first word, lower-case all the word
+      if (index == 0) {
+        return word.toLowerCase();
+      }
+      // Else, upper-case the first char and lower-case the rest
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join('');
 }
 
 export function unTildify(pth: string) {

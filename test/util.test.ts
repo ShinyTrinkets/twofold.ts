@@ -2,15 +2,18 @@ import { expect, test } from 'bun:test';
 import { importAny, toCamelCase } from '../src/util.ts';
 
 test('camel case', () => {
-  let text = 'blah blah';
-  const expected = 'blahBlah';
-  expect(toCamelCase(text)).toBe(expected);
+  expect(toCamelCase('blah_blah')).toBe('blahBlah');
+  expect(toCamelCase('blah blah ')).toBe('blahBlah');
+  expect(toCamelCase(' blah-blah')).toBe('blahBlah');
 
-  text = 'blah-blah';
-  expect(toCamelCase(text)).toBe(expected);
+  expect(toCamelCase('foo---bar-')).toBe('fooBar');
+  expect(toCamelCase('foo-bar_baz')).toBe('fooBarBaz');
 
-  text = 'blah_blah';
-  expect(toCamelCase(text)).toBe(expected);
+  expect(toCamelCase('hyphen-name-format')).toBe('hyphenNameFormat');
+  expect(toCamelCase('underscore_name_format')).toBe('underscoreNameFormat');
+
+  expect(toCamelCase('XML-Http-Request')).toBe('xmlHttpRequest');
+  expect(toCamelCase('Ajax-XML-http-request')).toBe('ajaxXmlHttpRequest');
 });
 
 test('import any', async () => {

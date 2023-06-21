@@ -158,10 +158,10 @@ const TESTS = [
     }],
   ],
   [
-    'blah <tesTing>!!',
+    'blah <tes_ting>!!',
     [
       { rawText: 'blah ' },
-      { rawText: '<tesTing>', name: 'tesTing', double: true },
+      { rawText: '<tes_ting>', name: 'tesTing', double: true },
       { rawText: '!!' },
     ],
   ],
@@ -258,13 +258,13 @@ const TESTS = [
     '<temp_f>0</temp_f>',
     [
       {
-        name: 'temp_f',
+        name: 'tempF',
         rawText: '<temp_f>',
         double: true,
       },
       { rawText: '0' },
       {
-        name: 'temp_f',
+        name: 'tempF',
         rawText: '</temp_f>',
         double: true,
       },
@@ -274,12 +274,12 @@ const TESTS = [
     '<a_b></b_c> ', // non matching tags are lexed OK
     [
       {
-        name: 'a_b',
+        name: 'aB',
         rawText: '<a_b>',
         double: true,
       },
       {
-        name: 'b_c',
+        name: 'bC',
         rawText: '</b_c>',
         double: true,
       },
@@ -290,7 +290,7 @@ const TESTS = [
     '< temp_a /><>< tempB />', // stress test 1
     [
       {
-        name: 'temp_a',
+        name: 'tempA',
         rawText: '< temp_a />',
         single: true,
       },
@@ -306,7 +306,7 @@ const TESTS = [
     '< temp_1 />><< temp2 />', // stress test 2
     [
       {
-        name: 'temp_1',
+        name: 'temp1',
         rawText: '< temp_1 />',
         single: true,
       },

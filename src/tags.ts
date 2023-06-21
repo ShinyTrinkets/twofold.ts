@@ -23,10 +23,6 @@ export function getText(node: ParseToken): string {
     }
   }
   for (const c of node.children) {
-    if (optIgnoreLevel(c) || optFreezeRender(c)) {
-      text += unParse(c);
-      continue;
-    }
     if (isDoubleTag(c)) {
       text += getText(c);
     } else {

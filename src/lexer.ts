@@ -1,6 +1,7 @@
 import { LexToken } from './types.ts';
 import * as config from './config.ts';
 import { isRawText } from './tags.ts';
+import { toCamelCase } from './util.ts';
 
 const STATE_RAW_TEXT = 's__text';
 const STATE_OPEN_TAG = 's_<_tag';
@@ -83,7 +84,11 @@ export default class Lexer {
        * and transition to a new state.
        */
       // console.log('Commit STATE:', self.state, self._pendingState)
-      if (self._pendingState.rawText) {
+      const pending = self._pendingState;
+      if (pending.name) {
+        pending.name = toCamelCase(pending.name);
+      }
+      if (pending.rawText) {
         let lastProcessed: LexToken = { rawText: '' };
         if (self._processed.length) {
           lastProcessed = self._processed.at(-1);
@@ -92,7 +97,7 @@ export default class Lexer {
           if (self._processed.length) {
             lastProcessed = self._processed.pop();
           }
-          lastProcessed.rawText += self._pendingState.rawText;
+          lastProcessed.rawText += pending.rawText;
           self._pendingState = { rawText: lastProcessed.rawText };
         } else {
           self._processed.push(self._pendingState);

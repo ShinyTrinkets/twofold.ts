@@ -6,7 +6,6 @@ import { ParseToken } from './types.ts';
 import { Config } from './config.ts';
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
-import { toCamelCase } from './util.ts';
 import functions from './functions/index.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
 
@@ -68,12 +67,11 @@ export function scanFile(fname: string, customFunctions = {}, customConfig: Conf
       console.timeEnd(label);
       let validTags = 0;
       for (const tag of nodes) {
-        const name = toCamelCase(tag.name);
-        if (allFunctions[name]) {
-          console.debug('✓', name);
+        if (allFunctions[tag.name]) {
+          console.debug('✓', tag.name);
           validTags += 1;
         } else {
-          console.debug('✗', name);
+          console.debug('✗', tag.name);
         }
       }
       const invalidTags = nodes.length - validTags;

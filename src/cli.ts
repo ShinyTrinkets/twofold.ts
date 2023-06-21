@@ -114,7 +114,11 @@ you can use pipes:
     if (changeDir && changePth) {
       console.log('(2✂︎f) WatchExec:', changePth);
       const fname = path.join(changeDir, changePth);
-      await twofold.renderFile(fname, funcs, config, { fname, root: changeDir, write: true });
+      await twofold.renderFile(fname, funcs, config, {
+        fname,
+        root: changeDir,
+        write: true,
+      });
       return;
     }
   }
@@ -142,8 +146,7 @@ you can use pipes:
         continue;
       }
     }
-  }
-  // render text from STDIN
+  } // render text from STDIN
   else {
     if (process.stdin.isTTY) {
       console.error('(2✂︎f) Nothing to to!');

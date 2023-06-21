@@ -18,11 +18,11 @@ test('sort lines', () => {
 test('lower, upper', async () => {
   let txt = '<lower>Xy <upper>a B c 1!</upper> qwE</lower>';
   let tmp = await twofold.renderText(txt);
-  expect(tmp).toBe('<lower>xy <upper>A B C 1!</upper> qwe</lower>');
+  expect(tmp).toBe('<lower>xy a b c 1! qwe</lower>');
 
-  txt = '<upper>AbC<lower>xYz</lower>123 aBa</upper>';
+  txt = '<upper>AbC <lower>xYz</lower> 123 aBa</upper>';
   tmp = await twofold.renderText(txt);
-  expect(tmp).toBe('<upper>ABC<lower>xyz</lower>123 ABA</upper>');
+  expect(tmp).toBe('<upper>ABC XYZ 123 ABA</upper>');
 
   txt = '<upper>AbC <text "aBc" /> </upper>';
   tmp = await twofold.renderText(txt);

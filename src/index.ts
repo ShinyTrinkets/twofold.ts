@@ -10,14 +10,14 @@ import { ParseToken } from './types.ts';
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import functions from './functions/index.ts';
-import { isFunction, toCamelCase } from './util.ts';
+import { isFunction } from './util.ts';
 import {
   getText,
-  isRawText,
   isDoubleTag,
+  isRawText,
   isSingleTag,
-  optIgnoreLevel,
   optFreezeRender,
+  optIgnoreLevel,
   optShouldConsume,
   unParse,
 } from './tags.ts';
@@ -30,17 +30,103 @@ function consumeTag(tag) {
 }
 
 /**
- * Convert a single tag into raw text,
- * by evaluating the tag function.
+ * Interpret a single tag, by evaluating the tag function.
  */
-async function flattenSingleTag(tag: ParseToken, customData, allFunctions, cfg: config.Config, meta = {}) {
-  // Special logic: if the tag is called "ignore", or if the tag has freeze=true, ignore
+async function interpretSingleTag(tag: LexToken, params, func, meta = {}) {
+  // Zero param text from the single tag &
+  // text prop, built-in option that allows single tags to receive text, just like double tags
+  const text = params['0'] || params.text || '';
+  let result = tag.rawText;
+  try {
+    //
+    // Execute the tag function with params
+    //
+    result = await func(text, params, { ast: { ...tag }, ...meta });
+  } catch (err) {
+    console.warn(`Cannot interpret single tag "${tag.name}" with "${text}"! ERROR:`, err.message);
+  }
+  // If the single tag doesn't have a result, DON'T change the tag
+  if (result === undefined || result === null) return;
+  // When evaluating a single tag, it is reduced to raw text
+  consumeTag(tag);
+  tag.rawText = result.toString();
+}
+
+/*
+ * Shallow interpret a double tag; Only the direct children are processed.
+ * If the double tag has param freeze=true, it will not be evaluated.
+ */
+async function interpretDoubleTag(tag: LexToken, params, func, meta = {}) {
+  let hasFrozen = false;
+  if (tag.children) {
+    for (const c of tag.children) {
+      if (optIgnoreLevel(c) || optFreezeRender(c)) {
+        hasFrozen = true;
+        break;
+      }
+    }
+  }
+  // Inject the parsed tag into the function
+  const ast = { ...tag };
+  ast.children = [];
+  //
+  // Execute the tag function with params
+  //
+  if (hasFrozen) {
+    // Inject current node into the caller func
+    const tagChildren = tag.children;
+    // ... but remove the children
+    tag.children = [];
+
+    for (const c of tagChildren) {
+      // If the double tag has frozen/ ignored children
+      // all frozen nodes must be kept untouched, in place
+      // TODO :: BROKEN
+      if (optIgnoreLevel(c) || optFreezeRender(c)) {
+        tag.children.push(c);
+      } else {
+        const text = getText(c);
+        let tmp = '';
+        try {
+          tmp = await func(text, params, { ast, ...meta });
+        } catch (err) {
+          console.warn(`Cannot interpret double tag "${tag.name}"! ERROR:`, err.message);
+        }
+        if (tmp === undefined || tmp === null) tmp = '';
+        tag.children.push({ rawText: tmp.toString() });
+      }
+    }
+  } else {
+    const text = getText(tag);
+    let result = text;
+    try {
+      result = await func(text, params, { ast, ...meta });
+    } catch (err) {
+      console.warn(`Cannot interpret double tag "${tag.name}"! ERROR:`, err.message);
+    }
+    if (result === undefined || result === null) result = '';
+    // When evaluating a single tag, all children are flattened
+    tag.children = [{ rawText: result.toString() }];
+  }
+}
+
+async function interpretTag(tag: LexToken, customData, allFunctions, cfg: config.Config, meta = {}) {
+  if (!tag || !tag.name) {
+    return;
+  }
   if (optIgnoreLevel(tag) || optFreezeRender(tag)) {
     return;
   }
-  const func = allFunctions[toCamelCase(tag.name)];
+  // Deep evaluate all children, including invalid TwoFold tags
+  if (tag.children) {
+    for (const c of tag.children) {
+      // c.parent = tag; // maybe ??
+      await interpretTag(c, customData, allFunctions, cfg, meta);
+    }
+  }
+  const func = allFunctions[tag.name];
+  // Could be an XML, or HTML tag, not a valid TwoFold tag
   if (!isFunction(func)) {
-    // console.debug(`Unknown single tag "${tag.name}"!`);
     return;
   }
   // Params for the tag come from parsed params and config
@@ -49,89 +135,11 @@ async function flattenSingleTag(tag: ParseToken, customData, allFunctions, cfg: 
   if (cfg.tags && typeof cfg.tags[tag.name] === 'object') {
     params = { ...cfg.tags[tag.name], ...params };
   }
-  // Zero param text from the single tag &
-  // text prop, built-in option that allows single tags to receive text, just like double tags
-  const text = params['0'] || '';
-  let result = tag.rawText;
-  try {
-    //
-    // Execute the tag function with params
-    //
-    result = await func(text, params, { ast: { ...tag }, ...meta });
-    if (result === undefined) result = '';
-    consumeTag(tag);
-    tag.rawText = result.toString();
-  } catch (err) {
-    console.warn(`Cannot eval single tag "${tag.name}":`, err.message);
-  }
-}
-
-/*
- * Deep evaluate all tags, by calling all inner tag functions.
- * If the double tag has param consume=true, it will be destroyed
- * after render, just like a single tag.
- * If the double tag has param freeze=true, it will not be evaluated.
- */
-async function flattenDoubleTag(tag: ParseToken, customData, allFunctions, cfg: config.Config, meta = {}) {
-  // Special logic: if the tag is called "ignore", or if the tag has freeze=true, ignore
-  if (optIgnoreLevel(tag) || optFreezeRender(tag)) {
-    return;
-  }
-  if (tag.children) {
-    // Flatten all children
-    for (const c of tag.children) {
-      if (isDoubleTag(c)) {
-        await flattenDoubleTag(c, customData, allFunctions, cfg, meta);
-      } else if (isSingleTag(c)) {
-        await flattenSingleTag(c, customData, allFunctions, cfg, meta);
-      }
-    }
-  }
-  const func = allFunctions[toCamelCase(tag.name)];
-  if (!isFunction(func)) {
-    // console.debug(`Unknown double tag "${tag.name}"!`);
-    return;
-  }
-  // Params for the tag come from parsed params and config
-  let params = { ...customData, ...tag.params };
-  if (cfg.tags && typeof cfg.tags[tag.name] === 'object') {
-    params = { ...cfg.tags[tag.name], ...params };
-  }
-  // Inject the parsed tag into the function
-  const ast = { ...tag };
-  ast.children = [];
-
-  let result = '';
-  try {
-    //
-    // Execute the tag function with params
-    //
-    // If the function requires keeping the inner elements
-    if (func.keepInner && tag.children) {
-      for (const c of tag.children) {
-        if (isRawText(c)) {
-          const text = getText(c);
-          let tmp = await func(text, params, { ast, ...meta });
-          if (tmp === undefined) tmp = '';
-          result += tmp;
-        } else {
-          result += unParse(c);
-        }
-      }
-    } else {
-      const text = getText(tag);
-      result = await func(text, params, { ast, ...meta });
-      if (result === undefined) result = '';
-    }
-  } catch (err) {
-    console.warn(`Cannot eval double tag "${tag.name}":`, err.message);
-  }
-  // Convert to single tag?
-  if (optShouldConsume(tag)) {
-    consumeTag(tag);
-    tag.rawText = result.toString();
-  } else {
-    tag.children = [{ rawText: result.toString() }];
+  // Call the specialized interpret function
+  if (isDoubleTag(tag)) {
+    await interpretDoubleTag(tag, params, func, meta);
+  } else if (isSingleTag(tag)) {
+    await interpretSingleTag(tag, params, func, meta);
   }
 }
 
@@ -155,22 +163,13 @@ export async function renderText(
   meta = {}
 ): Promise<string> {
   const allFunctions = { ...functions, ...customTags };
-  // const label = 'tf-' + (Math.random() * 100 * Math.random()).toFixed(6)
-  // console.time(label)
   const ast = parse(new Lexer(cfg).lex(text), cfg);
 
   let final = '';
-  // Convert single tags into raw text and deep flatten double tags
   for (const t of ast) {
-    if (isDoubleTag(t)) {
-      await flattenDoubleTag(t, customData, allFunctions, cfg, meta);
-    } else if (isSingleTag(t)) {
-      await flattenSingleTag(t, customData, allFunctions, cfg, meta);
-    }
+    await interpretTag(t, customData, allFunctions, cfg, meta);
     final += unParse(t);
   }
-
-  // console.timeEnd(label)
   return final;
 }
 
@@ -205,11 +204,7 @@ function renderStream(stream, customTags = {}, cfg: config.Config = {}, meta = {
 
       // Convert single tags into raw text and deep flatten double tags
       for (const t of ast) {
-        if (isDoubleTag(t)) {
-          await flattenDoubleTag(t, {}, allFunctions, cfg, meta);
-        } else if (isSingleTag(t)) {
-          await flattenSingleTag(t, {}, allFunctions, cfg, meta);
-        }
+        await interpretTag(t, {}, allFunctions, cfg, meta);
         const chunk = unParse(t);
         resultHash.update(chunk);
         final += chunk;
