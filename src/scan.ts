@@ -6,6 +6,7 @@ import { ParseToken } from './types.ts';
 import { Config } from './config.ts';
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
+import { toCamelCase } from './util.ts';
 import functions from './functions/index.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
 
@@ -65,11 +66,19 @@ export function scanFile(fname: string, customFunctions = {}, customConfig: Conf
         walk(tag);
       }
       console.timeEnd(label);
-      console.log('Number of tags ::', nodes.length);
+      let validTags = 0;
       for (const tag of nodes) {
-        console.log(allFunctions[tag.name] ? '✓' : '✗', tag);
+        const name = toCamelCase(tag.name);
+        if (allFunctions[name]) {
+          console.debug('✓', name);
+          validTags += 1;
+        } else {
+          console.debug('✗', name);
+        }
       }
-      resolve(nodes);
+      const invalidTags = nodes.length - validTags;
+      console.log('Valid tags ::', validTags, 'Invalid tags ::', invalidTags);
+      resolve({ validTags, invalidTags });
       console.log('-------');
     });
   });
@@ -88,13 +97,19 @@ export async function scanFolder(dir: string, customFunctions = {}, config: Conf
     onlyFiles: true,
     baseNameMatch: true,
   });
+
+  let total = 0;
   for (const pth of files) {
     try {
       const fname = path.join(dir, pth);
-      await scanFile(fname, customFunctions, config);
+      const { validTags, invalidTags } = await scanFile(fname, customFunctions, config);
+      total += validTags;
     } catch (err) {
       console.error('Scan dir ERR:', err);
     }
   }
+
+  console.log('Total valid tags ::', total);
+  console.log('-------');
   console.timeEnd(label);
 }

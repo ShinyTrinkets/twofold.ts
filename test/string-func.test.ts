@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import twofold from '../src/index.js';
 import { sortLines } from '../src/functions/string.ts';
 
 test('sort lines', () => {
@@ -12,4 +13,18 @@ test('sort lines', () => {
 
   txt = '\nb\na\nB\nA\n';
   expect(sortLines(txt)).toBe('\na\nA\nb\nB\n');
+});
+
+test('lower, upper', async () => {
+  let txt = '<lower>Xy <upper>a B c 1!</upper> qwE</lower>';
+  let tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('<lower>xy <upper>A B C 1!</upper> qwe</lower>');
+
+  txt = '<upper>AbC<lower>xYz</lower>123 aBa</upper>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('<upper>ABC<lower>xyz</lower>123 ABA</upper>');
+
+  txt = '<upper>AbC <text "aBc" /> </upper>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('<upper>ABC ABC </upper>');
 });

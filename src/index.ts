@@ -11,13 +11,33 @@ import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import functions from './functions/index.ts';
 import { isFunction, toCamelCase } from './util.ts';
-import { getText, isDoubleTag, isSingleTag, optRenderOnce, optShouldConsume, unParse } from './tags.ts';
+import {
+  getText,
+  isRawText,
+  isDoubleTag,
+  isSingleTag,
+  optIgnoreLevel,
+  optFreezeRender,
+  optShouldConsume,
+  unParse,
+} from './tags.ts';
+
+function consumeTag(tag) {
+  for (const k of Object.keys(tag)) {
+    if (k === 'rawText') continue;
+    delete tag[k];
+  }
+}
 
 /**
  * Convert a single tag into raw text,
  * by evaluating the tag function.
  */
 async function flattenSingleTag(tag: ParseToken, customData, allFunctions, cfg: config.Config, meta = {}) {
+  // Special logic: if the tag is called "ignore", or if the tag has freeze=true, ignore
+  if (optIgnoreLevel(tag) || optFreezeRender(tag)) {
+    return;
+  }
   const func = allFunctions[toCamelCase(tag.name)];
   if (!isFunction(func)) {
     // console.debug(`Unknown single tag "${tag.name}"!`);
@@ -37,10 +57,9 @@ async function flattenSingleTag(tag: ParseToken, customData, allFunctions, cfg: 
     //
     // Execute the tag function with params
     //
-    result = await func(text, params, { single: true, ...meta });
-    if (!result) result = '';
-    delete tag.name;
-    delete tag.single;
+    result = await func(text, params, { ast: { ...tag }, ...meta });
+    if (result === undefined) result = '';
+    consumeTag(tag);
     tag.rawText = result.toString();
   } catch (err) {
     console.warn(`Cannot eval single tag "${tag.name}":`, err.message);
@@ -48,14 +67,18 @@ async function flattenSingleTag(tag: ParseToken, customData, allFunctions, cfg: 
 }
 
 /*
- * Deep evaluate all tags, by calling the tag function.
+ * Deep evaluate all tags, by calling all inner tag functions.
  * If the double tag has param consume=true, it will be destroyed
  * after render, just like a single tag.
- * If the double tag has param once=true, it will not be evaluated,
- * if it contains any text inside.
+ * If the double tag has param freeze=true, it will not be evaluated.
  */
 async function flattenDoubleTag(tag: ParseToken, customData, allFunctions, cfg: config.Config, meta = {}) {
+  // Special logic: if the tag is called "ignore", or if the tag has freeze=true, ignore
+  if (optIgnoreLevel(tag) || optFreezeRender(tag)) {
+    return;
+  }
   if (tag.children) {
+    // Flatten all children
     for (const c of tag.children) {
       if (isDoubleTag(c)) {
         await flattenDoubleTag(c, customData, allFunctions, cfg, meta);
@@ -64,7 +87,6 @@ async function flattenDoubleTag(tag: ParseToken, customData, allFunctions, cfg: 
       }
     }
   }
-  // At this point all children are flat
   const func = allFunctions[toCamelCase(tag.name)];
   if (!isFunction(func)) {
     // console.debug(`Unknown double tag "${tag.name}"!`);
@@ -75,31 +97,41 @@ async function flattenDoubleTag(tag: ParseToken, customData, allFunctions, cfg: 
   if (cfg.tags && typeof cfg.tags[tag.name] === 'object') {
     params = { ...cfg.tags[tag.name], ...params };
   }
-  const text = getText(tag);
-  if (text && optRenderOnce(tag)) {
-    return;
-  }
-  let result = text;
+  // Inject the parsed tag into the function
+  const ast = { ...tag };
+  ast.children = [];
+
+  let result = '';
   try {
     //
     // Execute the tag function with params
     //
-    result = await func(text, params, { double: true, ...meta });
-    if (!result) result = '';
-    if (optShouldConsume(tag)) {
-      delete tag.name;
-      delete tag.double;
-      delete tag.params;
-      delete tag.children;
-      delete tag.firstTagText;
-      delete tag.secondTagText;
-      tag.rawText = result.toString();
+    // If the function requires keeping the inner elements
+    if (func.keepInner && tag.children) {
+      for (const c of tag.children) {
+        if (isRawText(c)) {
+          const text = getText(c);
+          let tmp = await func(text, params, { ast, ...meta });
+          if (tmp === undefined) tmp = '';
+          result += tmp;
+        } else {
+          result += unParse(c);
+        }
+      }
     } else {
-      // IDEA :: is it possible to keep all deep tags ??
-      tag.children = [{ rawText: result.toString() }];
+      const text = getText(tag);
+      result = await func(text, params, { ast, ...meta });
+      if (result === undefined) result = '';
     }
   } catch (err) {
     console.warn(`Cannot eval double tag "${tag.name}":`, err.message);
+  }
+  // Convert to single tag?
+  if (optShouldConsume(tag)) {
+    consumeTag(tag);
+    tag.rawText = result.toString();
+  } else {
+    tag.children = [{ rawText: result.toString() }];
   }
 }
 

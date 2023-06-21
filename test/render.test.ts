@@ -32,26 +32,6 @@ test('simple random integer', async () => {
   expect(tmp2.length <= 'random 999 ...'.length).toBe(true);
 });
 
-test('render once', async () => {
-  // Test without once
-  let text = `random <randomInt></randomInt> ...`;
-  let tmp1 = await twofold.renderText(text);
-  expect(tmp1.indexOf('random ')).toBe(0);
-  expect(text).not.toBe(tmp1);
-  let tmp2 = await twofold.renderText(tmp1);
-  expect(tmp2.indexOf('random ')).toBe(0);
-  expect(tmp1).not.toBe(tmp2);
-
-  // Test with once=true
-  text = `random <randomInt once=true></randomInt> ...`;
-  tmp1 = await twofold.renderText(text);
-  expect(tmp1.indexOf('random ')).toBe(0);
-  expect(text).not.toBe(tmp1);
-  tmp2 = await twofold.renderText(tmp1);
-  expect(tmp2.indexOf('random ')).toBe(0);
-  expect(tmp1).toBe(tmp2);
-});
-
 test('simple sort render', async () => {
   const li = ['z', 'x', 'a', 'm'];
   const txt = `qwerty <sortLines>\n${li.join('\n')}</sortLines> ...`;

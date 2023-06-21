@@ -4,17 +4,18 @@
 
 export function ignore() {
   /**
-   * When it's a single tag, all tags from the same level are not executed (frozen).
-   * When it's a double tag, all tags inside it are not executed.
+   * When it's a double tag, all tags inside it are protected (frozen).
+   * This is similar to the freeze=true prop.
    *
-   * The logic for this tag is in the flatten tags functions.
+   * The code for this tag is in the flatten tags functions.
    */
-  return '';
+  return;
 }
 
-export function noop(s) {
+export function text(s) {
   /**
-   * A tag used for DEV, that doesn't do anything.
+   * A tag used for DEV, that returns the text as is.
+   * If this wraps some tags, they will be flattened.
    */
   return s;
 }

@@ -61,3 +61,10 @@ test('parse unparse 2', () => {
   const final = unParse(ast[0]);
   expect(final).toBe(txt);
 });
+
+test('parse unparse 3', () => {
+  const txt = '<noop>1<noop>2</noop>3</noop>';
+  const ast = parse(new Lexer().lex(txt));
+  const final = unParse(ast[0]);
+  expect(final).toBe(txt);
+});

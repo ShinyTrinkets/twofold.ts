@@ -1,14 +1,17 @@
 export function lower(text: string): string {
   return text.toLowerCase();
 }
+lower.keepInner = true;
 
 export function upper(text: string): string {
   return text.toUpperCase();
 }
+upper.keepInner = true;
 
 export function title(text: string): string {
   return text.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
+upper.keepInner = true;
 
 export function line(len: string, { c = '-' } = {}): string {
   if (!len) return;

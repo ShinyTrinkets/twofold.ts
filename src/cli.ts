@@ -107,6 +107,8 @@ you can use pipes:
   }
 
   if (args.fromWatch) {
+    // Example CLI run:
+    // watchexec --watch . -- bun run src/cli.ts --fromWatch
     const changeDir = process.env.WATCHEXEC_COMMON_PATH;
     const changePth = process.env.WATCHEXEC_WRITTEN_PATH;
     if (changeDir && changePth) {

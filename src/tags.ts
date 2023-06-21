@@ -6,7 +6,8 @@ export const isRawText = (t: LexToken) => t && t.name === undefined && t.single 
 
 export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagText && t.secondTagText;
 
-export const optRenderOnce = (t: LexToken) => !!(t && t.params && t.params.once === true);
+export const optIgnoreLevel = (t: LexToken) => !!(t && t.name === 'ignore');
+export const optFreezeRender = (t: LexToken) => !!(t && t.params && t.params.freeze === true);
 export const optShouldConsume = (t: LexToken) => !!(t && t.params && t.params.consume === true);
 
 /**
@@ -22,6 +23,10 @@ export function getText(node: ParseToken): string {
     }
   }
   for (const c of node.children) {
+    if (optIgnoreLevel(c) || optFreezeRender(c)) {
+      text += unParse(c);
+      continue;
+    }
     if (isDoubleTag(c)) {
       text += getText(c);
     } else {

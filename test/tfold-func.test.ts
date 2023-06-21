@@ -1,0 +1,106 @@
+import { expect, test } from 'bun:test';
+import twofold from '../src/index.js';
+import helpers from '../src/functions/index.js';
+//
+// Testing the core TwoFold functions
+//
+test('simple text inside text', async () => {
+  let txt = '<text>1<text>2</text>3</text>';
+  let tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('<text>123</text>');
+
+  txt = '<text>1<text>2<text>3<text>4</text>5</text>6</text>7</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('<text>1234567</text>');
+
+  txt = '<text consume=true>1<text>2</text>3</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('123');
+
+  // txt = '<upper><text>aBc</text></upper>';
+  // tmp = await twofold.renderText(txt);
+  // expect(tmp).toBe('<upper>ABC</upper>');
+
+  // flattens all unknown tags
+  txt = '<text>1<div>2<asd123>3<cacas>4</cacas>5</asd123>6</div>7</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('<text>1234567</text>');
+
+  // check that normally, unknown tags are not flattened
+  txt = '1<div>2<asd123>3<cacas>4</cacas>5</asd123>6</div>7';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+});
+
+test('simple render freeze', async () => {
+  // Test with freeze=false
+  let text = `random <randomInt freeze=false></randomInt> ...`;
+  let tmp1 = await twofold.renderText(text);
+  expect(tmp1.indexOf('random ')).toBe(0);
+  expect(text).not.toBe(tmp1);
+  let tmp2 = await twofold.renderText(tmp1);
+  expect(tmp2.indexOf('random ')).toBe(0);
+  expect(tmp1).not.toBe(tmp2);
+
+  // Test with freeze=true
+  text = `random <randomInt freeze=true></randomInt> ...`;
+  tmp1 = await twofold.renderText(text);
+  expect(text).toBe(tmp1);
+  tmp2 = await twofold.renderText(tmp1);
+  expect(tmp1).toBe(tmp2);
+
+  text = `date <date freeze=true /> ...`;
+  tmp1 = await twofold.renderText(text);
+  expect(text).toBe(tmp1);
+});
+
+test('mix frozen text inside text', async () => {
+  let txt = '<text freeze=true>1<text>2</text>3</text>';
+  let tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+
+  txt = '<text>1<text freeze=true>2</text>3</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+
+  txt = '<text>1<text freeze=true>2<text>3</text>4</text>5</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+
+  txt = '<text>1<text>2<text freeze=true>3</text>4</text>5</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('<text>12<text freeze=true>3</text>45</text>');
+});
+
+test('ignore tag', async () => {
+  // root ignore
+  let txt = '<ignore> <randomInt /> <now /> <asd123 /> </ignore>';
+  let tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+
+  txt = '<ignore><text>1<text>2</text>3</text></ignore>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+
+  txt = '<ignore><upper>a</upper> Ab <lower>X</lower></ignore>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+
+  // deep ignore
+  txt =
+    '<increment "1" /> <ignore><increment "2" /></ignore> <increment "3" />';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('2 <ignore><increment "2" /></ignore> 4');
+
+  txt = '<randomInt /> <ignore><randomInt /> </ignore> <randomInt />';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).not.toBe(txt);
+  expect(tmp.indexOf(' <ignore><randomInt /> </ignore> ') > 0).toBeTruthy();
+
+  txt =
+    '<upper>aB<lower>cD <ignore><title>aBc</title></ignore> eF</lower>gH</upper>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(
+    '<upper>AB<lower>cd <ignore><title>aBc</title></ignore> ef</lower>GH</upper>',
+  );
+});
