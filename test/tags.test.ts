@@ -39,15 +39,15 @@ test('double tag parse unparse 1', () => {
 });
 
 test('double tag parse unparse 2', () => {
-  const txt = '<stuff>???</stuff>';
+  const txt = '<stuff>??? </stuff>';
   const ast = parse(new Lexer().lex(txt));
   const final = unParse(ast[0]);
   expect(final).toBe(txt);
 });
 
 test('parse unparse 1', () => {
-  const txt =
-    '<mumu a=b><mumu><mumu><increment>0</increment>\n</mumu></mumu></mumu>';
+  let txt = '<mumu a=b><mumu><mumu><increment>0</increment>';
+  txt += '\n</mumu></mumu></mumu>';
   const ast = parse(new Lexer().lex(txt));
   const final = unParse(ast[0]);
   expect(final).toBe(txt);

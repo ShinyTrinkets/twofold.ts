@@ -41,9 +41,11 @@ async function interpretSingleTag(tag: LexToken, params, func, meta = {}) {
     //
     // Execute the tag function with params
     //
-    result = await func(text, params, { ast: { ...tag }, ...meta });
+    result = await func(text, params, meta);
   } catch (err) {
-    console.warn(`Cannot interpret single tag "${tag.name}" with "${text}"! ERROR:`, err.message);
+    let info = JSON.stringify(params);
+    if (info.length > 120) info = info.slice(0, 120) + '...';
+    console.warn(`Cannot interpret single tag "${tag.name}" with "${info}"! ERROR:`, err.message);
   }
   // If the single tag doesn't have a result, DON'T change the tag
   if (result === undefined || result === null) return;
@@ -66,33 +68,32 @@ async function interpretDoubleTag(tag: LexToken, params, func, meta = {}) {
       }
     }
   }
-  // Inject the parsed tag into the function
-  const ast = { ...tag };
-  ast.children = [];
   //
   // Execute the tag function with params
   //
   if (hasFrozen) {
-    // Inject current node into the caller func
+    // Freeze tag, to maintain structure for the parent interpret
+    if (!tag.params) tag.params = {};
+    tag.params.freeze = true;
+
     const tagChildren = tag.children;
-    // ... but remove the children
     tag.children = [];
 
     for (const c of tagChildren) {
       // If the double tag has frozen/ ignored children
       // all frozen nodes must be kept untouched, in place
-      // TODO :: BROKEN
       if (optIgnoreLevel(c) || optFreezeRender(c)) {
         tag.children.push(c);
       } else {
         const text = getText(c);
         let tmp = '';
         try {
-          tmp = await func(text, params, { ast, ...meta });
+          tmp = await func(text, params, meta);
         } catch (err) {
-          console.warn(`Cannot interpret double tag "${tag.name}"! ERROR:`, err.message);
+          console.warn(`Cannot interpret double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
         }
         if (tmp === undefined || tmp === null) tmp = '';
+        // When evaluating a normal tag, it is flattened
         tag.children.push({ rawText: tmp.toString() });
       }
     }
@@ -100,16 +101,20 @@ async function interpretDoubleTag(tag: LexToken, params, func, meta = {}) {
     const text = getText(tag);
     let result = text;
     try {
-      result = await func(text, params, { ast, ...meta });
+      result = await func(text, params, meta);
     } catch (err) {
-      console.warn(`Cannot interpret double tag "${tag.name}"! ERROR:`, err.message);
+      console.warn(`Cannot interpret double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
     }
     if (result === undefined || result === null) result = '';
-    // When evaluating a single tag, all children are flattened
+    // When evaluating a double tag, all children are flattened
     tag.children = [{ rawText: result.toString() }];
   }
 }
 
+/**
+ * Deep interpret a tag, by preparing the params and calling
+ * the specialized interpret function.
+ */
 async function interpretTag(tag: LexToken, customData, allFunctions, cfg: config.Config, meta = {}) {
   if (!tag || !tag.name) {
     return;
@@ -120,21 +125,35 @@ async function interpretTag(tag: LexToken, customData, allFunctions, cfg: config
   // Deep evaluate all children, including invalid TwoFold tags
   if (tag.children) {
     for (const c of tag.children) {
-      // c.parent = tag; // maybe ??
+      c.parent = tag;
       await interpretTag(c, customData, allFunctions, cfg, meta);
     }
   }
+
   const func = allFunctions[tag.name];
   // Could be an XML, or HTML tag, not a valid TwoFold tag
   if (!isFunction(func)) {
     return;
   }
+
   // Params for the tag come from parsed params and config
   let params = { ...customData, ...tag.params };
   // Config tag params could contain API tokens, or CLI args
   if (cfg.tags && typeof cfg.tags[tag.name] === 'object') {
     params = { ...cfg.tags[tag.name], ...params };
   }
+
+  // Inject the parsed tag into the function meta
+  meta.node = { ...tag };
+  delete meta.node.children;
+  // Inject the parsed parent into the function meta
+  if (tag.parent) {
+    meta.node.parent = { ...tag.parent };
+    delete meta.node.parent.children;
+  } else {
+    meta.node.parent = {};
+  }
+
   // Call the specialized interpret function
   if (isDoubleTag(tag)) {
     await interpretDoubleTag(tag, params, func, meta);
@@ -177,8 +196,6 @@ function renderStream(stream, customTags = {}, cfg: config.Config = {}, meta = {
   const allFunctions = { ...functions, ...customTags };
 
   return new Promise(resolve => {
-    // const label = 'tf-' + (Math.random() * 100 * Math.random()).toFixed(6)
-    // console.time(label)
     const lex = new Lexer(cfg);
 
     // calc a text hash to see if it has changed
@@ -210,7 +227,6 @@ function renderStream(stream, customTags = {}, cfg: config.Config = {}, meta = {
         final += chunk;
       }
 
-      // console.timeEnd(label)
       resolve({
         ast,
         changed: streamHash.digest('hex') !== resultHash.digest('hex'),
@@ -232,6 +248,9 @@ export async function renderFile(fname: string, customTags = {}, cfg: config.Con
   if (!fname) {
     throw new Error('Invalid renderFile options!');
   }
+  // const label = 'tf-' + (Math.random() * 100 * Math.random()).toFixed(6)
+  // console.time(label);
+
   if (meta.fname === undefined) {
     meta.fname = fname;
   }
@@ -241,10 +260,13 @@ export async function renderFile(fname: string, customTags = {}, cfg: config.Con
   const stream = createReadStream(fname, { encoding: 'utf8' });
   const result = await renderStream(stream, customTags, cfg, meta);
   if (persist && result.changed) {
-    console.log('Writing file:', fname);
+    console.debug('Writing file:', fname);
     await writeFile(fname, result.text, { encoding: 'utf8' });
+    // console.timeEnd(label);
     return '';
   }
+
+  // console.timeEnd(label);
   return result.text;
 }
 

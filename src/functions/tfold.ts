@@ -24,17 +24,24 @@ export function debug(text, args, meta) {
   /**
    * A tag used for DEV, to echo the params received by it.
    */
-  if (meta.ast.rawText) {
+  if (meta.node.rawText) {
     // trim the < and > to disable the live tag
-    meta.ast.rawText = meta.ast.rawText.slice(1, -1) + '/';
+    meta.node.rawText = meta.node.rawText.slice(1, -1) + '/';
   }
-  if (meta.ast.secondTagText) {
+  if (meta.node.secondTagText) {
     // disable the double tag
-    meta.ast.secondTagText = '/' + meta.ast.secondTagText.slice(1, -1);
+    meta.node.secondTagText = '/' + meta.node.secondTagText.slice(1, -1);
   }
+  if (meta.node.parent.secondTagText) {
+    // disable the double tag
+    meta.node.parent.secondTagText = '/' + meta.node.parent.secondTagText.slice(1, -1);
+  }
+
+  const isDouble = meta.node.double || meta.node.parent.double;
   args = JSON.stringify(args, null, ' ');
   meta = JSON.stringify(meta, null, ' ');
   text = `---\nText: ${text}\nArgs: ${args}\nMeta: ${meta}\n---`;
-  if (meta.ast.double) text = '\n' + text + '\n';
+
+  if (isDouble) text = '\n' + text + '\n';
   return text;
 }

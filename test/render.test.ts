@@ -127,7 +127,8 @@ test('deep mixed HTML tags', async () => {
   txt += '<span class="text">Workd</span> <leftOrRight /></div>';
   tmp = await twofold.renderText(txt);
   expect(tmp).not.toBe(txt);
-  expect(tmp.startsWith('<div><span class="title">Hello</span> <br /><br />')).toBeTruthy();
+  expect(tmp.startsWith('<div><span class="title">Hello</span> <br /><br />'))
+    .toBeTruthy();
   expect(tmp.endsWith('</div>')).toBeTruthy();
 });
 

@@ -9,7 +9,7 @@ export async function fmtYapf(pyTxt, { txt, based_on_style = 'pep8', column_limi
   // TODO: user's shell instead of ZSH
   const proc = Bun.spawn(['zsh', '-c', `yapf --style='${opts}' <<'EOF'\n${txt}\nEOF`]);
   txt = await new Response(proc.stdout).text();
-  if (meta.ast.double) txt = `\n${txt.trim()}\n`;
+  if (meta.node.double) txt = `\n${txt.trim()}\n`;
   return txt;
 }
 
@@ -27,6 +27,6 @@ export async function fmtPrettier(jsTxt, { txt }, meta = {}): Promise<string> {
     `bunx prettier --print-width 120 --stdin-filepath script.js <<'EOF'\n${txt}\nEOF`,
   ]);
   txt = await new Response(proc.stdout).text();
-  if (meta.ast.double) txt = `\n${txt.trim()}\n`;
+  if (meta.node.double) txt = `\n${txt.trim()}\n`;
   return txt;
 }
