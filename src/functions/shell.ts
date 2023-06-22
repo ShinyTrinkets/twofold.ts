@@ -1,17 +1,17 @@
 import parse from 'shell-quote/parse';
 
-export async function cmd(txtCmd, { cmd, args = [] }, _meta = {}) {
+export async function cmd(txtCmd, { cmd, args = [] }, _meta: Record<string, any> = {}) {
   /**
-   * Execute a system command and return the output, without spawning a shell.
-   * You probably want to use Bash, or Zsh instead of this.
+   * Execute a system command and return the output, without spawning a shell;
+   * you probably want to use Bash, or Zsh instead of this.
    *
    * In Node.js, this could be done with execa, zx, child_process, etc.
    * In Bun, you just need to call Bun.spawn(...)
    * https://bun.sh/docs/api/spawn
    */
 
-  cmd = txtCmd || cmd;
-  txtCmd = null;
+  cmd = txtCmd.trim() || cmd.trim();
+
   if (!cmd) return;
 
   const xs = args && args.length ? [cmd, ...parse(args)] : parse(cmd);
@@ -46,7 +46,7 @@ export async function cmd(txtCmd, { cmd, args = [] }, _meta = {}) {
   return stdout.trim();
 }
 
-export async function bash(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promise<string> {
+export async function bash(txtCmd, { cmd, args = [], t = 5 }): Promise<string> {
   /**
    * Spawn Bash and execute command, with options and timeout.
    * Example: <bash "ps aux | grep bash | grep -v grep" //>
@@ -54,10 +54,10 @@ export async function bash(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promis
    */
   cmd = (txtCmd || cmd || '').trim();
   if (!(cmd || args.length)) return;
-  return await spawnShell('bash', cmd, args, t, meta);
+  return await spawnShell('bash', cmd, args, t);
 }
 
-export async function zsh(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promise<string> {
+export async function zsh(txtCmd, { cmd, args = [], t = 5 }): Promise<string> {
   /**
    * Spawn ZSH and execute command, with options and timeout.
    * Example: <zsh "ps aux | grep zsh | grep -v grep" //>
@@ -65,10 +65,10 @@ export async function zsh(txtCmd, { cmd, args = [], t = 5 }, meta = {}): Promise
    */
   cmd = (txtCmd || cmd || '').trim();
   if (!(cmd || args.length)) return;
-  return await spawnShell('zsh', cmd, args, t, meta);
+  return await spawnShell('zsh', cmd, args, t);
 }
 
-async function spawnShell(name: string, cmd: string, args: string[], timeout = 5, meta): Promise<string> {
+async function spawnShell(name: string, cmd: string, args: string[], timeout = 5): Promise<string> {
   const xs = [name];
   if (cmd) {
     xs.push('-c');

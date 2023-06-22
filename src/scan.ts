@@ -70,9 +70,8 @@ export function scanFile(fname: string, customFunctions = {}, customConfig: Conf
         if (allFunctions[tag.name]) {
           console.debug('✓', tag.name);
           validTags += 1;
-        } else {
-          console.debug('✗', tag.name);
         }
+        // else console.debug('✗', tag.name);
       }
       const invalidTags = nodes.length - validTags;
       console.log('Valid tags ::', validTags, 'Invalid tags ::', invalidTags);

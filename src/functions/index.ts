@@ -3,7 +3,7 @@ import * as string from './string.ts';
 import * as random from './random.ts';
 import * as time from './time.ts';
 
-import * as fs from './fs.ts';
+import * as os from './os.ts';
 import * as shell from './shell.ts';
 import * as request from './request.ts';
 
@@ -16,7 +16,7 @@ export default {
   ...string,
   ...random,
   ...time,
-  ...fs,
+  ...os,
   ...fmt,
   ...shell,
   ...request,

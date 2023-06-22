@@ -1,18 +1,40 @@
 export function lower(text: string): string {
+  /**
+   * Lower-case all the text.
+   */
   return text.toLowerCase();
 }
 
 export function upper(text: string): string {
+  /**
+   * Upper-case all the text.
+   */
   return text.toUpperCase();
 }
 
-export function title(text: string): string {
+export function titleAll(text: string): string {
+  /**
+   * Title case for all the words.
+   * It would be nice if this was called just "title", but
+   * there is an HTML tag called "title" already.
+   */
   return text.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
 
+export function trim(text: string): string {
+  /**
+   * Trim whitespaces from both ends of the text.
+   */
+  return text.trim();
+}
+
 export function line(len: string, { c = '-' } = {}): string {
+  /**
+   * Draw a long line, of specified length.
+   */
   if (!len) return;
   const nr = parseInt(len);
+  if (nr < 1) return;
   return c.repeat(nr);
 }
 
@@ -21,6 +43,8 @@ export function sortLines(text: string, { caseSensitive = false } = {}): string 
    * Sort lines of text alphabetically.
    * By default, the sorting is case insensitive.
    */
+  if (!text) return;
+
   let sortFunc = null;
   if (!caseSensitive) {
     sortFunc = (a, b) => a.toLowerCase().localeCompare(b.toLowerCase());
@@ -52,6 +76,7 @@ export function sortLines(text: string, { caseSensitive = false } = {}): string 
     group.sort();
     lines.push(group.join('\n'));
   }
+
   text = lines.join('\n').trim();
   return spaceBefore + text + spaceAfter;
 }

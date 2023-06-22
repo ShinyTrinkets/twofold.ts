@@ -3,12 +3,17 @@ import { LexToken, ParseToken } from './types.ts';
 export const isDoubleTag = (t: LexToken) => !!(t && t.name && t.double);
 export const isSingleTag = (t: LexToken) => !!(t && t.name && t.single && t.rawText);
 export const isRawText = (t: LexToken) => t && t.name === undefined && t.single === undefined && t.double === undefined;
+export const isProtectedTag = (t: LexToken) => t && (t.name === 'ignore' || (t.params && t.params.freeze === true));
 
 export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagText && t.secondTagText;
-
-export const optIgnoreLevel = (t: LexToken) => !!(t && t.name === 'ignore');
-export const optFreezeRender = (t: LexToken) => !!(t && t.params && t.params.freeze === true);
 export const optShouldConsume = (t: LexToken) => !!(t && t.params && t.params.consume === true);
+
+export function consumeTag(tag) {
+  for (const k of Object.keys(tag)) {
+    if (k === 'rawText') continue;
+    delete tag[k];
+  }
+}
 
 /**
  * Deep extract text from a node and all its children.

@@ -23,7 +23,7 @@ const MAYBE_JSON_VAL = /['"`][{\[].*[}\]]['"`]$/;
 /**
  * A lexer is a state machine.
  * The machine moves only when receiving text, or on finish.
- * Push text into the machine to make it process the text.
+ * Push any text into the machine to make it process the text.
  * Press "finish" to finish processing all the remaining text
  * and return the processed tags.
  * The lexer should never crash, even if the text is "bad".
@@ -58,9 +58,9 @@ export default class Lexer {
      * Push some text and move the lexing machine.
      * This will consume the block of text completely.
      * If the text represents half of a state,
-     * like an open tag, the half of text is kept in pending state.
-     * This allows any number of characters to be pushed into the machine,
-     * and peeking is not allowed.
+     * like an open tag, the half text is kept in pending state.
+     * This allows any number of characters to be pushed into the machine;
+     * peeking is not allowed.
      */
     if (this.state === STATE_FINAL) {
       throw new Error('The lexing is finished!');
@@ -123,6 +123,7 @@ export default class Lexer {
       } else if (quote) {
         value = '""';
       }
+      // This bit can be improved
       try {
         // Try to convert string value into Object
         // @ts-ignore

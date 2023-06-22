@@ -2,7 +2,7 @@ export async function req(txtUrl, { url, headers = {} }, _meta = {}) {
   /**
    * Make a HTTP request.
    *
-   * Node.js finally adds native `fetch` in v18 -- experimental!
+   * Node.js finally added native `fetch` in v18 -- experimental!
    * https://nodejs.org/dist/latest-v18.x/docs/api/globals.html#fetch
    * Bun already has support for it
    * https://bun.sh/docs/api/globals

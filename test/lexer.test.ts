@@ -136,6 +136,10 @@ const TESTS = [
     '<a ` ` />',
     [{ name: 'a', params: { 0: ' ' }, rawText: '<a ` ` />', single: true }],
   ],
+  // [
+  //   '<a "`" />', // FIXME !!
+  //   [{ name: 'a', params: { 0: '`' }, rawText: '<a "`" />', single: true }],
+  // ],
   [
     '<a "1" "2" />',
     [{ rawText: '<a "1" "2" />' }],
@@ -203,14 +207,14 @@ const TESTS = [
     ],
   ],
   [
-    `<echo text1='' text2="" text3=\`\` />`,
+    `<echo text1='"' text2="'" text3=\`\` />`,
     [{
-      rawText: `<echo text1='' text2="" text3=\`\` />`,
+      rawText: `<echo text1='"' text2="'" text3=\`\` />`,
       name: 'echo',
       single: true,
       params: {
-        text1: '',
-        text2: '',
+        text1: '"',
+        text2: '\'',
         text3: '',
       },
     }],

@@ -87,21 +87,26 @@ you can use pipes:
   }
 
   if (args.scan) {
-    const fname = args.scan;
-    let fstat;
-    try {
-      fstat = fs.statSync(fname);
-    } catch (err) {
-      console.error(err);
-      return;
+    let files = [args.scan];
+    if (args._ && args._.length) {
+      files = [...files, ...args._];
     }
-    console.log('(2✂︎f) Scan:', fname, config.glob);
-    if (fstat.isFile()) {
-      await scan.scanFile(fname, funcs, config);
-    } else if (fstat.isDirectory()) {
-      await scan.scanFolder(fname, funcs, config);
-    } else {
-      console.error('Unknown path type:', fstat);
+    for (const fname of files) {
+      let fstat;
+      try {
+        fstat = fs.statSync(fname);
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+      console.log('(2✂︎f) Scan:', fname, config.glob);
+      if (fstat.isFile()) {
+        await scan.scanFile(fname, funcs, config);
+      } else if (fstat.isDirectory()) {
+        await scan.scanFolder(fname, funcs, config);
+      } else {
+        console.error('Unknown path type:', fstat);
+      }
     }
     return;
   }

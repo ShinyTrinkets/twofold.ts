@@ -12,4 +12,5 @@ export interface ParseToken extends LexToken {
   firstTagText?: string;
   secondTagText?: string;
   children?: ParseToken[];
+  parent?: ParseToken;
 }

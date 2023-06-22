@@ -15,10 +15,12 @@ function addChild(parent: ParseToken, child: ParseToken): void {
 }
 
 /**
- * Transform an unstructured stream of tokens (coming from the lexer)
- * into a tree-like structure.
+ * Transform an unstructured stream of tokens (coming from the Lexer)
+ * into a valid tree-like structure.
  * If the tag is double, it will have children of type raw text,
  * or other single or double tags.
+ * Because the Lexer cannot peek, there may be double tags that don't match,
+ * so they will be fixed in here.
  */
 export default function parse(tokens: LexToken[], cfg: config.Config = {}): ParseToken[] {
   const { openTag, lastStopper } = { ...config.defaultCfg, ...cfg };
@@ -53,18 +55,16 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     if (isDoubleTag(token)) {
       // Is this the start of a double tag?
       if (RE_FIRST_START.test(token.rawText)) {
-        // console.log(`Start double Tag "${token.name}" !`)
         // @ts-ignore
         token.firstTagText = token.rawText;
         // Pushing this tag on the stack means that
         // all the following tags become children of this tag,
-        // until it is closed, or invalid
+        // until it is either closed, or invalid
         stack.push(token);
         continue;
       } // Is this the end of a double tag?
       else if (RE_SECOND_START.test(token.rawText)) {
         if (topTag && topTag.name === token.name) {
-          // console.log(`End double Tag "${token.name}"`)
           topTag.secondTagText = token.rawText;
           // @ts-ignore
           delete topTag.rawText;
@@ -72,7 +72,7 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
           // @ts-ignore
           commitToken(stack.pop());
         } else {
-          // console.log(`Non matching double Tag "${topTag.name}" != "${token.name}"`)
+          // Non-matching double tags are converted to raw text here
           // Remove the tag from the stack and prepare to cleanup
           stack.pop();
           if (topTag && topTag.rawText) {
@@ -102,7 +102,7 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     } else if (isRawText(topAst)) {
       topAst.rawText += token.rawText;
     } else {
-      // Unknown type of tag
+      // Unknown type of tag, destroy
       ast.push({ rawText: token.rawText });
     }
   };
