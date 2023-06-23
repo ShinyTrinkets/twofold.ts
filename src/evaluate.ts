@@ -1,30 +1,22 @@
 import { ParseToken } from './types.ts';
 import { isFunction } from './util.ts';
-import * as config from './config.ts';
-import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag } from './tags.ts';
-
-// const FUNC_PARAMS_REGEX = /\(.*?{(.+?)}.*?\)/;
-// export function guessFuncParams(text: string) {
-//   const m = text.match(FUNC_PARAMS_REGEX);
-//   if (m && m[1]) {
-//     return m[1].trim().split(/[ =;,]/)[0];
-//   }
-// }
+import { Config } from './config.ts';
+import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, isConsumableTag } from './tags.ts';
 
 /**
  * Evaluate a single tag, by calling the tag function.
  */
 async function evaluateSingleTag(tag: ParseToken, params: Record<string, any>, func, meta: Record<string, any> = {}) {
   // Zero param text from the single tag &
-  // text prop: built-in option that allows single tags to receive text, just like double tags
+  // A prop: built-in option that allows single tags to receive text, just like double tags
   // For single tags, zero params have higher priority
-  const text = params['0'] || params.text || '';
+  const firstParam = params['0'] || params.a || '';
   let result = tag.rawText;
   try {
     //
     // Execute the tag function with params
     //
-    result = await func(text, params, meta);
+    result = await func(firstParam, params, meta);
   } catch (err) {
     let info = JSON.stringify(params);
     if (info.length > 120) info = info.slice(0, 120) + '...';
@@ -51,7 +43,7 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
       }
     }
   }
-
+  const firstParam = params['0'] || params.a || '';
   //
   // Execute the tag function with params
   //
@@ -69,29 +61,35 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
       if (isProtectedTag(c)) {
         tag.children.push(c);
       } else {
-        const text = getText(c);
-        let tmp = '';
+        const innerText = getText(c);
+        let tmp = innerText;
         try {
-          tmp = await func(text, params, meta);
+          tmp = await func(firstParam, { ...params, innerText }, meta);
         } catch (err) {
           console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
         }
         if (tmp === undefined || tmp === null) tmp = '';
         // When evaluating a normal tag, it is flattened
+        // These kinds of tags cannot be cut (consumed)
         tag.children.push({ rawText: tmp.toString() });
       }
     }
   } else {
-    const text = getText(tag);
-    let result = text;
+    const innerText = getText(tag);
+    let result = innerText;
     try {
-      result = await func(text, params, meta);
+      result = await func(firstParam, { ...params, innerText }, meta);
     } catch (err) {
       console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
     }
     if (result === undefined || result === null) result = '';
     // When evaluating a double tag, all children are flattened
     tag.children = [{ rawText: result.toString() }];
+    // Cut (consume) the tag to make it behave like a single tag
+    if (isConsumableTag(tag)) {
+      consumeTag(tag);
+      tag.rawText = result.toString();
+    }
   }
 }
 
@@ -103,7 +101,7 @@ export default async function evaluateTag(
   tag: ParseToken,
   customData: Record<string, any>,
   allFunctions,
-  cfg: config.Config,
+  cfg: Config,
   meta: Record<string, any> = {}
 ) {
   if (!tag || !tag.name) {

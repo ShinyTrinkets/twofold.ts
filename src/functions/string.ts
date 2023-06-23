@@ -1,31 +1,31 @@
-export function lower(text: string): string {
+export function lower(text: string, { innerText }): string {
   /**
    * Lower-case all the text.
    */
-  return text.toLowerCase();
+  return (innerText || text).toLowerCase();
 }
 
-export function upper(text: string): string {
+export function upper(text: string, { innerText }): string {
   /**
    * Upper-case all the text.
    */
-  return text.toUpperCase();
+  return (innerText || text).toUpperCase();
 }
 
-export function titleAll(text: string): string {
+export function titleAll(text: string, { innerText }): string {
   /**
    * Title case for all the words.
    * It would be nice if this was called just "title", but
    * there is an HTML tag called "title" already.
    */
-  return text.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  return (innerText || text).replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
 
-export function trim(text: string): string {
+export function trim(text: string, { innerText }): string {
   /**
    * Trim whitespaces from both ends of the text.
    */
-  return text.trim();
+  return (innerText || text).trim();
 }
 
 export function line(len: string, { c = '-' } = {}): string {
@@ -38,11 +38,12 @@ export function line(len: string, { c = '-' } = {}): string {
   return c.repeat(nr);
 }
 
-export function sortLines(text: string, { caseSensitive = false } = {}): string {
+export function sortLines(text: string, { innerText, caseSensitive = false } = {}): string {
   /**
    * Sort lines of text alphabetically.
    * By default, the sorting is case insensitive.
    */
+  text = innerText || text;
   if (!text) return;
 
   let sortFunc = null;

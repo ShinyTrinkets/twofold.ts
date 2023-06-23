@@ -309,9 +309,9 @@ export default class Lexer {
           this._pendingState.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         } // Empty ZERO param values not allowed
-        // Eg: {cmd ""}, {exec ""}, or {ping ""} doesn't make sense
+        // Eg: {cmd ""}, {exec ""}, or {ping ""} don't make sense
         else if (
-          QUOTE_LETTERS.test(char) &&
+          char === getParamValueQuote() &&
           this._pendingState.param_key === '0' &&
           this._pendingState.param_value.length === 1
         ) {
@@ -321,7 +321,7 @@ export default class Lexer {
           this._pendingState.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         } // Is this a valid closing quote?
-        else if (QUOTE_LETTERS.test(char) && char === getParamValueQuote()) {
+        else if (char === getParamValueQuote() && QUOTE_LETTERS.test(char)) {
           this._pendingState.rawText += char;
           this._pendingState.param_value += char;
           commitTag(true);
@@ -400,5 +400,12 @@ export default class Lexer {
     this._processed = final;
     this.state = STATE_FINAL;
     return this._processed;
+  }
+
+  reset() {
+    this.state = STATE_RAW_TEXT;
+    this.priorState = STATE_RAW_TEXT;
+    this._processed = [];
+    this._pendingState = { rawText: '' };
   }
 }

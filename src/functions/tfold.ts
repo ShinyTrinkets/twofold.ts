@@ -2,6 +2,8 @@
  * TwoFold useful tags.
  */
 
+import { parseNumber } from './common.ts';
+
 export function ignore() {
   /**
    * When it's a double tag, all tags inside it are protected (frozen).
@@ -12,12 +14,20 @@ export function ignore() {
   return;
 }
 
-export function text(s) {
+export function text(s, { innerText }) {
   /**
    * A tag used for DEV, that returns the text as is.
    * If this wraps some tags, they will be flattened.
    */
-  return s;
+  return innerText || s;
+}
+
+export function increment(s, { innerText, plus = 1 } = {}): number {
+  /**
+   * Very silly DEV tag, increment the input with a number.
+   * The increment can be any integer, or float, positive or negative.
+   */
+  return parseNumber(s || innerText) + parseNumber(plus);
 }
 
 export function debug(text, args, meta) {

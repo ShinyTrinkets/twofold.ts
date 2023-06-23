@@ -27,4 +27,8 @@ test('lower, upper', async () => {
   txt = '<upper>AbC <text "aBc" /> </upper>';
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe('<upper>ABC ABC </upper>');
+
+  txt = '<lower>AbC <text cut=1>aBc</text></lower>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('<lower>abc abc</lower>');
 });

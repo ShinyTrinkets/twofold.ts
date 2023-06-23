@@ -11,7 +11,7 @@ export function randomFloat(txtMax, { min = 1, max = 100, decimals = 2 }): strin
    */
   const precision = parseInt(decimals);
   min = Math.ceil(parseInt(min));
-  max = Math.floor(parseInt(txtMax || max));
+  max = Math.floor(parseInt(txtMax || max || nr));
   const nr = max - Math.random() * (max - min);
   return nr.toFixed(precision);
 }
@@ -22,7 +22,7 @@ export function randomInt(txtMax, { min = 1, max = 100 }): number {
    * Returns a pseudo-random integer in the range min–max (inclusive of min, but not max).
    */
   min = Math.ceil(parseInt(min));
-  max = Math.floor(parseInt(txtMax || max));
+  max = Math.floor(parseInt(txtMax || max || nr));
   return Math.floor(max - Math.random() * (max - min));
 }
 

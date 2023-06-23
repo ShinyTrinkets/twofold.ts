@@ -46,7 +46,7 @@ test('double tag parse unparse 2', () => {
 });
 
 test('parse unparse 1', () => {
-  let txt = '<mumu a=b><mumu><mumu><increment>0</increment>';
+  let txt = '<mumu a=b><mumu><mumu><text>0</text>';
   txt += '\n</mumu></mumu></mumu>';
   const ast = parse(new Lexer().lex(txt));
   const final = unParse(ast[0]);

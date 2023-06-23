@@ -3,10 +3,11 @@ import { LexToken, ParseToken } from './types.ts';
 export const isDoubleTag = (t: LexToken) => !!(t && t.name && t.double);
 export const isSingleTag = (t: LexToken) => !!(t && t.name && t.single && t.rawText);
 export const isRawText = (t: LexToken) => t && t.name === undefined && t.single === undefined && t.double === undefined;
+
 export const isProtectedTag = (t: LexToken) => t && (t.name === 'ignore' || (t.params && t.params.freeze === true));
+export const isConsumableTag = (t: LexToken) => !!(t && t.params && (t.params.cut === true || t.params.cut === 1));
 
 export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagText && t.secondTagText;
-export const optShouldConsume = (t: LexToken) => !!(t && t.params && t.params.consume === true);
 
 export function consumeTag(tag) {
   for (const k of Object.keys(tag)) {

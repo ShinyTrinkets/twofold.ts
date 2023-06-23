@@ -50,21 +50,23 @@ export function scanFile(fname: string, customFunctions = {}, customConfig: Conf
     console.time(label);
 
     let len = 0;
-    const p = new Lexer(customConfig);
+    const lex = new Lexer(customConfig);
     const stream = createReadStream(fname, { encoding: 'utf8' });
 
     stream.on('data', data => {
       len += data.length;
-      p.push(data);
+      lex.push(data);
     });
 
     stream.on('close', () => {
-      const ast = parse(p.finish(), customConfig);
+      const ast = parse(lex.finish(), customConfig);
+      lex.reset();
       console.log('Text length ::', len);
       for (const tag of ast) {
         walk(tag);
       }
       console.timeEnd(label);
+
       let validTags = 0;
       for (const tag of nodes) {
         if (allFunctions[tag.name]) {

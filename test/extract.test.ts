@@ -55,10 +55,24 @@ test('render file some tags', async () => {
   expect(final).toBe(txt);
 });
 
+test('render XML no tags', async () => {
+  const fname = __dirname + '/fixtures/menu.xml';
+  const txt = fs.readFileSync(fname, { encoding: 'utf8' });
+  const final = await twofold.renderFile(fname);
+  expect(final).toBe(txt);
+});
+
+test('render HTML no tags', async () => {
+  const fname = __dirname + '/fixtures/index.html';
+  const txt = fs.readFileSync(fname, { encoding: 'utf8' });
+  const final = await twofold.renderFile(fname);
+  expect(final).toBe(txt);
+});
+
 test('render folder', async () => {
   const folder = __dirname + '/fixtures/';
   let result = await twofold.renderFolder(folder);
-  expect(result).toBe(4);
+  expect(result).toBe(5);
   result = await twofold.renderFolder(folder, {}, { glob: '*.js' });
   expect(result).toBe(1);
 });

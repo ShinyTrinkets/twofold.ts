@@ -17,8 +17,16 @@ const TESTS = [
     [{ rawText: '<x1>' }], // this is raw-text
   ],
   [
+    '</x1>',
+    [{ rawText: '</x1>' }],
+  ],
+  [
     '<wrong>, very wrong',
     [{ rawText: '<wrong>, very wrong' }], // this is raw-text
+  ],
+  [
+    'wrong, very </wrong>',
+    [{ rawText: 'wrong, very </wrong>' }],
   ],
   [
     '<temp type=f>0</',
