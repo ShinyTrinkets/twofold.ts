@@ -1,57 +1,40 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import * as fsPromises from 'node:fs/promises';
 
-// This is surprisingly complicated for double tags...
-// because they can have text inside
-async function resolveFileName(name1, name2) {
-  name1 = name1 ? name1.trim() : null;
-  name2 = name2 ? name2.trim() : null;
-  if (name1) {
-    try {
-      let name = path.normalize(name1);
-      const fstat = await fsPromises.stat(name);
-      if (fstat.isFile()) return name;
-    } catch {}
-  }
-  if (name2) {
-    try {
-      let name = path.normalize(name2);
-      const fstat = await fsPromises.stat(name);
-      if (fstat.isFile()) return name;
-    } catch {}
-  }
-}
+import { resolveFileName, resolveDirName } from './common.ts';
 
-export async function cat(txtFile, { file, start = 0, limit = 250 }) {
+export async function cat(txtFile, { f, start = 0, limit = 250 }) {
   /**
    * Read a file with limit. Similar to "cat" commant from Linux.
    */
-  file = await resolveFileName(txtFile, file);
-  if (!file) return;
-  const fd = await fsPromises.open(file, 'r');
+  let fname = await resolveFileName(f);
+  if (!fname) fname = await resolveFileName(txtFile);
+  if (!fname) return;
+  const fd = await fsPromises.open(fname, 'r');
   const buffer = Buffer.alloc(limit);
   await fsPromises.read(fd, buffer, 0, limit, start);
   return buffer.toString();
 }
 
-export async function head(txtFile, { file, lines = 10 }) {
+export async function head(txtFile, { f, lines = 10 }) {
   /**
    * Read a number of lines from file. Similar to "head" commant from Linux.
    */
-  file = await resolveFileName(txtFile, file);
-  if (!file) return;
-  const input = fs.readFileSync(file, 'utf-8').split(/\r?\n/);
+  let fname = await resolveFileName(f);
+  if (!fname) fname = await resolveFileName(txtFile);
+  if (!fname) return;
+  const input = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
   return input.slice(0, lines).join('\n');
 }
 
-export async function tail(txtFile, { file, lines = 10 }) {
+export async function tail(txtFile, { f, lines = 10 }) {
   /**
    * Read a number of lines from the end of file. Similar to "tail" commant from Linux.
    */
-  file = await resolveFileName(txtFile, file);
-  if (!file) return;
-  const input = fs.readFileSync(file, 'utf-8').split(/\r?\n/);
+  let fname = await resolveFileName(f);
+  if (!fname) fname = await resolveFileName(txtFile);
+  if (!fname) return;
+  const input = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
   const lastLine = input.length - 1;
   return input.slice(lastLine - lines, lastLine).join('\n');
 }
@@ -75,12 +58,13 @@ export async function tail(txtFile, { file, lines = 10 }) {
 //   return result.join('\n');
 // }
 
-export async function dir(txtDir, { dir = '.', li = '*', space = ' ' }) {
-  let name1 = txtDir ? txtDir.trim() : null;
-  let name2 = dir ? dir.trim() : null;
-  dir = path.normalize(name1 || name2);
+export async function dir(txtDir, { d, li = '*', space = ' ' }) {
+  let dname = await resolveDirName(d);
+  if (!dname) dname = await resolveDirName(txtDir);
+  if (!dname) return;
+
   let result = '';
-  const files = await fsPromises.readdir(dir);
+  const files = await fsPromises.readdir(dname);
   for (const f of files) {
     result += `${li}${space}${f}\n`;
   }

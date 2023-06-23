@@ -1,6 +1,6 @@
-//
-// TwoFold useful tags.
-//
+/**
+ * TwoFold useful tags.
+ */
 
 export function ignore() {
   /**

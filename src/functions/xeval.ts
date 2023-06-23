@@ -1,3 +1,7 @@
+/**
+ * Eval code in different programming languages.
+ */
+
 export function jsEval(zeroExpr, args = {}) {
   /**
    * Eval Javascript and return the result. Useful for Math.

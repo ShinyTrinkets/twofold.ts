@@ -52,9 +52,6 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
     }
   }
 
-  console.log('PARAM ??', params);
-  console.log('FUNC ??', func.toString());
-
   //
   // Execute the tag function with params
   //
@@ -72,8 +69,6 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
       if (isProtectedTag(c)) {
         tag.children.push(c);
       } else {
-        // It's hard to GUESS what text to send to the tag function ...
-        // using inner text here, because of the SPLIT with the frozen tag
         const text = getText(c);
         let tmp = '';
         try {
@@ -87,9 +82,7 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
       }
     }
   } else {
-    // It's hard to GUESS what text to send to the tag function ...
-    // using the "text" param with higher priority here
-    const text = params.text || getText(tag);
+    const text = getText(tag);
     let result = text;
     try {
       result = await func(text, params, meta);

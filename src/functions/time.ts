@@ -3,14 +3,7 @@
  * More functions are available in twofold-extras.
  */
 
-function getDate(text) {
-  if (text && typeof text === 'string') {
-    return new Date(text);
-  } else if (!text || typeof text !== 'object') {
-    return new Date();
-  }
-  return text;
-}
+import { getDate } from './common.ts';
 
 export function now(txtDate: string, { date = null } = {}): string {
   date = getDate(txtDate || date);

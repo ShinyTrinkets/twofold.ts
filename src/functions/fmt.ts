@@ -1,3 +1,7 @@
+/**
+ * Functions for formatting code.
+ */
+
 export async function fmtYapf(
   pyTxt,
   { text, based_on_style = 'pep8', column_limit = 120 },
@@ -17,7 +21,7 @@ export async function fmtYapf(
   return text;
 }
 
-export async function fmtPrettier(jsTxt, { text }, meta = {}): Promise<string> {
+export async function fmtPrettier(jsTxt, { text, print_width = 120 }, meta = {}): Promise<string> {
   /**
    * Format Javascript code with Prettier. Of course, Prettier needs to be installed.
    * Prettier is called within a Shell to allow it to read local config files.
@@ -28,7 +32,7 @@ export async function fmtPrettier(jsTxt, { text }, meta = {}): Promise<string> {
   const proc = Bun.spawn([
     'zsh',
     '-c',
-    `bunx prettier --print-width 120 --stdin-filepath script.js <<'EOF'\n${text}\nEOF`,
+    `bunx prettier --print-width ${print_width} --stdin-filepath script.js <<'EOF'\n${text}\nEOF`,
   ]);
   text = await new Response(proc.stdout).text();
   if (meta.node.double) text = `\n${text.trim()}\n`;

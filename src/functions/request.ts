@@ -8,7 +8,7 @@ export async function req(txtUrl, { url, headers = {} }, _meta = {}) {
    * https://bun.sh/docs/api/globals
    */
 
-  url = txtUrl || url;
+  url = url || txtUrl;
 
   if (!url) return;
 

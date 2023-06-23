@@ -2,10 +2,7 @@
  * Functions for generating randomness, available as tags.
  */
 
-function randomChoice(choices) {
-  const index = Math.floor(Math.random() * choices.length);
-  return choices[index];
-}
+import { randomChoice } from './common.ts';
 
 export function randomFloat(txtMax, { min = 1, max = 100, decimals = 2 }): string {
   /**
