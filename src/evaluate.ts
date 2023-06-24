@@ -1,7 +1,7 @@
 import { ParseToken } from './types.ts';
 import { isFunction } from './util.ts';
 import { Config } from './config.ts';
-import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, isConsumableTag } from './tags.ts';
+import { consumeTag, getText, isConsumableTag, isDoubleTag, isProtectedTag, isSingleTag } from './tags.ts';
 
 /**
  * Evaluate a single tag, by calling the tag function.

@@ -136,21 +136,35 @@ const TESTS = [
     '<a ` ` />',
     [{ name: 'a', params: { 0: ' ' }, rawText: '<a ` ` />', single: true }],
   ],
-  // [
-  //   '<a "`" />', // FIXME !!
-  //   [{ name: 'a', params: { 0: '`' }, rawText: '<a "`" />', single: true }],
-  // ],
+  [
+    '<a "`" /><a `"` />',
+    [
+      { name: 'a', params: { 0: '`' }, rawText: '<a "`" />', single: true },
+      { name: 'a', params: { 0: `"` }, rawText: '<a `"` />', single: true },
+    ],
+  ],
   [
     '<a "1" "2" />',
     [{ rawText: '<a "1" "2" />' }],
   ],
   [
-    '<a "1" "" />',
-    [{ rawText: '<a "1" "" />' }],
+    '<a "1" "" /> <a "1" `` />',
+    [{ rawText: '<a "1" "" /> <a "1" `` />' }],
+  ],
+  [
+    '<a "1" ""></a>',
+    [{ rawText: '<a "1" "">' }, { double: true, name: 'a', rawText: '</a>' }],
   ],
   [
     '<a \'\' /> <ls `` /> <ping "" />',
     [{ rawText: '<a \'\' /> <ls `` /> <ping "" />' }], // ZERO tags with empty value not allowed
+  ],
+  [
+    '<a "1"></a>',
+    [
+      { rawText: '<a "1">', name: 'a', params: { '0': '1' }, double: true },
+      { rawText: '</a>', name: 'a', double: true },
+    ],
   ],
   [
     '< ls "-la" extra="h" />',
@@ -274,6 +288,17 @@ const TESTS = [
       },
     ],
   ],
+  ['<sort x=t>\n<//>', [
+    {
+      double: true,
+      name: 'sort',
+      params: {
+        x: 't',
+      },
+      rawText: '<sort x=t>',
+    },
+    { rawText: '\n<//>' },
+  ]],
   [
     '<a_b></b_c> ', // non matching tags are lexed OK
     [

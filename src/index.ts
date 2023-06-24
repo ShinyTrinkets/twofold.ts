@@ -57,6 +57,8 @@ function renderStream(stream, customTags = {}, cfg: config.Config = {}, meta = {
 
     stream.on('close', async () => {
       const ast = parse(lex.finish(), cfg);
+      lex.reset();
+
       // Save time and IO if the file doesn't have TwoFold tags
       if (ast.length === 1) {
         return resolve({

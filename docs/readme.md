@@ -8,17 +8,19 @@ extra props of the tag and user settings (in case they are defined).
 For example, the `increment()` function looks like this:
 
 ```js
-// functions/math.ts file
-function increment(text, { nr = 1 } = {}): number {
-    return parseNumber(text) + parseNumber(nr)
+// functions/tfold.ts file
+function increment(text, { innerText, plus = 1 } = {}): number {
+    return parseNumber(text || innerText) + parseNumber(plus);
 }
 ```
 
-And it can be called like: "&lt;increment nr=4>6&lt;/increment>". The function
-will receive the args as: text="6" and nr="4".
+<ignore>
 
-All tags can be called in camelCase (eg: &lt;emojiClock />), or separated by
-underline (eg: &lt;emoji_clock />).
+And it can be called like: "<increment plus=4>6</increment>". The function will
+receive the args as: innerText="6" and plus="4".
+
+All tags can be called in camelCase (eg: <emojiClock />), or separated by
+underline (eg: <emoji_clock />).
 
 The built-in tags are located in "/src/functions/" and are available
 automatically. To create extra tags, make a folder eg: "mkdir myFuncs" and
@@ -30,24 +32,18 @@ tags.<br/> You can check the "/src/functions/" for examples to get you started.
 There are **two types of tags**, and multiple options that make them behave
 differently. See below.
 
-**Note**: All examples here use **double slash** instead of single slash, to
-disable the tags, so that TwoFold doesn't accidentally render them. If you want
-to copy paste the examples, just remove the extra slash.
-
-We are brainstorming ideas⚡️ about how to selectively disable tags from a text
-file in [issue #2](https://github.com/ShinyTrinkets/twofold.js/issues/2). Feel
-free to add your ideas!!
-
 ## Single tags
 
 Example:
 
-- `<randomFloat decimals=2 //>`
-- `<eval "1 + 7 * 9" //>`
+- `<line '80' />`
+- `<randomFloat decimals=2 />`
+- `<jsEval "1 + 7 * 9" />`
 
-Single tags are **consumed** after they are rendered, so they are one use only.
+Single tags are **consumed** after they are rendered, so they are **one use
+only**.
 
-Some functions make more sense as single tags (eg: &lt;emojiClock />).
+Some functions make more sense as single tags (eg: <emojiClock />).
 
 They are useful in case of composing a document, when you want TwoFold to
 quickly autocomplete some text for you, and then stay out of your way.
@@ -59,30 +55,32 @@ Example:
 ```md
 <sortLines caseSensitive=true>
 * a
-* b
 * c
-<//sortLines>
+* b
+</sortLines>
 ```
 
 Double tags are **persistent** and are normally rendered every time the file is
 processed by TwoFold. They can be disabled by invalidating them, or using the
-`once=true` option.
+`freeze=true` option.
 
-Some functions make more sense as double tags, because they contain the text
-that needs to be processed.
+Some functions make more sense as double tags, because they contain a lot of
+text that needs to be processed.
 
 They are useful in case of documentation, for example, to keep the document in
-sync with other external sources.
+sync with other external sources, or to format and correct a paragraph.
 
 ## Tag options
 
-Options, or props, or args for tags look like this:
+Options (also called props, or args) for tags look like this:
 
-`<cat 'readme.md' start=0 limit=90 //>`
+`<cat 'readme.md' start=0 limit=90 />`
 
 In this example, the 3 options are: `'readme.md' start=0 limit=90`.
 
-Usually all options are... optional.
+Usually all options are... optional, but they don't always have a default; for
+example calculating or executing an expression absolutely requires an
+expression.
 
 If the values contain space, they can be surrounded by a matching single quotes,
 double quotes, or ticks.
@@ -106,41 +104,47 @@ Examples:
 
 ## Special options
 
-#### once
+#### "zero" prop
 
-Example: `<randomCard once=true><//randomCard>`
+Example: `<eval "1.2 * (2 + 4.5)" />`
 
-"Once" is a built-in option that tells TwoFold to NOT replace the text inside
-the double tag, if there's already text inside it. It works only with double
-tags.
+"Zero" prop. It's like an option, but without a name. TwoFold tags are inspired
+from XML and HTML, but XML doesn't have options without a name. If you want to
+maintain compatibility with XML, you can use `a="1.2 * (2 + 4.5)"`.
 
-To make TwoFold render the text again, you just need to delete the once=true
-prop inside the double tag.<br />This is useful to temporarily disable a double
-tag. You can also invalidate it, eg: by adding a double // in the closing tag.
+"Zero" props are useful to allow adding text inside a single tag.
+
+Only 1 is allowed per tag and it must be the first prop. The tag will still be
+consumed after the first use.
+
+This option works only with **single tags**.
+
+#### freeze
+
+Example: `<randomCard freeze=true></randomCard>`
+
+"Freeze" is a built-in option that tells TwoFold to protect the tag. As long as
+the tag has this option, it will never be executed.
+
+To make TwoFold render the tag again, you just need to delete the freeze=true
+prop inside the tag.
 
 This is useful in case you want to keep the previous text and make sure that
 TwoFold won't accidentally replace it.
 
-#### consume
+You can also invalidate it, eg: by adding a double // in the closing tag, or
+making the tag name Upper-case.
 
-Example: `<sortLines consume=true>some text here<//sortLines>`
+#### cut
 
-"Consume" is a built-in option that tells TwoFold to consume a double tag after
-it's rendered, basically to convert it into a single tag.
+Example: `<sortLines cut=true>some text here</sortLines>`
 
-This tag works only with **double tags**.
+"Cut" is a built-in option that tells TwoFold to consume a double tag after it's
+rendered, basically to convert it into a single tag.
 
-#### "zero" prop
+This option works only with **double tags**.
 
-Example: `<eval "1.2 * (2 + 4.5)" //>`
-
-"Zero" prop. It's like an option, but without a name. TwoFold tags are inspired
-from XML and HTML, but there are no tags like that in XML or HTML.
-
-They are useful to allow adding text inside a single tag.
-
-Only 1 is allowed per tag and it must be the first prop. The tag will still be
-consumed after the first use. This option works only with **single tags**.
+</ignore>
 
 ## Built-in tags
 
@@ -151,8 +155,6 @@ have some tags available to start with. There are extra tags available in the
 [twofold-extras](https://github.com/ShinyTrinkets/twofold-extras) repository.
 You can of course, write your own tags, and load them with the `--funcs` cmd
 line switch.
-
-#### multiply nr=1
 
 #### increment nr=1
 

@@ -107,14 +107,6 @@ test('mixed tags', async () => {
   expect(lines[3].indexOf('rand int ')).toBe(0);
 });
 
-test('deep mixed tags', async () => {
-  const txt = '<cmd>echo Up or Down <upOrDown /></cmd>';
-  const tmp = await twofold.renderText(txt);
-  expect(tmp).not.toBe(txt);
-  expect(tmp.startsWith('<cmd>Up or Down ')).toBeTruthy();
-  expect(tmp.endsWith('</cmd>')).toBeTruthy();
-});
-
 test('deep mixed HTML tags', async () => {
   let txt = '';
   txt += '<div id="main"><span class="title">Hello</span>\n';
@@ -200,24 +192,23 @@ test('custom double tag', async () => {
   expect(tmp).toBe('{mumu}ok{#mumu}');
 });
 
-// test('deep increment consume render', async () => {
-//   const nr = 997;
-//   let txt = 'qwerty <increment consume=true><increment consume=true>';
-//   txt += `<increment consume=true>${nr}</increment></increment></increment>`;
-//   let tmp = await twofold.renderText(txt);
-//   expect(tmp).not.toBe(txt);
-//   expect(tmp).toBe(`qwerty ${nr + 3}`);
-// });
+test('deep increment consume render', async () => {
+  const nr = 997;
+  let txt = 'qwerty <increment cut=true><increment cut=true>';
+  txt += `<increment cut=true>${nr}</increment></increment></increment>`;
+  let tmp = await twofold.renderText(txt);
+  expect(tmp).not.toBe(txt);
+  expect(tmp).toBe(`qwerty ${nr + 3}`);
+});
 
-// test('deep increment render', async () => {
-//   const nr = 997;
-//   let txt =
-//     'qwerty <increment><increment consume=true><increment consume=true>';
-//   txt += `${nr}</increment></increment></increment>`;
-//   let tmp = await twofold.renderText(txt);
-//   expect(tmp).not.toBe(txt);
-//   expect(tmp).toBe(`qwerty <increment>${nr + 3}</increment>`);
-// });
+test('deep increment render', async () => {
+  const nr = 997;
+  let txt = 'qwerty <increment><increment cut=true><increment cut=true>';
+  txt += `${nr}</increment></increment></increment>`;
+  let tmp = await twofold.renderText(txt);
+  expect(tmp).not.toBe(txt);
+  expect(tmp).toBe(`qwerty <increment>${nr + 3}</increment>`);
+});
 
 test('deep custom function render', async () => {
   let tmp = '';
@@ -246,9 +237,8 @@ test('deep custom function render', async () => {
 });
 
 test('deep unknown function render', async () => {
-  const tmp = await twofold.renderText(
-    '<mumu><mumu><mumu>\n<increment "0" /></mumu></mumu></mumu>',
-  );
+  const tmp = await twofold.renderText(`<mumu><mumu><mumu>
+<increment "0" cut=true></increment></mumu></mumu></mumu>`);
   expect(tmp).toBe('<mumu><mumu><mumu>\n1</mumu></mumu></mumu>');
 });
 

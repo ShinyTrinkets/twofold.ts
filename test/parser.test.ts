@@ -271,6 +271,53 @@ const TESTS = [
       { rawText: '</tx>' },
     ],
   ],
+  [
+    '<trick1><trick2><trick3></trick1>',
+    [{
+      double: true,
+      name: 'trick1',
+      firstTagText: '<trick1>',
+      secondTagText: '</trick1>',
+      children: [{
+        rawText: '<trick2><trick3>',
+      }],
+    }],
+  ],
+  [
+    '<trick1><trick2><trick3><trick4></trick2>',
+    [{
+      rawText: '<trick1>',
+    }, {
+      double: true,
+      name: 'trick2',
+      firstTagText: '<trick2>',
+      secondTagText: '</trick2>',
+      children: [{
+        rawText: '<trick3><trick4>',
+      }],
+    }],
+  ],
+  [
+    '<i><increment plus=4>6</increment><sort x=t>\n<//></i>',
+    [{
+      double: true,
+      name: 'i',
+      firstTagText: '<i>',
+      secondTagText: '</i>',
+      children: [{
+        double: true,
+        name: 'increment',
+        firstTagText: '<increment plus=4>',
+        secondTagText: '</increment>',
+        params: { plus: 4 },
+        children: [
+          {
+            rawText: '6',
+          },
+        ],
+      }, { rawText: '<sort x=t>\n<//>' }],
+    }],
+  ],
 ];
 
 test('all parse tests', () => {
@@ -278,9 +325,9 @@ test('all parse tests', () => {
     const o = new Lexer();
     o.push(text);
     const lex = o.finish();
-    // console.log("-T- LEXED ::", JSON.stringify(lex, null, " "), "\n");
+    // console.log('-T- LEXED ::', JSON.stringify(lex, null, ' '), '\n');
     const ast = parse(lex);
-    // console.log("-T- PARSED ::", JSON.stringify(ast, null, " "), "\n");
+    // console.log('-T- PARSED ::', JSON.stringify(ast, null, ' '), '\n');
     expect(ast).toEqual(expected);
   }
 });

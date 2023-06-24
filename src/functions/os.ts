@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 
-import { resolveFileName, resolveDirName } from './common.ts';
+import { resolveDirName, resolveFileName } from './common.ts';
 
 export async function cat(txtFile, { f, start = 0, limit = 250 }) {
   /**

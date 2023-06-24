@@ -45,12 +45,37 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     }
   };
 
+  const commitDouble = function (token: ParseToken): void {
+    const topStack = getTopStack();
+    topStack.secondTagText = token.rawText;
+    // A valid double tag doesn't have raw text
+    // @ts-ignore
+    delete topStack.rawText;
+    // Remove the tag from the stack and commit
+    // @ts-ignore
+    commitToken(stack.pop());
+  };
+
+  const dropFakeDouble = function (token: ParseToken): void {
+    const topStack = getTopStack();
+    // Non-matching double tags are converted to raw text here
+    // Remove the tag from the stack and prepare to cleanup
+    if (topStack) {
+      stack.pop();
+      commitToken({ rawText: topStack.firstTagText || topStack.rawText });
+      if (topStack.children) {
+        for (const child of topStack.children) {
+          commitToken(child);
+        }
+      }
+    }
+  };
+
   for (const token of tokens) {
     if (!token || !token.rawText) {
       continue;
     }
-
-    const topTag = getTopStack();
+    // console.log('TOKEN ::', token);
 
     if (isDoubleTag(token)) {
       // Is this the start of a double tag?
@@ -64,33 +89,35 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
         continue;
       } // Is this the end of a double tag?
       else if (RE_SECOND_START.test(token.rawText)) {
-        if (topTag && topTag.name === token.name) {
-          topTag.secondTagText = token.rawText;
-          // @ts-ignore
-          delete topTag.rawText;
-          // Remove the tag from the stack and commit
-          // @ts-ignore
-          commitToken(stack.pop());
+        const topStack = getTopStack();
+        if (topStack && topStack.name === token.name) {
+          commitDouble(token);
         } else {
-          // Non-matching double tags are converted to raw text here
-          // Remove the tag from the stack and prepare to cleanup
-          stack.pop();
-          if (topTag && topTag.rawText) {
-            commitToken({ rawText: topTag.firstTagText || topTag.rawText });
-            if (topTag.children) {
-              for (const child of topTag.children) {
-                commitToken(child);
-              }
+          dropFakeDouble();
+          // Search up the stack if the closing tag matches anything
+          let unwindNo;
+          for (let i = stack.length - 1; i >= 0; i--) {
+            const upStack = stack[i];
+            if (upStack.name === token.name) {
+              unwindNo = i;
+              break;
             }
           }
-          commitToken({ rawText: token.rawText });
+          if (typeof unwindNo === 'number') {
+            for (let i = stack.length - 1; i >= 0; i--) {
+              if (unwindNo === i) break;
+              dropFakeDouble();
+            }
+            commitDouble(token);
+          } else {
+            commitToken({ rawText: token.rawText });
+          }
         }
-        continue;
       }
+    } else {
+      // Finally, commit
+      commitToken(token);
     }
-
-    // Commit
-    commitToken(token);
   }
 
   const finalCommit = function (token: LexToken): void {

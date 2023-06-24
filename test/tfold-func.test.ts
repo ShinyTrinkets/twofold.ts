@@ -17,6 +17,10 @@ test('simple text inside text', async () => {
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe('<upper>ABC</upper>');
 
+  txt = '<text cut=1>1<text>2</text>3</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('123');
+
   // flattens all unknown tags
   txt = '<text>1<div>2<asd123>3<cacas>4</cacas>5</asd123>6</div>7</text>';
   tmp = await twofold.renderText(txt);
@@ -79,6 +83,11 @@ test('ignore tag', async () => {
   expect(tmp).toBe(txt);
 
   txt = '<ignore><upper>a</upper> Ab <lower>X</lower></ignore>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+
+  txt = '<ignore><increment plus=4>6</increment>';
+  txt += '<sort x=t>\n<//></ignore>';
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe(txt);
 
