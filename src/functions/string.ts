@@ -18,6 +18,7 @@ export function titleAll(text: string, { innerText }): string {
    * It would be nice if this was called just "title", but
    * there is an HTML tag called "title" already.
    */
+  // text.toLowerCase().replace(/(?=\b)(\w)/g, (m, $1) => $1.toUpperCase());
   return (innerText || text).replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
 

@@ -6,8 +6,13 @@
 - can now compile a standalone CLI executable from Bun
 - also thanks to Bun, added `cmd` and `req` core tags
 - created lots of new core tags
-- zero prop values for single tags (eg: {ping "1.1.1.1" /})
+- zero prop values for tags (eg: {ping "1.1.1.1" /})
+- added a powerful Ignore tag to protect a part of a file from rendering
 - fixed writing files even if they don't have any TwoFold tags
+- BREAKING change: once=true replaced with freeze=true, which is more general
+- BREAKING change: consume=true replaced with cut=true, which is shorter to
+  write
+- a bunch of bug fixes in the lexer and parser
 
 ## v0.5
 

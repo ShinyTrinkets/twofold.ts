@@ -22,6 +22,9 @@ receive the args as: innerText="6" and plus="4".
 All tags can be called in camelCase (eg: <emojiClock />), or separated by
 underline (eg: <emoji_clock />).
 
+You can customize the tag markers, so you can make them look like jinja2,
+nunjucks, etc. (eg: {emojiClock %}).
+
 The built-in tags are located in "/src/functions/" and are available
 automatically. To create extra tags, make a folder eg: "mkdir myFuncs" and
 create as many Javascript files as you want and expose the functions that you
