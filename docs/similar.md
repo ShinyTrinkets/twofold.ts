@@ -29,10 +29,10 @@ about the syntax used for the tags; to me, it looks complicated and I don't like
 the visible Python code inside, so I never got to use it.
 
 TwoFold uses XML-like tags to execute code, and inserts the output back into the
-original file in case of the double-tags. The single-tags are consumed after
-render, making them perfect for interactive use. The tags are short and
+original file, but only in the case of double-tags. The single-tags are consumed
+after render, making them perfect for interactive use. The tags are short and
 intuitive, but the source code for the tag is not visible (but it should be open
-source!)
+source!) which makes the original text much cleaner.
 
 ---
 
@@ -53,7 +53,7 @@ The same idea like Cog, but in the context of Readmes, or Markdown files in
 general.
 
 Because it was never finished, I don't know what was the direction of the
-project. However, from the examples and code, TwoFold seems to be a more general
+project. From the examples and code, TwoFold seems to be a more general
 templating application.
 
 ---
@@ -70,12 +70,12 @@ Also similar: https://github.com/albinotonnina/mmarkdown
 > Mmarkdown seems to be unmaintained for the last 5 years, but maybe it's
 > finished and it doesn't need updates.
 
-Mmarkdown is a very simple app, very focused on running JS code inside Markdown
-files. It uses REGEX to find the mmd fenced blocks.
+Mmarkdown is a very simple app, very focused on running JS code snippets inside
+Markdown files. It uses REGEX to find the mmd fenced blocks.
 
 TwoFold is a more general templating application, the tags look like XML tags,
-so you don't actually see the JS code. You can have consumable single-tags. You
-can have deeply nested tags.
+so you don't actually see the JS code, which makes the original text much
+cleaner. You can have consumable single-tags. You can have deeply nested tags.
 
 ---
 
@@ -144,7 +144,7 @@ Worth mentioning:
 - https://textexpander.com -- not free, cloud
 - https://phraseexpress.com -- free/ payed, native apps
 
-There may be others. They seem to be just for text snippets.
+There may be others. They seem to exist just for expanding text snippets.
 
 # Template engines
 

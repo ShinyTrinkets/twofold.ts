@@ -1,6 +1,6 @@
 # TwoFold (2✂︎f) tags
 
-The TwoFold tags are just regular Javascript functions.
+The TwoFold tags are just regular TypeScript/ JavaScript functions.
 
 They can receive as input the text inside the tags (in case of double tags),
 extra props of the tag and user settings (in case they are defined).
@@ -46,10 +46,13 @@ Example:
 Single tags are **consumed** after they are rendered, so they are **one use
 only**.
 
-Some functions make more sense as single tags (eg: `<emojiClock />`).
+Some functions are better suited as single tags, such as `<emojiClock />`, or
+`<line '40 />`.
 
-They are useful in case of composing a document, when you want TwoFold to
-quickly autocomplete some text for you, and then stay out of your way.
+These tags are particularly useful when starting TwoFold in watch mode. By
+specifying the folder where you edit your files, TwoFold promptly executes the
+tag and generates the result every time you save, staying out of your way while
+providing efficient functionality.
 
 ## Double tags
 
@@ -64,25 +67,28 @@ Example:
 ```
 
 Double tags are **persistent** and are normally rendered every time the file is
-processed by TwoFold. They can be disabled by invalidating them, or using the
-`freeze=true` option.
+processed by TwoFold.
 
-Some functions make more sense as double tags, because they contain a lot of
-text that needs to be processed.
+If necessary, they can be disabled by explicitly invalidating them or by using
+the `freeze=true` option.
 
-They are useful in case of documentation, for example, to keep the document in
-sync with other external sources, or to format and correct a paragraph.
+Some functions make more sense as double tags, particularly when they involve
+processing a significant amount of text, which is impractical to add inside a
+single tag.
+
+They are useful in case of documentation, to keep the document in sync with
+other external sources, or to format and correct a paragraph.
 
 ## Tag options
 
-Options (also called props, or args) for tags look like this:
+Options for tags (also called props, or args) look like this:
 
 `<cat 'readme.md' start=0 limit=90 />`
 
 In this example, the 3 options are: `'readme.md' start=0 limit=90`.
 
 Usually all options are... optional, but they don't always have a default; for
-example calculating or executing an expression absolutely requires an
+example calculating or executing an expression **absolutely requires** an
 expression.
 
 If the values contain space, they can be surrounded by a matching single quotes,
@@ -91,9 +97,9 @@ double quotes, or ticks.
 Examples:
 
 - prop=value
-- prop='value'
-- prop="value"
-- prop=\`value\`
+- prop='value & space'
+- prop="value & space"
+- prop=\`value & space\`
 
 The value can be a text, a number, true/ false, null, or a JavaScript object.
 
