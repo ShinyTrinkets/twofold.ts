@@ -127,7 +127,8 @@ packages.
 
 TwoFold doesn't detect your typing, and only works with regular files on the
 disk. TwoFold knows the file, folder, line, and the text before and after the
-tag, so the functions can get access the entire context around the tag.
+tag, so the functions can get access to the entire context around the tag, and
+the config files from the same folder.
 
 TwoFold config is very small, but also optional.
 
@@ -162,8 +163,8 @@ Examples:
 - etc, etc
 
 They are based on the same idea that you have template files with raw text and
-XML-like template tags. The tags can be nested and can call different
-shortcodes/ helpers/ filters.
+XML-like tags. The tags can be nested and can call different shortcodes/
+helpers/ filters.
 
 The template files are used to generate the final text, and are usually larger.
 
@@ -185,8 +186,8 @@ commands or code, depending on the available tags.
 
 The TwoFold tags are very powerful, they receive the inner text and can improve
 it, destroy it, or ignore it, depending on what the tag needs to do. The tags
-can also receive the context around them, so they can decide what to generate
-based on context.
+can also receive the text around them, so they can decide what to generate based
+on context.
 
 Because TwoFold tags are powerful, but also unique, they are also unpredictible.
 You have to try them to learn how they behave.

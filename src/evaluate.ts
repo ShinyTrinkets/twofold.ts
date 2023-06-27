@@ -82,7 +82,8 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
     } catch (err) {
       console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
     }
-    if (result === undefined || result === null) result = '';
+    // If the single tag doesn't have a result, DON'T change the tag
+    if (result === undefined || result === null) return;
     // When evaluating a double tag, all children are flattened
     tag.children = [{ rawText: result.toString() }];
     // Cut (consume) the tag to make it behave like a single tag

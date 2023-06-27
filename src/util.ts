@@ -5,6 +5,14 @@ import { types } from 'node:util';
 // TODO ? types.isGeneratorFunction(f) ?
 export const isFunction = f => typeof f === 'function' || types.isAsyncFunction(f);
 
+/**
+ * Extract function name and params from the source.
+ */
+export function functionParams(f) {
+  const m = f.toString().match(/function(.+?\(.*?\).+?)\{/);
+  if (m && m[1]) return m[1].trim();
+}
+
 // Credits:
 // - https://stackoverflow.com/a/32604073
 // - https://stackoverflow.com/a/35976812

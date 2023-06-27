@@ -69,10 +69,22 @@ test('render HTML no tags', async () => {
   expect(final).toBe(txt);
 });
 
-test('render folder', async () => {
+test('render fixtures/', async () => {
   const folder = __dirname + '/fixtures/';
   let result = await twofold.renderFolder(folder);
   expect(result).toBe(5);
   result = await twofold.renderFolder(folder, {}, { glob: '*.js' });
   expect(result).toBe(1);
+});
+
+test('render docs/', async () => {
+  const folder = __dirname + '../docs/';
+  let result = await twofold.renderFolder(folder);
+  expect(result).toBe(0);
+});
+
+test('render *.md', async () => {
+  const folder = __dirname + '../';
+  let result = await twofold.renderFolder(folder, {}, { glob: '*.md' });
+  expect(result).toBe(0);
 });

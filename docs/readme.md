@@ -16,14 +16,14 @@ function increment(text, { innerText, plus = 1 } = {}): number {
 
 <ignore>
 
-And it can be called like: "<increment plus=4>6</increment>". The function will
-receive the args as: innerText="6" and plus="4".
+And it can be called like: "`<increment plus=4>6</increment>`". The function
+will receive the args as: innerText="6" and plus="4".
 
-All tags can be called in camelCase (eg: <emojiClock />), or separated by
-underline (eg: <emoji_clock />).
+All tags can be called in camelCase (eg: `<emojiClock />`), or separated by
+underline (eg: `<emoji_clock />`).
 
 You can customize the tag markers, so you can make them look like jinja2,
-nunjucks, etc. (eg: {emojiClock %}).
+nunjucks, etc. (eg: `{emojiClock %}`).
 
 The built-in tags are located in "/src/functions/" and are available
 automatically. To create extra tags, make a folder eg: "mkdir myFuncs" and
@@ -46,7 +46,7 @@ Example:
 Single tags are **consumed** after they are rendered, so they are **one use
 only**.
 
-Some functions make more sense as single tags (eg: <emojiClock />).
+Some functions make more sense as single tags (eg: `<emojiClock />`).
 
 They are useful in case of composing a document, when you want TwoFold to
 quickly autocomplete some text for you, and then stay out of your way.
@@ -102,25 +102,27 @@ Examples:
 - decimals=2 ---> `2` is a JS number
 - sortLines caseSensitive=true ---> `true` becomes a JS True value
 - sortLines caseSensitive=null ---> `null` becomes a JS Null value
-- req "ipinfo.io" headers=`{"User-Agent":"curl/8.0.1"}` ---> the headers becone
+- req "ipinfo.io" headers=`{"User-Agent":"curl/8.0.1"}` ---> the headers become
   a JS Object
 
 ## Special options
 
 #### "zero" prop
 
-Example: `<eval "1.2 * (2 + 4.5)" />`
+Example: `<pyEval "1.2 * (2 + 4.5)" />`
 
-"Zero" prop. It's like an option, but without a name. TwoFold tags are inspired
+"Zero" prop is like an option, but without a name. TwoFold tags are inspired
 from XML and HTML, but XML doesn't have options without a name. If you want to
-maintain compatibility with XML, you can use `a="1.2 * (2 + 4.5)"`.
+maintain compatibility with XML, you can name the prop **a**, like this:
+`a="1.2 * (2 + 4.5)"`.
 
-"Zero" props are useful to allow adding text inside a single tag.
+"Zero" props are useful to specify the default text inside a tag, and they are
+the first argument for the actual JavaScript function behind the tag.
 
-Only 1 is allowed per tag and it must be the first prop. The tag will still be
-consumed after the first use.
+Only **one "zero" prop is allowed** per tag and it must be the first. The single
+tag will still be consumed after the first use.
 
-This option works only with **single tags**.
+This option works with **single tags** and **double tags**.
 
 #### freeze
 
@@ -129,7 +131,7 @@ Example: `<randomCard freeze=true></randomCard>`
 "Freeze" is a built-in option that tells TwoFold to protect the tag. As long as
 the tag has this option, it will never be executed.
 
-To make TwoFold render the tag again, you just need to delete the freeze=true
+To make TwoFold render the tag again, you just need to delete the `freeze=true`
 prop inside the tag.
 
 This is useful in case you want to keep the previous text and make sure that
@@ -138,9 +140,15 @@ TwoFold won't accidentally replace it.
 You can also invalidate it, eg: by adding a double // in the closing tag, or
 making the tag name Upper-case.
 
+Invalid tag examples:
+
+- `<randomCard freeze=true><//randomCard>` -- notice the double slash
+- `<RandomCard freeze=true></RandomCard>` -- notice the Upper-case from the name
+  of the tag; TwoFold tags must begin with lower-case
+
 #### cut
 
-Example: `<sortLines cut=true>some text here</sortLines>`
+Example: `<sortLines cut=true>some\ntext\nhere</sortLines>`
 
 "Cut" is a built-in option that tells TwoFold to consume a double tag after it's
 rendered, basically to convert it into a single tag.

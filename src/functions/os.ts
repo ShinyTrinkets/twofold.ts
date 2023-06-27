@@ -3,12 +3,19 @@ import * as fsPromises from 'node:fs/promises';
 
 import { resolveDirName, resolveFileName } from './common.ts';
 
+async function _resolvFname(f1, f2) {
+  if (!(f1 || f2)) return;
+  let fname = await resolveFileName(f1);
+  if (!fname) fname = await resolveFileName(f2);
+  if (!fname) return;
+  return fname;
+}
+
 export async function cat(txtFile, { f, start = 0, limit = 250 }) {
   /**
    * Read a file with limit. Similar to "cat" commant from Linux.
    */
-  let fname = await resolveFileName(f);
-  if (!fname) fname = await resolveFileName(txtFile);
+  const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
   const fd = await fsPromises.open(fname, 'r');
   const buffer = Buffer.alloc(limit);
@@ -20,8 +27,7 @@ export async function head(txtFile, { f, lines = 10 }) {
   /**
    * Read a number of lines from file. Similar to "head" commant from Linux.
    */
-  let fname = await resolveFileName(f);
-  if (!fname) fname = await resolveFileName(txtFile);
+  const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
   const input = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
   return input.slice(0, lines).join('\n');
@@ -31,8 +37,7 @@ export async function tail(txtFile, { f, lines = 10 }) {
   /**
    * Read a number of lines from the end of file. Similar to "tail" commant from Linux.
    */
-  let fname = await resolveFileName(f);
-  if (!fname) fname = await resolveFileName(txtFile);
+  const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
   const input = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
   const lastLine = input.length - 1;

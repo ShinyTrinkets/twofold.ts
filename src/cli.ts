@@ -73,7 +73,9 @@ you can use pipes:
 
   if (args.tags) {
     const allFunctions = { ...tags, ...funcs };
-    console.log(allFunctions);
+    for (const f of Object.keys(allFunctions)) {
+      console.log(f, '::', util.functionParams(allFunctions[f]));
+    }
     return;
   }
 
