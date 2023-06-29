@@ -29,7 +29,7 @@
   "type": "module",
   "main": "./src/index.ts",
   "bin": {
-    "2fold": "./src/cli.ts"
+    "tfold": "./src/cli.ts"
   },
   "scripts": {
     "fmt": "bunx prettier --write ./src/{*,*/}*.ts",

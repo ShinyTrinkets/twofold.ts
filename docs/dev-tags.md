@@ -13,6 +13,8 @@ export function increment(s, { innerText, plus = 1 } = {}): number {
 }
 ```
 
+<ignore>
+
 It is a TypeScript function with 3 params, but the function can decide if they
 need to be used.
 
@@ -72,6 +74,8 @@ example:
 ```md
 <debug 'a' b=c d=1 />
 ```
+
+</ignore>
 
 The result will look like this:
 

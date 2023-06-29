@@ -137,6 +137,8 @@ non-technical users to write their own tags.
 
 TwoFold will probably never have a GUI.
 
+Oh, and TwoFold can be easily used as a text expander.
+
 ---
 
 Worth mentioning:
@@ -175,14 +177,16 @@ the final product.
 Template engines are tools made for developers, usually to generate web pages.
 Their goal is to generate the final text.
 
-TwoFold uses only 1 file, both as source and final product; the same user can be
-the creator and the consumer.
-
-The single-tags are destroyed after render, making them perfect for interactive
-use.
-
-TwoFold is a general app and can launch other applications and run arbitrary
+**TwoFold** is a general app and can launch other applications and run arbitrary
 commands or code, depending on the available tags.
+
+TwoFold uses 1 file, both as source and final product; the same user can be the
+creator and the consumer.
+
+But the biggest difference is that TwoFold parser is designed to never crash. If
+it crashes, it's a bug and must be fixed! TwoFold will just ignore the badly
+formed/ invalid XML tags, they will not be executed. All the other template
+engines will stop processing at the first syntax error.
 
 The TwoFold tags are very powerful, they receive the inner text and can improve
 it, destroy it, or ignore it, depending on what the tag needs to do. The tags

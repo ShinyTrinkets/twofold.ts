@@ -64,3 +64,31 @@ export function unParse(node: ParseToken): string {
   }
   return text;
 }
+
+/**
+ * Make a 1 tag string from node elements, ignoring the rawText.
+ * HACKY !!! config is not respected, the values are not quoted...
+ * This is different from unParse, because the tags are generated
+ * from the name and params, so the spacing between elements is lost,
+ * the quotes are normalized, the order of params can be changed...
+ */
+export function makeSingleTag(node: ParseToken): string {
+  let params = ' ';
+  for (const k of Object.keys(node.params)) {
+    let v = node.params[k];
+    if (k === '0') {
+      params += `'${v}' `;
+      continue;
+    }
+    if (typeof v === 'string') {
+      // double quotes cand break the value..
+      v = `"${v}"`;
+    } else if (typeof v === 'object') {
+      // single quotes cand break the value..
+      v = `'${v}'`;
+    }
+    params += `${k}=${v} `;
+  }
+  // TODO: use the tags from config
+  return '<' + node.name + params + '/>';
+}

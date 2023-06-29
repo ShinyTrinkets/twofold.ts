@@ -3,6 +3,7 @@
  */
 
 import { parseNumber } from './common.ts';
+import { makeSingleTag } from '../tags.ts';
 
 export function ignore() {
   /**
@@ -28,6 +29,23 @@ export function increment(s, { innerText, plus = 1 } = {}): number {
    * The increment can be any integer, or float, positive or negative.
    */
   return parseNumber(s || innerText) + parseNumber(plus);
+}
+
+export async function countDown(s, args, meta) {
+  /**
+   * Tick tick tick!
+   */
+  let n = s || args.n;
+  if (n === undefined || n === null) return;
+  if (n === '' || n === '0') return;
+  n = parseNumber(n);
+  if (n < 1) return;
+  // keep the param in the same place
+  if (s) meta.node.params['0'] = n - 1;
+  else meta.node.params.n = n - 1;
+  // the delay is a backup
+  await Bun.sleep(500);
+  return makeSingleTag(meta.node);
 }
 
 export function debug(text, args, meta) {
