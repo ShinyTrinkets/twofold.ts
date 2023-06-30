@@ -66,6 +66,20 @@ You can find more examples in the `/src/functions/` folder. The core tags should
 be well documented; feel free to raise an issue in you think something is not
 clear.
 
+## Errors
+
+When a tag doesn't receive the parameters it needs, it should just return.
+When the TwoFold evaluator runs a function that returns `undefined` or `null`,
+it will not destroy the single tag and it will not replace the inner text of
+a double tag.
+
+For example, the tag `<line />` cannot return anything and is not consumed,
+because it needs the length parameter.
+
+When a tag function crashes, the stack trace is written in the TwoFold CLI.
+I am thinking about methods to make the errors more visible to the user.
+See discussion: https://github.com/ShinyTrinkets/twofold.ts/issues/2
+
 ## Debug
 
 To view what params a tag function can receive, you can use the `debug` tag, for
