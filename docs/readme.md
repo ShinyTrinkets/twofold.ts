@@ -2,13 +2,13 @@
 
 The TwoFold tags are just regular TypeScript/ JavaScript functions.
 
-They can receive as input the text inside the tags (in case of double tags),
-extra props of the tag and user settings (in case they are defined).
+They receive as input the text inside the tags (in case of double tags),
+extra tag props and user settings (in case they are defined).
 
 For example, the `increment()` function looks like this:
 
 ```js
-// functions/tfold.ts file
+// src/functions/tfold.ts file
 function increment(text, { innerText, plus = 1 } = {}): number {
     return parseNumber(text || innerText) + parseNumber(plus);
 }
@@ -25,12 +25,12 @@ underline (eg: `<emoji_clock />`).
 You can customize the tag markers, so you can make them look like jinja2,
 nunjucks, etc. (eg: `{emojiClock %}`).
 
-The built-in tags are located in "/src/functions/" and are available
+The built-in tags are located in `/src/functions/` and are available
 automatically. To create extra tags, make a folder eg: "mkdir myFuncs" and
-create as many Javascript files as you want and expose the functions that you
-want.<br/> Then run `2fold --funcs myFuncs` to point it to your folder. All
-Javascript files will be scanned and all exposed functions will be available as
-tags.<br/> You can check the "/src/functions/" for examples to get you started.
+create your TypeScript/ JavaScript files and expose the functions that you
+want.<br/> Then run `tfold --funcs myFuncs ...` to point it to your folder. All
+JavaScript files will be scanned and all exposed functions will be available as
+tags.<br/> You can check the `/src/functions/` for examples to get you started.
 
 There are **two types of tags**, and multiple options that make them behave
 differently. See below.
@@ -47,12 +47,12 @@ Single tags are **consumed** after they are rendered, so they are **one use
 only**.
 
 Some functions are better suited as single tags, such as `<emojiClock />`, or
-`<line '40 />`.
+`<line '40' />`.
 
-These tags are particularly useful when starting TwoFold in watch mode. By
+These tags are particularly useful when running TwoFold in watch mode. By
 specifying the folder where you edit your files, TwoFold promptly executes the
-tag and generates the result every time you save, staying out of your way while
-providing efficient functionality.
+tag and generates the result every time you save, staying out of your way when
+there are no tags to execute.
 
 ## Double tags
 
@@ -77,7 +77,7 @@ processing a significant amount of text, which is impractical to add inside a
 single tag.
 
 They are useful in case of documentation, to keep the document in sync with
-other external sources, or to format and correct a paragraph.
+other external sources, or to format and correct a paragraph, etc.
 
 ## Tag options
 
@@ -89,7 +89,7 @@ In this example, the 3 options are: `'readme.md' start=0 limit=90`.
 
 Usually all options are... optional, but they don't always have a default; for
 example calculating or executing an expression **absolutely requires** an
-expression.
+expression. When a tag doesn't have all the required values, it will not run.
 
 If the values contain space, they can be surrounded by a matching single quotes,
 double quotes, or ticks.
@@ -148,8 +148,8 @@ making the tag name Upper-case.
 
 Invalid tag examples:
 
-- `<randomCard freeze=true><//randomCard>` -- notice the double slash
-- `<RandomCard freeze=true></RandomCard>` -- notice the Upper-case from the name
+- `<randomCard><//randomCard>` -- notice the double slash
+- `<RandomCard></RandomCard>` -- notice the Upper-case from the name
   of the tag; TwoFold tags must begin with lower-case
 
 #### cut
