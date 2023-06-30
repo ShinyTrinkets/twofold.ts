@@ -29,23 +29,23 @@ const usage = `TwoFold (2✂︎f) v${pkg.version}
 Process a file or folder that contains TwoFold template tags
 and overwrite the original files:
 
-  $ 2fold <file|folder>
+  $ tfold <file|folder>
 
 Scan a file or folder to see what tags might be processed,
 without processing the files:
 
-  $ 2fold -s|--scan <file|folder>
+  $ tfold -s|--scan <file|folder>
 
 For scan or render, you can load a folder with extra
 functions (tags):
 
-  $ 2fold -f|--funcs <folder> --scan <file>
+  $ tfold -f|--funcs <folder> --scan <file>
 
 To test tags, or chain multiple CLI apps together,
 you can use pipes:
 
-  $ echo "yes or no: No" | 2fold
-  $ cat my-file.md | 2fold
+  $ echo "gimme a game card: <randomCard />" | tfold
+  $ cat my-file.md | tfold
 `;
 (async function main() {
   const args = mri(process.argv.slice(2), options);

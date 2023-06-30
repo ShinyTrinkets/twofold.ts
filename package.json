@@ -33,7 +33,8 @@
   },
   "scripts": {
     "fmt": "bunx prettier --write ./src/{*,*/}*.ts",
-    "lint": "tsc -noEmit -allowImportingTsExtensions -esModuleInterop src/*.ts"
+    "lint": "tsc -noEmit -allowImportingTsExtensions -esModuleInterop src/*.ts",
+    "tfold": "./src/cli.ts"
   },
   "dependencies": {
     "cosmiconfig": "8.x",
