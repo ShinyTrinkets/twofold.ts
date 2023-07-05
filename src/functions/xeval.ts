@@ -29,3 +29,27 @@ export async function pyEval(zeroExpr, args = {}) {
   const result = await new Response(proc.stdout).text();
   return result.trim();
 }
+
+export async function rbEval(zeroExpr, args = {}) {
+  /**
+   * Eval Ruby expression and return the result. Useful for Math.
+   */
+  const expr = zeroExpr || args.expr;
+  if (!expr || !expr.trim()) return;
+  const print = args.print === undefined || args.print === true ? `p ${expr}` : expr.toString();
+  const proc = Bun.spawn(['ruby', '-e', print]);
+  const result = await new Response(proc.stdout).text();
+  return result.trim();
+}
+
+export async function perlEval(zeroExpr, args = {}) {
+  /**
+   * Eval Perl expression and return the result. Useful for Math.
+   */
+  const expr = zeroExpr || args.expr;
+  if (!expr || !expr.trim()) return;
+  const say = args.say === undefined || args.say === true ? `say ${expr}` : expr.toString();
+  const proc = Bun.spawn(['perl', '-E', say]);
+  const result = await new Response(proc.stdout).text();
+  return result.trim();
+}
