@@ -15,8 +15,10 @@ const STATE_FINAL = 's__final';
 
 const SPACE_LETTERS = /[ \t]/;
 const QUOTE_LETTERS = /['"`]/;
-const LOWER_LETTERS = /[a-z]/;
-const ALLOWED_ALPHA = /[_0-9a-zA-Z]/;
+// lower latin + greek alphabet letters
+const LOWER_LETTERS = /[a-zα-ω]/;
+// arabic numbers, upper latin + greek alphabet
+const ALLOWED_ALPHA = /[_0-9a-zA-Z\u0391-\u03A1\u03A3-\u03A9]/;
 const MAX_NAME_LEN = 42;
 const MAYBE_JSON_VAL = /['"`][{\[].*[}\]]['"`]$/;
 
