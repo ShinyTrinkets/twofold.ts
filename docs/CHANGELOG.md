@@ -1,6 +1,11 @@
 # TwoFold (2✂︎f) changelog
 
-## v0.6 WIP
+## v0.7 WIP
+
+- more & more polished core tags
+- allow greek letters in tag names
+
+## v0.6
 
 - completele re-written for Bun, in TypeScript, which makes it 2x faster
 - can now compile a standalone CLI executable from Bun
@@ -8,16 +13,14 @@
 - created lots of new core tags
 - zero prop values for tags (eg: {ping "1.1.1.1" /})
 - added a powerful Ignore tag to protect a part of a file from rendering
-- fixed writing files even if they don't have any TwoFold tags
 - BREAKING change: once=true replaced with freeze=true, which is more general
-- BREAKING change: consume=true replaced with cut=true, which is shorter to
-  write
-- a bunch of bug fixes in the lexer and parser
+- BREAKING change: consume=true replaced with cut=true, which is shorter to write
+- fixed writing files even if they don't have any TwoFold tags
+- a bunch of **bug fixes** in the lexer and parser
 
 ## v0.5
 
-- tag prop values can now be surrounded by: single quote `'`, double quote `"`
-  and backtick `` ` ``
+- tag prop values can now be surrounded by: single quote `'`, double quote `"` and backtick `` ` ``
 - tag functions now receive info if the tag is Single or Double
 - CLI option to render all files on watch start (not just on change)
 - CLI config now validates the openTag, closeTag and lastStopper
