@@ -106,6 +106,9 @@ export async function renderFile(fname: string, customTags = {}, cfg: config.Con
   if (meta.fname === undefined) {
     meta.fname = fname;
   }
+  if (meta.root === undefined) {
+    meta.root = path.dirname(meta.fname);
+  }
   const persist = meta.write;
   delete meta.write;
 

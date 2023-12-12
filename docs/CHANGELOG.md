@@ -7,6 +7,7 @@
 
 ## v0.6
 
+- moved repository to: https://github.com/ShinyTrinkets/twofold.ts ; the old repository was: https://github.com/ShinyTrinkets/twofold.js
 - completele re-written for Bun, in TypeScript, which makes it 2x faster
 - can now compile a standalone CLI executable from Bun
 - also thanks to Bun, added `cmd` and `req` core tags
