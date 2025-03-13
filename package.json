@@ -12,19 +12,19 @@
     "2fold",
     "template"
   ],
-  "version": "0.6.0",
+  "version": "0.7.0-dev",
   "license": "MIT",
   "authors": [
     "Cristi Constantin (https://crlf.link/)"
   ],
   "contributors": [],
-  "homepage": "https://github.com/ShinyTrinkets/twofold.js",
+  "homepage": "https://github.com/ShinyTrinkets/twofold.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ShinyTrinkets/twofold.js.git"
+    "url": "git+https://github.com/ShinyTrinkets/twofold.ts.git"
   },
   "bugs": {
-    "url": "https://github.com/ShinyTrinkets/twofold.js/issues"
+    "url": "https://github.com/ShinyTrinkets/twofold.ts/issues"
   },
   "type": "module",
   "main": "./src/index.ts",
@@ -44,8 +44,8 @@
     "shell-quote": "1.x"
   },
   "devDependencies": {
-    "@types/node": "20.x",
-    "bun-types": "0.x",
+    "@types/node": "22.x",
+    "bun-types": "1.x",
     "prettier": "2.x",
     "typescript": "5.x"
   },

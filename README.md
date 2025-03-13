@@ -21,9 +21,9 @@ Python Jupyter Notebooks and React JS.
 
 Check the **[Similar and comparison](/docs/similar.md) page** for more details.
 
-TwoFold operates by processing a text file and identifying all XML-like tags, transforming them into
+TwoFold operates by processing a text file, identifying all XML-like tags and transforming them into
 useful outputs. It is compatible with XML and HTML documents, but you can customize the tag markers,
-so you can make them look like jinja2, nunjucks, etc.
+and you can make them look like jinja2, nunjucks, etc.
 
 TwoFold can watch your files for changes and allow real-time collaboration within the same file and
 location, for example: to validate some information, or calculate some statistics (similar to a
@@ -83,7 +83,7 @@ bun build ./src/cli.ts --compile --outfile tfold
 tfold --help
 ```
 
-You can move the executable anywhere you need, eg: /usr/local/bin/
+You can move the executable anywhere you need, eg: `/usr/local/bin/`.
 
 ## Usage
 
@@ -129,7 +129,7 @@ Then you call TwoFold to render it like this:
 tfold example.md
 ```
 
-The file should be something like:
+The file should become something like:
 
 <!-- deno-fmt-ignore-start -->
 
@@ -144,7 +144,7 @@ Should I play with TwoFold some more ? <yesOrNo>Yes</yesOrNo> ugh...
 
 </ignore>
 
-To see a list with all the available tags, you can call:
+To see a list with all available tags you can use, call:
 
 ```sh
 tfold --tags
