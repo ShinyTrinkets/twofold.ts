@@ -1,4 +1,4 @@
-import { ParseToken } from './types.ts';
+import { DoubleTag, ParseToken, SingleTag } from './types.ts';
 import { isFunction } from './util.ts';
 import { Config } from './config.ts';
 import { consumeTag, getText, isConsumableTag, isDoubleTag, isProtectedTag, isSingleTag } from './tags.ts';
@@ -6,7 +6,12 @@ import { consumeTag, getText, isConsumableTag, isDoubleTag, isProtectedTag, isSi
 /**
  * Evaluate a single tag, by calling the tag function.
  */
-async function evaluateSingleTag(tag: ParseToken, params: Record<string, any>, func, meta: Record<string, any> = {}) {
+async function evaluateSingleTag(
+  tag: SingleTag,
+  params: Record<string, any>,
+  func: Function,
+  meta: Record<string, any> = {}
+): Promise<void> {
   // Zero param text from the single tag &
   // A prop: built-in option that allows single tags to receive text, just like double tags
   // For single tags, zero params have higher priority
@@ -17,7 +22,7 @@ async function evaluateSingleTag(tag: ParseToken, params: Record<string, any>, f
     // Execute the tag function with params
     //
     result = await func(firstParam, params, meta);
-  } catch (err) {
+  } catch (err: any) {
     let info = JSON.stringify(params);
     if (info.length > 120) info = info.slice(0, 120) + '...';
     console.warn(`Cannot evaluate single tag "${tag.name}" with "${info}"! ERROR:`, err.message);
@@ -33,7 +38,12 @@ async function evaluateSingleTag(tag: ParseToken, params: Record<string, any>, f
  * Shallow evaluate a double tag; Only the direct children are processed.
  * If the double tag has param freeze=true, it will not be evaluated.
  */
-async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, func, meta: Record<string, any> = {}) {
+async function evaluateDoubleTag(
+  tag: DoubleTag,
+  params: Record<string, any>,
+  func: Function,
+  meta: Record<string, any> = {}
+): Promise<void> {
   let hasFrozen = false;
   if (tag.children) {
     for (const c of tag.children) {
@@ -52,7 +62,7 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
     if (!tag.params) tag.params = {};
     tag.params.freeze = true;
 
-    const tagChildren = tag.children;
+    const tagChildren = tag.children || [];
     tag.children = [];
 
     for (const c of tagChildren) {
@@ -65,7 +75,7 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
         let tmp = innerText;
         try {
           tmp = await func(firstParam, { ...params, innerText }, meta);
-        } catch (err) {
+        } catch (err: any) {
           console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
         }
         if (tmp === undefined || tmp === null) tmp = '';
@@ -79,7 +89,7 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
     let result = innerText;
     try {
       result = await func(firstParam, { ...params, innerText }, meta);
-    } catch (err) {
+    } catch (err: any) {
       console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
     }
     // If the single tag doesn't have a result, DON'T change the tag
@@ -101,7 +111,7 @@ async function evaluateDoubleTag(tag: ParseToken, params: Record<string, any>, f
 export default async function evaluateTag(
   tag: ParseToken,
   customData: Record<string, any>,
-  allFunctions,
+  allFunctions: Record<string, Function>,
   cfg: Config,
   meta: Record<string, any> = {}
 ) {
@@ -145,8 +155,8 @@ export default async function evaluateTag(
 
   // Call the specialized evaluate function
   if (isDoubleTag(tag)) {
-    await evaluateDoubleTag(tag, params, func, meta);
+    await evaluateDoubleTag(tag as DoubleTag, params, func, meta);
   } else if (isSingleTag(tag)) {
-    await evaluateSingleTag(tag, params, func, meta);
+    await evaluateSingleTag(tag as SingleTag, params, func, meta);
   }
 }

@@ -21,7 +21,7 @@ export function getDate(text: string | Date): Date {
   return text;
 }
 
-export function randomChoice(choices) {
+export function randomChoice(choices: any[]): any {
   const index = Math.floor(Math.random() * choices.length);
   return choices[index];
 }

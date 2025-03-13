@@ -1,14 +1,15 @@
 import path from 'node:path';
+import process from 'node:process';
 import { homedir } from 'node:os';
 import { types } from 'node:util';
 
 // TODO ? types.isGeneratorFunction(f) ?
-export const isFunction = f => typeof f === 'function' || types.isAsyncFunction(f);
+export const isFunction = (f: any) => typeof f === 'function' || types.isAsyncFunction(f);
 
 /**
  * Extract function name and params from the source.
  */
-export function functionParams(f) {
+export function functionParams(f: Function) {
   const m = f.toString().match(/function(.+?\(.*?\).+?)\{/);
   if (m && m[1]) return m[1].trim();
 }
@@ -56,7 +57,7 @@ export async function importAny(dir: string) {
   dir = dir[0] === '/' ? dir : path.join(process.cwd(), dir);
   try {
     return await import(dir);
-  } catch (err) {
+  } catch (err: any) {
     console.warn(`Import ERR: ${err.message}, import '${dir}'`);
   }
 }

@@ -21,7 +21,7 @@ export async function fmtYapf(
   return text;
 }
 
-export async function fmtBlack(pyTxt: string, args, meta): Promise<string> {
+export async function fmtBlack(pyTxt: string, args, meta = {}): Promise<string> {
   /**
    * Format Python code with Black. Of course, Black needs to be installed.
    * Black is called within a Shell to allow it to read local config files, ENV options, etc.
@@ -29,7 +29,7 @@ export async function fmtBlack(pyTxt: string, args, meta): Promise<string> {
   return await fmtBlackOrBlue('black', pyTxt, args, meta);
 }
 
-export async function fmtBlue(pyTxt: string, args, meta): Promise<string> {
+export async function fmtBlue(pyTxt: string, args, meta = {}): Promise<string> {
   /**
    * Format Python code with Blue. Of course, Blue needs to be installed.
    * Blue is called within a Shell to allow it to read local config files, ENV options, etc.

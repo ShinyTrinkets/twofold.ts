@@ -24,8 +24,8 @@ function addChild(parent: ParseToken, child: ParseToken): void {
  */
 export default function parse(tokens: LexToken[], cfg: config.Config = {}): ParseToken[] {
   const { openTag, lastStopper } = { ...config.defaultCfg, ...cfg };
-  const RE_FIRST_START = new RegExp(`^${openTag[0]}[ ]*[a-z]`);
-  const RE_SECOND_START = new RegExp(`^${openTag[0]}[${lastStopper[0]}][ ]*[a-z]`);
+  const RE_FIRST_START = new RegExp(`^${openTag as string[0]}[ ]*[a-z]`);
+  const RE_SECOND_START = new RegExp(`^${openTag as string[0]}[${lastStopper as string[0]}][ ]*[a-z]`);
 
   const ast: ParseToken[] = [];
   const stack: ParseToken[] = [];
@@ -49,14 +49,14 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     const topStack = getTopStack();
     topStack.secondTagText = token.rawText;
     // A valid double tag doesn't have raw text
-    // @ts-ignore
+    // @ts-ignore Shut up, TS
     delete topStack.rawText;
     // Remove the tag from the stack and commit
-    // @ts-ignore
+    // @ts-ignore Top stack exists
     commitToken(stack.pop());
   };
 
-  const dropFakeDouble = function (token: ParseToken): void {
+  const dropFakeDouble = function (): void {
     const topStack = getTopStack();
     // Non-matching double tags are converted to raw text here
     // Remove the tag from the stack and prepare to cleanup
@@ -80,7 +80,7 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     if (isDoubleTag(token)) {
       // Is this the start of a double tag?
       if (RE_FIRST_START.test(token.rawText)) {
-        // @ts-ignore
+        // @ts-ignore Transition to ParseToken
         token.firstTagText = token.rawText;
         // Pushing this tag on the stack means that
         // all the following tags become children of this tag,

@@ -1,6 +1,5 @@
 import { expect, test } from 'bun:test';
 import twofold from '../src/index.js';
-import helpers from '../src/functions/index.js';
 //
 // Testing the core TwoFold functions
 //

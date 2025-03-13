@@ -10,12 +10,12 @@ export function ignore() {
    * When it's a double tag, all tags inside it are protected (frozen).
    * This is similar to the freeze=true prop.
    *
-   * The code for this tag is in the flatten tags functions.
+   * The logic for this tag is in the evaluate tags functions.
    */
   return;
 }
 
-export function text(s, { innerText }) {
+export function text(s: string, { innerText }) {
   /**
    * A tag used for DEV, that returns the text as is.
    * If this wraps some tags, they will be flattened.
@@ -23,7 +23,7 @@ export function text(s, { innerText }) {
   return innerText || s;
 }
 
-export function increment(s, { innerText, plus = 1 } = {}): number {
+export function increment(s: string, { innerText, plus = 1 } = {}): number {
   /**
    * Very silly DEV tag, increment the input with a number.
    * The increment can be any integer, or float, positive or negative.
@@ -31,7 +31,7 @@ export function increment(s, { innerText, plus = 1 } = {}): number {
   return parseNumber(s || innerText) + parseNumber(plus);
 }
 
-export async function countDown(s, args, meta) {
+export async function countDown(s: string, args, meta) {
   /**
    * Tick tick tick!
    */
@@ -48,9 +48,9 @@ export async function countDown(s, args, meta) {
   return makeSingleTag(meta.node);
 }
 
-export function debug(text, args, meta) {
+export function debug(text: string, args, meta) {
   /**
-   * A tag used for DEV, to echo the params received by it.
+   * A tag used for DEV, to echo the parsed tag metadata.
    */
   if (meta.node.rawText) {
     // trim the < and > to disable the live tag

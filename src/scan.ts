@@ -2,44 +2,44 @@ import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import globby from 'fast-glob';
 
-import { ParseToken } from './types.ts';
+import { ParseToken, ScanToken, SingleTag, DoubleTag } from './types.ts';
 import { Config } from './config.ts';
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
 import functions from './functions/index.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
 
-interface ScanToken {
-  name: string;
-  tag: string;
-  single?: boolean;
-  double?: boolean;
-}
-
 /**
  * Scan files and return info about them.
  */
-export function scanFile(fname: string, customFunctions = {}, customConfig: Config = {}) {
-  const allFunctions = { ...functions, ...customFunctions };
+export function scanFile(
+  fname: string,
+  customFunctions = {},
+  customConfig: Config = {}
+): Promise<{ validTags: number; invalidTags: number }> {
+  const allFunctions: Record<string, Function> = { ...functions, ...customFunctions };
   const nodes: ScanToken[] = [];
 
   const walk = (tag: ParseToken) => {
     // Deep walk into tag and list all tags
     if (isDoubleTag(tag)) {
+      const dtag = tag as DoubleTag;
       nodes.push({
         double: true,
-        name: tag.name,
-        tag: tag.firstTagText + tag.secondTagText,
+        name: dtag.name,
+        tag: dtag.firstTagText + dtag.secondTagText,
       });
     } else if (isSingleTag(tag)) {
-      nodes.push({ single: true, name: tag.name, tag: tag.rawText });
+      const stag = tag as SingleTag;
+      nodes.push({ single: true, name: stag.name, tag: stag.rawText });
     }
     if (tag.children) {
       for (const c of tag.children) {
         if (isDoubleTag(c)) {
           walk(c);
         } else if (isSingleTag(c)) {
-          nodes.push({ single: true, name: tag.name, tag: tag.rawText });
+          const stag = c as SingleTag;
+          nodes.push({ single: true, name: stag.name, tag: stag.rawText });
         }
       }
     }
@@ -97,18 +97,23 @@ export async function scanFolder(dir: string, customFunctions = {}, config: Conf
     baseNameMatch: true,
   });
 
-  let total = 0;
+  let validN = 0;
+  let inValidN = 0;
   for (const pth of files) {
     try {
       const fname = path.join(dir, pth);
       const { validTags, invalidTags } = await scanFile(fname, customFunctions, config);
-      total += validTags;
+      validN += validTags;
+      inValidN += invalidTags;
     } catch (err) {
       console.error('Scan dir ERR:', err);
     }
   }
 
-  console.log('Total valid tags ::', total);
+  console.log('Total valid tags ::', validN);
+  if (inValidN > 0) {
+    console.error(`Total invalid tags :: ${inValidN}!`);
+  }
   console.log('-------');
   console.timeEnd(label);
 }

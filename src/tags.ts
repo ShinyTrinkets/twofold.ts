@@ -1,17 +1,21 @@
-import { LexToken, ParseToken } from './types.ts';
+import { DoubleTag, LexToken, ParseToken } from './types.ts';
 
-export const isDoubleTag = (t: LexToken) => !!(t && t.name && t.double);
-export const isSingleTag = (t: LexToken) => !!(t && t.name && t.single && t.rawText);
-export const isRawText = (t: LexToken) => t && t.name === undefined && t.single === undefined && t.double === undefined;
+export const isDoubleTag = (t: LexToken | ParseToken) => !!(t && t.name && t.double);
+export const isSingleTag = (t: LexToken | ParseToken) => !!(t && t.name && t.single && t.rawText);
+export const isRawText = (t: LexToken | ParseToken) =>
+  t && t.name === undefined && t.single === undefined && t.double === undefined;
 
-export const isProtectedTag = (t: LexToken) => t && (t.name === 'ignore' || (t.params && t.params.freeze === true));
-export const isConsumableTag = (t: LexToken) => !!(t && t.params && (t.params.cut === true || t.params.cut === 1));
+export const isProtectedTag = (t: LexToken | ParseToken) =>
+  t && (t.name === 'ignore' || (t.params && t.params.freeze === true));
+export const isConsumableTag = (t: LexToken | ParseToken) =>
+  !!(t && t.params && (t.params.cut === true || t.params.cut === 1));
 
 export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagText && t.secondTagText;
 
-export function consumeTag(tag) {
+export function consumeTag(tag: ParseToken) {
   for (const k of Object.keys(tag)) {
     if (k === 'rawText') continue;
+    // @ts-ignore Delete is OK
     delete tag[k];
   }
 }
@@ -44,7 +48,7 @@ export function getText(node: ParseToken): string {
 export function unParse(node: ParseToken): string {
   let text = '';
   if (node.children) {
-    text = node.firstTagText;
+    text = (node as DoubleTag).firstTagText;
     for (const c of node.children) {
       if (isDoubleTag(c)) {
         text += unParse(c);
@@ -56,8 +60,8 @@ export function unParse(node: ParseToken): string {
   } // Empty double tag, single tag, or raw text
   else {
     if (isDoubleTag(node)) {
-      text = node.firstTagText;
-      text += node.secondTagText;
+      text = (node as DoubleTag).firstTagText;
+      text += (node as DoubleTag).secondTagText;
     } else {
       text = node.rawText;
     }
@@ -67,6 +71,7 @@ export function unParse(node: ParseToken): string {
 
 /**
  * Make a 1 tag string from node elements, ignoring the rawText.
+ * Super EXPERIMENTAL, only used as a demonstration.
  * HACKY !!! config is not respected, the values are not quoted...
  * This is different from unParse, because the tags are generated
  * from the name and params, so the spacing between elements is lost,

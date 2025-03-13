@@ -1,6 +1,10 @@
 import parse from 'shell-quote/parse';
 
-export async function cmd(txtCmd, { cmd, args = [] }, _meta: Record<string, any> = {}) {
+export async function cmd(
+  txtCmd: string,
+  { cmd, args = [] },
+  _meta: Record<string, any> = {}
+): Promise<string | undefined> {
   /**
    * Execute a system command and return the output, without spawning a shell;
    * you probably want to use Bash, or Zsh instead of this.
@@ -46,7 +50,7 @@ export async function cmd(txtCmd, { cmd, args = [] }, _meta: Record<string, any>
   return stdout.trim();
 }
 
-export async function bash(txtCmd, { cmd, args = [], t = 5 }): Promise<string> {
+export async function bash(txtCmd: string, { cmd, args = [], t = 5 }): Promise<string | undefined> {
   /**
    * Spawn Bash and execute command, with options and timeout.
    * Example: <bash "ps aux | grep bash | grep -v grep" //>
@@ -57,7 +61,7 @@ export async function bash(txtCmd, { cmd, args = [], t = 5 }): Promise<string> {
   return await spawnShell('bash', cmd, args, t);
 }
 
-export async function zsh(txtCmd, { cmd, args = [], t = 5 }): Promise<string> {
+export async function zsh(txtCmd: string, { cmd, args = [], t = 5 }): Promise<string | undefined> {
   /**
    * Spawn ZSH and execute command, with options and timeout.
    * Example: <zsh "ps aux | grep zsh | grep -v grep" //>

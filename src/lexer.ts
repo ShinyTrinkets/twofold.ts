@@ -128,15 +128,17 @@ export default class Lexer {
       // This bit can be improved
       try {
         // Try to convert string value into Object
-        // @ts-ignore
+        // @ts-ignore JSON value
         value = JSON.parse(value);
       } catch {
         if (MAYBE_JSON_VAL.test(value)) {
           try {
             // Remove quotes and try again
-            // @ts-ignore
+            // @ts-ignore JSON value
             value = JSON.parse(value.slice(1, -1));
-          } catch {}
+          } catch {
+            /* No need to handle the error */
+          }
         }
         // console.error('Cannot parse param value:', pending.param_key, value)
       }
@@ -376,7 +378,7 @@ export default class Lexer {
     }
 
     if (this._pendingState.rawText) {
-      const lastProcessed = this._processed.at(-1);
+      const lastProcessed = this._processed.at(-1) as LexToken;
       // If the last processed state was a Tag, create a new raw-text
       if (lastProcessed.name) {
         this._processed.push({ rawText: this._pendingState.rawText });
@@ -389,7 +391,7 @@ export default class Lexer {
     this._pendingState = { rawText: '' };
 
     // compact all raw text tags
-    let final = [];
+    const final: LexToken[] = [];
     for (const tok of this._processed) {
       const lastProcessed = final.at(-1);
       if (lastProcessed && isRawText(tok) && isRawText(lastProcessed)) {

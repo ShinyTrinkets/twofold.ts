@@ -1,0 +1,20 @@
+{
+    "lint": {
+        "include": [
+            "src/"
+        ],
+        "exclude": [
+            "src/functions/"
+        ],
+        "rules": {
+            "tags": [
+                "recommended"
+            ],
+            "exclude": [
+                "no-explicit-any",
+                "no-node-globals",
+                "no-unused-vars"
+            ]
+        }
+    }
+}
