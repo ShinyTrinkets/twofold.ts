@@ -1,6 +1,5 @@
 import { expect, test } from 'bun:test';
 import * as fs from 'node:fs';
-import path from 'node:path';
 
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
@@ -69,10 +68,18 @@ test('render HTML no tags', async () => {
   expect(final).toBe(txt);
 });
 
+test('render The Big List of Naughty Strings', async () => {
+  // From: https://github.com/minimaxir/big-list-of-naughty-strings
+  const fname = __dirname + '/fixtures/blns.txt';
+  const txt = fs.readFileSync(fname, { encoding: 'utf8' });
+  const final = await twofold.renderFile(fname);
+  expect(final).toBe(txt);
+});
+
 test('render fixtures/', async () => {
   const folder = __dirname + '/fixtures/';
   let result = await twofold.renderFolder(folder);
-  expect(result).toBe(5);
+  expect(result).toBe(6);
   result = await twofold.renderFolder(folder, {}, { glob: '*.js' });
   expect(result).toBe(1);
 });

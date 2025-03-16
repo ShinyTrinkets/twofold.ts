@@ -76,7 +76,10 @@ export function scanFile(
         // else console.debug('✗', tag.name);
       }
       const invalidTags = nodes.length - validTags;
-      console.log('Valid tags ::', validTags, 'Invalid tags ::', invalidTags);
+      console.log('Valid tags ::', validTags);
+      if (invalidTags) {
+        console.error(`Invalid tags :: ${invalidTags}!`);
+      }
       resolve({ validTags, invalidTags });
       console.log('-------');
     });
