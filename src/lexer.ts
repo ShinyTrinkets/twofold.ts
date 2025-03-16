@@ -390,8 +390,8 @@ export default class Lexer {
     }
 
     if (this._pendingState.rawText) {
-      const lastProcessed = this._processed.at(-1) as LexToken;
-      // If the last processed state was a Tag, create a new raw-text
+      const lastProcessed = this._processed[this._processed.length - 1] as LexToken;
+      // If the last processed state was an unfinished Tag, create a new raw-text
       if (lastProcessed.name) {
         this._processed.push({ rawText: this._pendingState.rawText });
       } else {
@@ -400,12 +400,10 @@ export default class Lexer {
       }
     }
 
-    this._pendingState = { rawText: '' };
-
     // compact all raw text tags
     const final: LexToken[] = [];
     for (const tok of this._processed) {
-      const lastProcessed = final.at(-1);
+      const lastProcessed = final[final.length - 1] as LexToken;
       if (lastProcessed && isRawText(tok) && isRawText(lastProcessed)) {
         lastProcessed.rawText += tok.rawText;
       } else {
@@ -413,6 +411,7 @@ export default class Lexer {
       }
     }
 
+    this._pendingState = { rawText: '' };
     this._processed = final;
     this.state = STATE_FINAL;
     return this._processed;
