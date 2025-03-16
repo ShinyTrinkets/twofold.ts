@@ -191,6 +191,15 @@ const TESTS = [
     ],
   ],
   [
+    'blah <αγγελος_αω /><naïveÉcole />',
+    [
+      { rawText: 'blah ' },
+      { rawText: '<αγγελος_αω />', name: 'αγγελοςΑω', single: true },
+      { rawText: '<naïveÉcole />', name: 'naïveÉcole', single: true },
+    ],
+  ],
+  ['<αλφάβητο />', [{ single: true, rawText: '<αλφάβητο />', name: 'αλφάβητο' }]],
+  [
     'asd <tesTing/> zxc',
     [
       { rawText: 'asd ' },

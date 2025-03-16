@@ -16,9 +16,9 @@ const STATE_FINAL = 's__final';
 const SPACE_LETTERS = /[ \t]/;
 const QUOTE_LETTERS = /['"`]/;
 // lower latin + greek alphabet letters
-const LOWER_LETTERS = /[a-zα-ω]/;
+const LOWER_LETTERS = /[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]/;
 // arabic numbers, upper latin + greek alphabet
-const ALLOWED_ALPHA = /[_0-9a-zA-Z\u0391-\u03A1\u03A3-\u03A9]/;
+const ALLOWED_ALPHA = /[_0-9A-ZÀÁÂÃÄÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝŒŸΆΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ]/i;
 const MAX_NAME_LEN = 42;
 const MAYBE_JSON_VAL = /['"`][{\[].*[}\]]['"`]$/;
 
@@ -93,11 +93,11 @@ export default class Lexer {
       if (pending.rawText) {
         let lastProcessed: LexToken = { rawText: '' };
         if (self._processed.length) {
-          lastProcessed = self._processed.at(-1);
+          lastProcessed = self._processed.at(-1) as LexToken;
         }
         if (joinState && newState === STATE_RAW_TEXT && !lastProcessed.single) {
           if (self._processed.length) {
-            lastProcessed = self._processed.pop();
+            lastProcessed = self._processed.pop() as LexToken;
           }
           lastProcessed.rawText += pending.rawText;
           self._pendingState = { rawText: lastProcessed.rawText };

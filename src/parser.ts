@@ -24,8 +24,14 @@ function addChild(parent: ParseToken, child: ParseToken): void {
  */
 export default function parse(tokens: LexToken[], cfg: config.Config = {}): ParseToken[] {
   const { openTag, lastStopper } = { ...config.defaultCfg, ...cfg };
-  const RE_FIRST_START = new RegExp(`^${openTag as string[0]}[ ]*[a-z]`);
-  const RE_SECOND_START = new RegExp(`^${openTag as string[0]}[${lastStopper as string[0]}][ ]*[a-z]`);
+  const RE_FIRST_START = new RegExp(
+    `^${openTag as string[0]}[ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
+  );
+  const RE_SECOND_START = new RegExp(
+    `^${openTag as string[0]}[${
+      lastStopper as string[0]
+    }][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
+  );
 
   const ast: ParseToken[] = [];
   const stack: ParseToken[] = [];

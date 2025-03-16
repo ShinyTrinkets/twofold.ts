@@ -14,6 +14,8 @@ export function functionParams(f: Function) {
   if (m && m[1]) return m[1].trim();
 }
 
+const NON_ALPHA = /[^0-9a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω\s]/gi;
+
 // Credits:
 // - https://stackoverflow.com/a/32604073
 // - https://stackoverflow.com/a/35976812
@@ -22,7 +24,7 @@ export function toCamelCase(str: string) {
     // Replace any - or _ characters with a space
     .replace(/[-_]+/g, ' ')
     // Remove any non alphanumeric characters
-    .replace(/[^\w\s]/g, '')
+    .replace(NON_ALPHA, '')
     // Remove space from the start and the end
     .trim();
 

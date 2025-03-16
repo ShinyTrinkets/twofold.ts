@@ -49,6 +49,16 @@ const TESTS = [
   ],
 
   [
+    '<αλφάβητο />',
+    [
+      {
+        single: true,
+        rawText: '<αλφάβητο />',
+        name: 'αλφάβητο',
+      },
+    ],
+  ],
+  [
     'less < and > but <yesOrNo></yesOrNo>',
     [
       { rawText: 'less < and > but ' },
