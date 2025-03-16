@@ -3,6 +3,13 @@ import process from 'node:process';
 import { homedir } from 'node:os';
 import { types } from 'node:util';
 
+// lower latin + greek alphabet letters
+export const LOWER_LETTERS = /^[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]/;
+// arabic numbers, all latin + greek alphabet
+export const ALLOWED_ALPHA = /^[_0-9A-ZÀÁÂÃÄÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝŒŸΆΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ]/i;
+
+export const NON_ALPHANUM = /[^0-9a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω\s]/gi;
+
 // TODO ? types.isGeneratorFunction(f) ?
 export const isFunction = (f: any) => typeof f === 'function' || types.isAsyncFunction(f);
 
@@ -14,8 +21,6 @@ export function functionParams(f: Function) {
   if (m && m[1]) return m[1].trim();
 }
 
-const NON_ALPHA = /[^0-9a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω\s]/gi;
-
 // Credits:
 // - https://stackoverflow.com/a/32604073
 // - https://stackoverflow.com/a/35976812
@@ -24,7 +29,7 @@ export function toCamelCase(str: string) {
     // Replace any - or _ characters with a space
     .replace(/[-_]+/g, ' ')
     // Remove any non alphanumeric characters
-    .replace(NON_ALPHA, '')
+    .replace(NON_ALPHANUM, '')
     // Remove space from the start and the end
     .trim();
 

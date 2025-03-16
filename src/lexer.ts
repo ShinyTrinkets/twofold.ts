@@ -13,12 +13,27 @@ const STATE_EQUAL = 's__equal';
 const STATE_VALUE = 's__value';
 const STATE_FINAL = 's__final';
 
-const SPACE_LETTERS = /[ \t]/;
-const QUOTE_LETTERS = /['"`]/;
+const SPACE_LETTERS = /^[ \t]/;
+const QUOTE_LETTERS = /^['"`]/;
 // lower latin + greek alphabet letters
-const LOWER_LETTERS = /[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]/;
-// arabic numbers, upper latin + greek alphabet
-const ALLOWED_ALPHA = /[_0-9A-ZÀÁÂÃÄÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝŒŸΆΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ]/i;
+const isLowerLetter = (code: number) => {
+  return (
+    (code >= 97 && code <= 122) || // a-z
+    (code >= 224 && code <= 255) || // à-ÿ
+    (code >= 940 && code <= 974) // ά-ω
+  );
+};
+// arabic numbers, all latin + greek alphabet
+const isAllowedAlpha = (code: number) => {
+  return (
+    (code >= 48 && code <= 57) || // 0-9
+    (code >= 65 && code <= 90) || // A-Z
+    (code >= 97 && code <= 122) || // a-z
+    code === 95 || // _
+    (code >= 192 && code <= 255) || // À-Ÿ à-ÿ
+    (code >= 940 && code <= 974) // ά-ω
+  );
+};
 const MAX_NAME_LEN = 42;
 const MAYBE_JSON_VAL = /['"`][{\[].*[}\]]['"`]$/;
 
@@ -55,7 +70,7 @@ export default class Lexer {
     return this.finish();
   }
 
-  push(text: string | Buffer): void {
+  push(text: string): void {
     /**
      * Push some text and move the lexing machine.
      * This will consume the block of text completely.
@@ -70,41 +85,40 @@ export default class Lexer {
       return;
     }
 
-    const { openTag, closeTag, lastStopper } = this.lexerConfig;
+    // Cache properties outside the loop
+    const openTagChar = this.lexerConfig.openTag[0];
+    const closeTagChar = this.lexerConfig.closeTag[0];
+    const lastStopperChar = this.lexerConfig.lastStopper[0];
+    let pending: LexToken = this._pendingState;
 
-    const self = this;
-
-    const transition = function (newState: string) {
+    const transition = (newState: string) => {
       // console.log(`Transition FROM (${self.state}) TO (${newState})`)
-      self.priorState = self.state;
-      self.state = newState;
+      this.priorState = this.state;
+      this.state = newState;
     };
 
-    const commitAndTransition = function (newState: string, joinState = false) {
+    const commitAndTransition = (newState: string, joinState = false) => {
       /*
        * Commit old state in the processed list
        * and transition to a new state.
        */
-      // console.log('Commit STATE:', self.state, self._pendingState)
-      const pending = self._pendingState;
+      // console.log('Commit STATE:', this.state, this._pendingState)
       if (pending.name) {
         pending.name = toCamelCase(pending.name);
       }
       if (pending.rawText) {
-        let lastProcessed: LexToken = { rawText: '' };
-        if (self._processed.length) {
-          lastProcessed = self._processed.at(-1) as LexToken;
-        }
+        let lastProcessed: LexToken = this._processed.length ? (this._processed.at(-1) as LexToken) : { rawText: '' };
         if (joinState && newState === STATE_RAW_TEXT && !lastProcessed.single) {
-          if (self._processed.length) {
-            lastProcessed = self._processed.pop() as LexToken;
+          if (this._processed.length) {
+            lastProcessed = this._processed.pop() as LexToken;
           }
           lastProcessed.rawText += pending.rawText;
-          self._pendingState = { rawText: lastProcessed.rawText };
+          this._pendingState = { rawText: lastProcessed.rawText };
         } else {
-          self._processed.push(self._pendingState);
-          self._pendingState = { rawText: '' };
+          this._processed.push(this._pendingState);
+          this._pendingState = { rawText: '' };
         }
+        pending = this._pendingState;
       }
       transition(newState);
     };
@@ -115,13 +129,15 @@ export default class Lexer {
        * and delete the temporary variables.
        * quote=t is for wrapping in a JSON compatible quote.
        */
-      // console.log('Commit TAG:', quote, self.state, self._pendingState)
-      const pending = self._pendingState;
-      let value = pending.param_value;
+      // console.log('Commit TAG:', quote, this.state, this._pendingState)
+      const key = pending.param_key!;
+      let value = pending.param_value!;
       if (quote && value && value.length > 2) {
         if (MAYBE_JSON_VAL.test(value)) {
           value = '"' + value.slice(1, -1) + '"';
-        } else value = JSON.stringify(value.slice(1, -1));
+        } else {
+          value = JSON.stringify(value.slice(1, -1));
+        }
       } else if (quote) {
         value = '""';
       }
@@ -140,219 +156,215 @@ export default class Lexer {
             /* No need to handle the error */
           }
         }
-        // console.error('Cannot parse param value:', pending.param_key, value)
+        // console.error('Cannot parse param value:', key, value)
       }
-      pending.params[pending.param_key] = value;
-      delete pending.param_key;
-      delete pending.param_value;
+      if (key) {
+        pending.params![key] = value;
+        delete pending.param_key;
+        delete pending.param_value;
+      }
     };
 
     const hasParamValueQuote = () => {
-      return QUOTE_LETTERS.test(self._pendingState.param_value[0]);
+      return QUOTE_LETTERS.test(pending.param_value![0]);
     };
 
     const getParamValueQuote = () => {
-      return self._pendingState.param_value[0];
+      return pending.param_value![0];
     };
 
-    for (const char of text) {
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const code: number = text.charCodeAt(i);
       // console.log(`STATE :: ${this.state} ;; new CHAR :: ${char}`)
 
       if (this.state === STATE_RAW_TEXT) {
         // Could this be the beginning of a new tag?
-        if (char === openTag[0]) {
+        if (char === openTagChar) {
           commitAndTransition(STATE_OPEN_TAG);
         }
         // Just append the text to pending state
-        this._pendingState.rawText += char;
+        pending.rawText += char;
         continue;
       } // --
       else if (this.state === STATE_OPEN_TAG) {
         // Is this the beginning of a tag name?
         // only lower letters allowed here
-        if (LOWER_LETTERS.test(char)) {
-          this._pendingState.rawText += char;
-          this._pendingState.name = char;
+        if (isLowerLetter(code)) {
+          pending.rawText += char;
+          pending.name = char;
           transition(STATE_TAG_NAME);
         } // Is this the end of the Second tag from a Double tag?
-        else if (char === lastStopper[0] && !this._pendingState.name && this._pendingState.rawText === openTag[0]) {
-          this._pendingState.rawText += char;
-          this._pendingState.double = true;
+        else if (char === lastStopperChar && !pending.name && pending.rawText === openTagChar) {
+          pending.rawText += char;
+          pending.double = true;
         } // Is this a space before the tag name?
-        else if (
-          SPACE_LETTERS.test(char) &&
-          !this._pendingState.name &&
-          !SPACE_LETTERS.test(this._pendingState.rawText.at(-1))
-        ) {
-          this._pendingState.rawText += char;
+        else if (SPACE_LETTERS.test(char) && !pending.name && !SPACE_LETTERS.test(pending.rawText.at(-1)!)) {
+          pending.rawText += char;
         } // it was a fake open tag, so maybe
         // this be the beginning of a real tag?
-        else if (char === openTag[0]) {
+        else if (char === openTagChar) {
           commitAndTransition(STATE_OPEN_TAG);
-          this._pendingState.rawText += char;
+          pending.rawText += char;
         } // Abandon current state, back to raw text
         else {
-          this._pendingState.rawText += char;
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         }
       } // --
       else if (this.state === STATE_CLOSE_TAG) {
         // Is this the end of a tag?
-        if (char === closeTag[0]) {
-          this._pendingState.rawText += char;
+        if (char === closeTagChar) {
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT);
         } // Abandon current state, back to raw text
         else {
-          delete this._pendingState.name;
-          this._pendingState.rawText += char;
+          delete pending.name;
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         }
       } // --
-      else if (this.state === STATE_TAG_NAME && this._pendingState.name) {
+      else if (this.state === STATE_TAG_NAME && pending.name) {
         // Is this the middle of a tag name?
-        if (ALLOWED_ALPHA.test(char) && this._pendingState.name.length < MAX_NAME_LEN) {
-          this._pendingState.rawText += char;
-          this._pendingState.name += char;
+        if (isAllowedAlpha(code) && pending.name.length < MAX_NAME_LEN) {
+          pending.rawText += char;
+          pending.name += char;
         } // Is this a space after the tag name?
         else if (SPACE_LETTERS.test(char)) {
-          this._pendingState.rawText += char;
+          pending.rawText += char;
           transition(STATE_INSIDE_TAG);
         } // Is this a tag stopper?
         // In this case, it's a single tag
-        else if (char === lastStopper[0]) {
-          this._pendingState.rawText += char;
-          this._pendingState.single = true;
+        else if (char === lastStopperChar) {
+          pending.rawText += char;
+          pending.single = true;
           transition(STATE_CLOSE_TAG);
         } // Is this the end of the First tag from a Double tag?
-        else if (char === closeTag[0]) {
-          this._pendingState.rawText += char;
-          this._pendingState.double = true;
+        else if (char === closeTagChar) {
+          pending.rawText += char;
+          pending.double = true;
           commitAndTransition(STATE_RAW_TEXT);
         } // Abandon current state, back to raw text
         else {
-          delete this._pendingState.name;
-          this._pendingState.rawText += char;
+          delete pending.name;
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         }
       } // --
       else if (this.state === STATE_INSIDE_TAG) {
         // Is this a tag stopper?
         // In this case, it's a single tag
-        if (char === lastStopper[0] && this._pendingState.name) {
-          this._pendingState.rawText += char;
-          this._pendingState.single = true;
+        if (char === lastStopperChar && pending.name) {
+          pending.rawText += char;
+          pending.single = true;
           transition(STATE_CLOSE_TAG);
         } // Is this the end of the First tag from a Double tag?
-        else if (char === closeTag[0]) {
-          this._pendingState.rawText += char;
-          this._pendingState.double = true;
+        else if (char === closeTagChar) {
+          pending.rawText += char;
+          pending.double = true;
           commitAndTransition(STATE_RAW_TEXT);
         } // Is this the start of a ZERO param value?
         // Only one is allowed, and it must be first
-        else if (QUOTE_LETTERS.test(char) && !this._pendingState.params) {
-          this._pendingState.rawText += char;
-          this._pendingState.params = {};
-          this._pendingState.param_key = '0';
-          this._pendingState.param_value = char;
+        else if (QUOTE_LETTERS.test(char) && !pending.params) {
+          pending.rawText += char;
+          pending.params = {};
+          pending.param_key = '0';
+          pending.param_value = char;
           transition(STATE_VALUE);
         } // Is this a space char inside the tag?
-        else if (SPACE_LETTERS.test(char) && this._pendingState.name) {
-          this._pendingState.rawText += char;
+        else if (SPACE_LETTERS.test(char) && pending.name) {
+          pending.rawText += char;
         } // Is this the beginning of a param name?
         // Only lower letters allowed here
-        else if (LOWER_LETTERS.test(char)) {
-          this._pendingState.rawText += char;
-          if (!this._pendingState.params) {
-            this._pendingState.params = {};
+        else if (isLowerLetter(code)) {
+          pending.rawText += char;
+          if (!pending.params) {
+            pending.params = {};
           }
-          this._pendingState.param_key = char;
+          pending.param_key = char;
           transition(STATE_PARAM);
         } // Abandon current state, back to raw text
         else {
-          delete this._pendingState.name;
-          this._pendingState.rawText += char;
+          delete pending.name;
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         }
       } // --
-      else if (this.state === STATE_PARAM && this._pendingState.param_key) {
+      else if (this.state === STATE_PARAM && pending.param_key) {
         // Is this the middle of a param name?
-        if (ALLOWED_ALPHA.test(char) && this._pendingState.param_key.length < MAX_NAME_LEN) {
-          this._pendingState.rawText += char;
-          this._pendingState.param_key += char;
+        if (isAllowedAlpha(code) && pending.param_key.length < MAX_NAME_LEN) {
+          pending.rawText += char;
+          pending.param_key += char;
         } // Is this the equal between key and value?
         // Only "=" allowed between param & value
         else if (char === '=') {
-          this._pendingState.rawText += char;
+          pending.rawText += char;
           transition(STATE_EQUAL);
         } else {
-          delete this._pendingState.params;
-          delete this._pendingState.param_key;
-          this._pendingState.rawText += char;
+          delete pending.params;
+          delete pending.param_key;
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         }
       } // --
-      else if (this.state === STATE_EQUAL && this._pendingState.param_key) {
+      else if (this.state === STATE_EQUAL && pending.param_key) {
         // Is this the start of a value after equal?
-        if (!SPACE_LETTERS.test(char) && char !== lastStopper[0]) {
-          this._pendingState.rawText += char;
-          this._pendingState.param_value = char;
+        if (!SPACE_LETTERS.test(char) && char !== lastStopperChar) {
+          pending.rawText += char;
+          pending.param_value = char;
           transition(STATE_VALUE);
         } else {
-          delete this._pendingState.params;
-          delete this._pendingState.param_key;
-          this._pendingState.rawText += char;
+          delete pending.params;
+          delete pending.param_key;
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         }
       } // Most characters are valid as a VALUE
-      else if (this.state === STATE_VALUE && this._pendingState.param_key) {
+      else if (this.state === STATE_VALUE && pending.param_key) {
         // Newline not allowed inside prop values (really?)
         if (char === '\n') {
-          delete this._pendingState.params;
-          delete this._pendingState.param_key;
-          delete this._pendingState.param_value;
-          this._pendingState.rawText += char;
+          delete pending.params;
+          delete pending.param_key;
+          delete pending.param_value;
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         } // Empty ZERO param values not allowed
         // Eg: {cmd ""}, {exec ""}, or {ping ""} don't make sense
-        else if (
-          char === getParamValueQuote() &&
-          this._pendingState.param_key === '0' &&
-          this._pendingState.param_value.length === 1
-        ) {
-          delete this._pendingState.params;
-          delete this._pendingState.param_key;
-          delete this._pendingState.param_value;
-          this._pendingState.rawText += char;
+        else if (char === getParamValueQuote() && pending.param_key === '0' && pending.param_value!.length === 1) {
+          delete pending.params;
+          delete pending.param_key;
+          delete pending.param_value;
+          pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         } // Is this a valid closing quote?
         else if (char === getParamValueQuote() && QUOTE_LETTERS.test(char)) {
-          this._pendingState.rawText += char;
-          this._pendingState.param_value += char;
+          pending.rawText += char;
+          pending.param_value += char;
           commitTag(true);
           transition(STATE_INSIDE_TAG);
         } // Is this a tag stopper? And the prop value not a string?
         // In this case, it's a single tag
-        else if (char === lastStopper[0] && !hasParamValueQuote()) {
-          this._pendingState.rawText += char;
-          this._pendingState.single = true;
+        else if (char === lastStopperChar && !hasParamValueQuote()) {
+          pending.rawText += char;
+          pending.single = true;
           commitTag();
           transition(STATE_CLOSE_TAG);
         } // Is this the end of the First tag from a Double tag?
         // And the prop value is not a string?
-        else if (char === closeTag[0] && !hasParamValueQuote()) {
-          this._pendingState.rawText += char;
-          this._pendingState.double = true;
+        else if (char === closeTagChar && !hasParamValueQuote()) {
+          pending.rawText += char;
+          pending.double = true;
           commitTag();
           commitAndTransition(STATE_RAW_TEXT);
         } // Is this a space char inside the tag?
         else if (SPACE_LETTERS.test(char) && !hasParamValueQuote()) {
-          this._pendingState.rawText += char;
+          pending.rawText += char;
           commitTag();
           transition(STATE_INSIDE_TAG);
         } // Is this the middle of a value after equal?
         else {
-          this._pendingState.rawText += char;
-          this._pendingState.param_value += char;
+          pending.rawText += char;
+          pending.param_value += char;
         }
       } // UGH THIS SHOULDN'T HAPPEN, TIME TO PANIC
       // SCREAM !!
