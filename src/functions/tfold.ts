@@ -31,7 +31,7 @@ export function increment(s: string, { innerText, plus = 1 } = {}): number {
   return parseNumber(s || innerText) + parseNumber(plus);
 }
 
-export async function countDown(s: string, args, meta) {
+export async function countDown(s: string, args: any, meta: any) {
   /**
    * Tick tick tick!
    */
@@ -48,21 +48,25 @@ export async function countDown(s: string, args, meta) {
   return makeSingleTag(meta.node);
 }
 
-export function debug(text: string, args, meta) {
+export function debug(text: string, args: any, meta: any) {
   /**
    * A tag used for DEV, to echo the parsed tag metadata.
    */
   if (meta.node.rawText) {
     // trim the < and > to disable the live tag
-    meta.node.rawText = meta.node.rawText.slice(1, -1) + '/';
+    meta.node.rawText = meta.node.rawText.slice(1, -1);
+  }
+  if (meta.node.firstTagText) {
+    // disable the double tag
+    meta.node.firstTagText = meta.node.firstTagText.slice(1, -1);
   }
   if (meta.node.secondTagText) {
     // disable the double tag
-    meta.node.secondTagText = '/' + meta.node.secondTagText.slice(1, -1);
+    meta.node.secondTagText = meta.node.secondTagText.slice(1, -1);
   }
   if (meta.node.parent.secondTagText) {
     // disable the double tag
-    meta.node.parent.secondTagText = '/' + meta.node.parent.secondTagText.slice(1, -1);
+    meta.node.parent.secondTagText = meta.node.parent.secondTagText.slice(1, -1);
   }
 
   const isDouble = meta.node.double || meta.node.parent.double;

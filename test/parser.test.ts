@@ -16,18 +16,12 @@ const TESTS = [
     '<x1>',
     [{ rawText: '<x1>' }], // this is raw-text
   ],
-  [
-    '</x1>',
-    [{ rawText: '</x1>' }],
-  ],
+  ['</x1>', [{ rawText: '</x1>' }]],
   [
     '<wrong>, very wrong',
     [{ rawText: '<wrong>, very wrong' }], // this is raw-text
   ],
-  [
-    'wrong, very </wrong>',
-    [{ rawText: 'wrong, very </wrong>' }],
-  ],
+  ['wrong, very </wrong>', [{ rawText: 'wrong, very </wrong>' }]],
   [
     '<temp type=f>0</',
     [{ rawText: '<temp type=f>0</' }], // this is raw-text
@@ -88,6 +82,20 @@ const TESTS = [
         single: true,
       },
       { rawText: ' </zxc>' },
+    ],
+  ],
+  [
+    '<cmd `bash -c "ls -la"` z=`zzz` />', // shouldn't have 2 zero props here
+    [
+      {
+        name: 'cmd',
+        single: true,
+        rawText: '<cmd `bash -c "ls -la"` z=`zzz` />',
+        params: {
+          '0': 'bash -c "ls -la"',
+          z: 'zzz',
+        },
+      },
     ],
   ],
   [

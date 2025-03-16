@@ -89,7 +89,8 @@ test('separated sort render', async () => {
 test('mixed tags', async () => {
   // This test validates a lot of usecases for multiple mixed tags
   // Wrong tags, wrong helper names
-  const txt = `qaz <mumu /> ...\n` +
+  const txt =
+    `qaz <mumu /> ...\n` +
     `rand slice <randomSlice />\n` +
     `xyz <xyz />\n` +
     `rand int <randomInt>\n</randomInt>\n` +
@@ -119,8 +120,7 @@ test('deep mixed HTML tags', async () => {
   txt += '<span class="text">Workd</span> <leftOrRight /></div>';
   tmp = await twofold.renderText(txt);
   expect(tmp).not.toBe(txt);
-  expect(tmp.startsWith('<div><span class="title">Hello</span> <br /><br />'))
-    .toBeTruthy();
+  expect(tmp.startsWith('<div><span class="title">Hello</span> <br /><br />')).toBeTruthy();
   expect(tmp.endsWith('</div>')).toBeTruthy();
 });
 
@@ -131,29 +131,54 @@ test('custom single tag', async () => {
   expect(tmp).toBe('ok');
 
   // Test open and close tag for single
-  tmp = await twofold.renderText('<mumu />', {}, { mumu }, {
-    openTag: '{',
-    closeTag: '}',
-  });
+  tmp = await twofold.renderText(
+    '<mumu />',
+    {},
+    { mumu },
+    {
+      openTag: '{',
+      closeTag: '}',
+    }
+  );
   expect(tmp).toBe('<mumu />');
-  tmp = await twofold.renderText('{mumu /}', {}, { mumu }, {
-    openTag: '{',
-    closeTag: '}',
-  });
+  tmp = await twofold.renderText(
+    '{mumu /}',
+    {},
+    { mumu },
+    {
+      openTag: '{',
+      closeTag: '}',
+    }
+  );
   expect(tmp).toBe('ok');
 
   // Test last stopper for single
-  tmp = await twofold.renderText('<mumu />', {}, { mumu }, {
-    lastStopper: '?',
-  });
+  tmp = await twofold.renderText(
+    '<mumu />',
+    {},
+    { mumu },
+    {
+      lastStopper: '?',
+    }
+  );
   expect(tmp).toBe('<mumu />');
-  tmp = await twofold.renderText('<mumu ?>', {}, { mumu }, {
-    lastStopper: '?',
-  });
+  tmp = await twofold.renderText(
+    '<mumu ?>',
+    {},
+    { mumu },
+    {
+      lastStopper: '?',
+    }
+  );
   expect(tmp).toBe('ok');
-  tmp = await twofold.renderText('<mumu #>', {}, { mumu }, {
-    lastStopper: '#',
-  });
+  tmp = await twofold.renderText(
+    '<mumu #>',
+    {},
+    { mumu },
+    {
+      lastStopper: '#',
+    }
+  );
   expect(tmp).toBe('ok');
 
   // Full config test
@@ -222,11 +247,7 @@ test('deep custom function render', async () => {
   expect(calls).toBe(2); // evaluate calls
 
   calls = 0;
-  tmp = await twofold.renderText(
-    '<mumu><mumu><mumu></mumu></mumu></mumu>',
-    {},
-    { mumu },
-  );
+  tmp = await twofold.renderText('<mumu><mumu><mumu></mumu></mumu></mumu>', {}, { mumu });
   expect(tmp).toBe('<mumu>ok</mumu>');
   expect(calls).toBe(3); // evaluate calls
 

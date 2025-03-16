@@ -15,7 +15,7 @@ async function evaluateSingleTag(
   // Zero param text from the single tag &
   // A prop: built-in option that allows single tags to receive text, just like double tags
   // For single tags, zero params have higher priority
-  const firstParam = params['0'] || params.a || '';
+  const firstParam = params['0'] || params.z || '';
   let result = tag.rawText;
   try {
     //
@@ -53,7 +53,7 @@ async function evaluateDoubleTag(
       }
     }
   }
-  const firstParam = params['0'] || params.a || '';
+  const firstParam = params['0'] || params.z || '';
   //
   // Execute the tag function with params
   //

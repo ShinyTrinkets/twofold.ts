@@ -91,8 +91,7 @@ test('ignore tag', async () => {
   expect(tmp).toBe(txt);
 
   // deep ignore
-  txt =
-    '<increment "1" /> <ignore><increment "2" /></ignore> <increment "3" />';
+  txt = '<increment "1" /> <ignore><increment "2" /></ignore> <increment "3" />';
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe('2 <ignore><increment "2" /></ignore> 4');
 

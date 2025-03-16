@@ -8,6 +8,8 @@ export interface Config {
 }
 
 export const defaultCfg: Config = {
+  // TODO :: make 2 configs, this one is only for Lexing
+  //
   // Currently, openTag, closeTag and lastStopper must be
   // strings of length 1.
 
@@ -54,6 +56,9 @@ export function validateCfg(cfg: Config) {
   }
   if (cfg.closeTag && cfg.closeTag.length !== 1) {
     throw new ConfigError('Close tag validation error');
+  }
+  if (cfg.closeTag == cfg.lastStopper) {
+    throw new ConfigError('Close tag must be different from the stopper');
   }
   if (cfg.lastStopper && !ALLOWED_LAST_STOPPER.test(cfg.lastStopper)) {
     throw new ConfigError('Last stopper validation error');

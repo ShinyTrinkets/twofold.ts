@@ -112,13 +112,12 @@ Example: `<pyEval "1.2 * (2 + 4.5)" />`
 
 "Zero" prop is like an option, but without a name. TwoFold tags are inspired from XML and HTML, but
 XML doesn't have options without a name. If you want to maintain compatibility with XML, you can
-name the prop **a**, like this: `a="1.2 * (2 + 4.5)"`.
+name the prop **z**, like this: `z="1.2 * (2 + 4.5)"`.
 
 "Zero" props are useful to specify the default text inside a tag, and they are the first argument
 for the actual JavaScript function behind the tag.
 
-Only **one "zero" prop is allowed** per tag and it must be the first. The single tag will still be
-consumed after the first use.
+Only **one "zero" prop is allowed** per tag and it must be the first.
 
 This option works with **single tags** and **double tags**.
 
@@ -126,8 +125,8 @@ This option works with **single tags** and **double tags**.
 
 Example: `<randomCard freeze=true></randomCard>`
 
-"Freeze" is a built-in option that tells TwoFold to protect the tag. As long as the tag has this
-option, it will never be executed.
+"Freeze" is a built-in prop that tells TwoFold to protect the tag. As long as the tag has this
+option, the tag and all its children will never be executed.
 
 To make TwoFold render the tag again, you just need to delete the `freeze=true` prop inside the tag.
 
@@ -152,7 +151,8 @@ to convert it into a single tag.
 
 The value of cut can be either "true", or "1", eg: `cut=1` is shorter to write.
 
-It is useful to wrap a big chunk of text within a double tag, and consume the tag after processing.
+It is useful to wrap a big chunk of text within a double tag, and consume the tag after processing,
+eg in case of jsEval, pyEval, or cmd.
 
 This option works only with **double tags**.
 

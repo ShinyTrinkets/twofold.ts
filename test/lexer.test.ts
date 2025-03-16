@@ -144,7 +144,7 @@ const TESTS = [
     ],
   ],
   [
-    '<a "1" "2" />',
+    '<a "1" "2" />', // only 1 zero tag
     [{ rawText: '<a "1" "2" />' }],
   ],
   [
@@ -163,6 +163,13 @@ const TESTS = [
     '<a "1"></a>',
     [
       { rawText: '<a "1">', name: 'a', params: { '0': '1' }, double: true },
+      { rawText: '</a>', name: 'a', double: true },
+    ],
+  ],
+  [
+    '<a z="1"></a>',
+    [
+      { rawText: '<a z="1">', name: 'a', params: { z: '1' }, double: true },
       { rawText: '</a>', name: 'a', double: true },
     ],
   ],
