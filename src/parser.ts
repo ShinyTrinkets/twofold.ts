@@ -25,12 +25,10 @@ function addChild(parent: ParseToken, child: ParseToken): void {
 export default function parse(tokens: LexToken[], cfg: config.Config = {}): ParseToken[] {
   const { openTag, lastStopper } = { ...config.defaultCfg, ...cfg };
   const RE_FIRST_START = new RegExp(
-    `^${openTag as string[0]}[ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
+    `^${openTag as string}[ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
   );
   const RE_SECOND_START = new RegExp(
-    `^${openTag as string[0]}[${
-      lastStopper as string[0]
-    }][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
+    `^${openTag as string}[${lastStopper as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
   );
 
   const ast: ParseToken[] = [];
@@ -63,16 +61,14 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
   };
 
   const dropFakeDouble = function (): void {
-    const topStack = getTopStack();
+    if (stack.length === 0) return;
+    const topStack = stack.pop() as ParseToken;
     // Non-matching double tags are converted to raw text here
     // Remove the tag from the stack and prepare to cleanup
-    if (topStack) {
-      stack.pop();
-      commitToken({ rawText: topStack.firstTagText || topStack.rawText });
-      if (topStack.children) {
-        for (const child of topStack.children) {
-          commitToken(child);
-        }
+    commitToken({ rawText: topStack.firstTagText || topStack.rawText });
+    if (topStack.children) {
+      for (const child of topStack.children) {
+        commitToken(child);
       }
     }
   };
@@ -101,17 +97,15 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
         } else {
           dropFakeDouble();
           // Search up the stack if the closing tag matches anything
-          let unwindNo;
+          let unwindNo = -1;
           for (let i = stack.length - 1; i >= 0; i--) {
-            const upStack = stack[i];
-            if (upStack.name === token.name) {
+            if (stack[i].name === token.name) {
               unwindNo = i;
               break;
             }
           }
-          if (typeof unwindNo === 'number') {
-            for (let i = stack.length - 1; i >= 0; i--) {
-              if (unwindNo === i) break;
+          if (unwindNo >= 0) {
+            for (let i = stack.length - 1; i > unwindNo; i--) {
               dropFakeDouble();
             }
             commitDouble(token);

@@ -36,8 +36,8 @@ const TESTS = [
     [{ rawText: ' <a_b></b_c>' }], // non matching tags
   ],
   [
-    '<ping \'x.y\'></pink>',
-    [{ rawText: '<ping \'x.y\'></pink>' }], // non matching tags
+    "<ping 'x.y'></pink>",
+    [{ rawText: "<ping 'x.y'></pink>" }], // non matching tags
   ],
   [
     '\n<I am doing>some</stuff>\n',
@@ -295,50 +295,64 @@ const TESTS = [
   ],
   [
     '<trick1><trick2><trick3></trick1>',
-    [{
-      double: true,
-      name: 'trick1',
-      firstTagText: '<trick1>',
-      secondTagText: '</trick1>',
-      children: [{
-        rawText: '<trick2><trick3>',
-      }],
-    }],
+    [
+      {
+        double: true,
+        name: 'trick1',
+        firstTagText: '<trick1>',
+        secondTagText: '</trick1>',
+        children: [
+          {
+            rawText: '<trick2><trick3>',
+          },
+        ],
+      },
+    ],
   ],
   [
     '<trick1><trick2><trick3><trick4></trick2>',
-    [{
-      rawText: '<trick1>',
-    }, {
-      double: true,
-      name: 'trick2',
-      firstTagText: '<trick2>',
-      secondTagText: '</trick2>',
-      children: [{
-        rawText: '<trick3><trick4>',
-      }],
-    }],
+    [
+      {
+        rawText: '<trick1>',
+      },
+      {
+        double: true,
+        name: 'trick2',
+        firstTagText: '<trick2>',
+        secondTagText: '</trick2>',
+        children: [
+          {
+            rawText: '<trick3><trick4>',
+          },
+        ],
+      },
+    ],
   ],
   [
     '<i><increment plus=4>6</increment><sort x=t>\n<//></i>',
-    [{
-      double: true,
-      name: 'i',
-      firstTagText: '<i>',
-      secondTagText: '</i>',
-      children: [{
+    [
+      {
         double: true,
-        name: 'increment',
-        firstTagText: '<increment plus=4>',
-        secondTagText: '</increment>',
-        params: { plus: 4 },
+        name: 'i',
+        firstTagText: '<i>',
+        secondTagText: '</i>',
         children: [
           {
-            rawText: '6',
+            double: true,
+            name: 'increment',
+            firstTagText: '<increment plus=4>',
+            secondTagText: '</increment>',
+            params: { plus: 4 },
+            children: [
+              {
+                rawText: '6',
+              },
+            ],
           },
+          { rawText: '<sort x=t>\n<//>' },
         ],
-      }, { rawText: '<sort x=t>\n<//>' }],
-    }],
+      },
+    ],
   ],
 ];
 
@@ -365,7 +379,12 @@ test('weird parse tests', () => {
   ast = parse(lex);
   expect(ast).toStrictEqual([]);
 
-  lex = [{ rawText: '1' }, { rawText: '2' }];
+  lex = [
+    { rawText: '1' },
+    { rawText: '2' },
+    { double: true, name: 'a', rawText: '</a>' },
+    { double: true, name: 'a', rawText: '<b>' },
+  ];
   ast = parse(lex);
-  expect(ast).toStrictEqual([{ rawText: '12' }]);
+  expect(ast).toStrictEqual([{ rawText: '12</a><b>' }]);
 });
