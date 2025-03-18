@@ -1,0 +1,44 @@
+{
+  "version": "4",
+  "specifiers": {
+    "jsr:@std/assert@^1.0.11": "1.0.11",
+    "jsr:@std/expect@*": "1.0.13",
+    "jsr:@std/internal@^1.0.5": "1.0.5"
+  },
+  "jsr": {
+    "@std/assert@1.0.11": {
+      "integrity": "2461ef3c368fe88bc60e186e7744a93112f16fd110022e113a0849e94d1c83c1",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/expect@1.0.13": {
+      "integrity": "d8e236c7089cd9fcf5e6032f27dadc3db6349d0aee48c15bc71d717bca5baa42",
+      "dependencies": [
+        "jsr:@std/assert",
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.5": {
+      "integrity": "54a546004f769c1ac9e025abd15a76b6671ddc9687e2313b67376125650dc7ba"
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:shell-quote@*"
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@types/node@22",
+        "npm:bun-types@1",
+        "npm:cosmiconfig@8",
+        "npm:fast-glob@3",
+        "npm:micromatch@4",
+        "npm:mri@1",
+        "npm:prettier@2",
+        "npm:shell-quote@1",
+        "npm:typescript@5"
+      ]
+    }
+  }
+}

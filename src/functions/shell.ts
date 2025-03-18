@@ -1,4 +1,4 @@
-import parse from 'shell-quote/parse';
+import { parse } from 'shell-quote';
 
 export async function cmd(
   txtCmd: string,

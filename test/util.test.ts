@@ -1,4 +1,5 @@
-import { expect, test } from 'bun:test';
+import { testing } from './wrap.ts';
+const { test, expect } = await testing;
 import { importAny, toCamelCase } from '../src/util.ts';
 
 test('camel case', () => {

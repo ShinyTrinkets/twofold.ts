@@ -1,4 +1,5 @@
-import { expect, test } from 'bun:test';
+import { testing } from './wrap.ts';
+const { test, expect } = await testing;
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
 import { getText, unParse } from '../src/tags.ts';

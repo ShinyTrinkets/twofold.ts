@@ -1,4 +1,7 @@
 {
+    "imports": {
+        "shell-quote": "npm:shell-quote"
+    },
     "lint": {
         "include": [
             "src/"

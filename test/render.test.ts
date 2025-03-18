@@ -1,6 +1,7 @@
-import { expect, test } from 'bun:test';
-import twofold from '../src/index.js';
-import helpers from '../src/functions/index.js';
+import { testing } from './wrap.ts';
+const { test, expect } = await testing;
+import twofold from '../src/index.ts';
+import helpers from '../src/functions/index.ts';
 //
 // General testing of the render function
 //
