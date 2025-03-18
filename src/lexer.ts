@@ -13,8 +13,9 @@ const STATE_EQUAL = 's__equal';
 const STATE_VALUE = 's__value';
 const STATE_FINAL = 's__final';
 
-const SPACE_LETTERS = /^[ \t]/;
-const QUOTE_LETTERS = /^['"`]/;
+const isSpace = (char: string) => char === ' ' || char === '\t';
+const isQuote = (char: string) => char === "'" || char === '"' || char === '`';
+
 // lower latin + greek alphabet letters
 const isLowerLetter = (code: number) => {
   return (
@@ -123,18 +124,18 @@ export default class Lexer {
       transition(newState);
     };
 
-    const commitTag = function (quote = false) {
+    const commitTag = (quote = false) => {
       /*
        * Commit pending tag key + value as a dict
        * and delete the temporary variables.
        * quote=t is for wrapping in a JSON compatible quote.
        */
-      // console.log('Commit TAG:', quote, this.state, this._pendingState)
+      // console.log('Commit TAG:', quote, this.state, pending)
       const key = pending.param_key!;
       let value = pending.param_value!;
       if (quote && value && value.length > 2) {
         if (MAYBE_JSON_VAL.test(value)) {
-          value = '"' + value.slice(1, -1) + '"';
+          value = value.slice(1, -1);
         } else {
           value = JSON.stringify(value.slice(1, -1));
         }
@@ -166,7 +167,7 @@ export default class Lexer {
     };
 
     const hasParamValueQuote = () => {
-      return QUOTE_LETTERS.test(pending.param_value![0]);
+      return isQuote(pending.param_value![0]);
     };
 
     const getParamValueQuote = () => {
@@ -199,7 +200,7 @@ export default class Lexer {
           pending.rawText += char;
           pending.double = true;
         } // Is this a space before the tag name?
-        else if (SPACE_LETTERS.test(char) && !pending.name && !SPACE_LETTERS.test(pending.rawText.at(-1)!)) {
+        else if (!pending.name && isSpace(char) && !isSpace(pending.rawText.at(-1)!)) {
           pending.rawText += char;
         } // it was a fake open tag, so maybe
         // this be the beginning of a real tag?
@@ -230,7 +231,7 @@ export default class Lexer {
           pending.rawText += char;
           pending.name += char;
         } // Is this a space after the tag name?
-        else if (SPACE_LETTERS.test(char)) {
+        else if (isSpace(char)) {
           pending.rawText += char;
           transition(STATE_INSIDE_TAG);
         } // Is this a tag stopper?
@@ -265,14 +266,14 @@ export default class Lexer {
           commitAndTransition(STATE_RAW_TEXT);
         } // Is this the start of a ZERO param value?
         // Only one is allowed, and it must be first
-        else if (QUOTE_LETTERS.test(char) && !pending.params) {
+        else if (!pending.params && isQuote(char)) {
           pending.rawText += char;
           pending.params = {};
           pending.param_key = '0';
           pending.param_value = char;
           transition(STATE_VALUE);
         } // Is this a space char inside the tag?
-        else if (SPACE_LETTERS.test(char) && pending.name) {
+        else if (pending.name && isSpace(char)) {
           pending.rawText += char;
         } // Is this the beginning of a param name?
         // Only lower letters allowed here
@@ -309,7 +310,7 @@ export default class Lexer {
       } // --
       else if (this.state === STATE_EQUAL && pending.param_key) {
         // Is this the start of a value after equal?
-        if (!SPACE_LETTERS.test(char) && char !== lastStopperChar) {
+        if (char !== lastStopperChar && !isSpace(char)) {
           pending.rawText += char;
           pending.param_value = char;
           transition(STATE_VALUE);
@@ -337,7 +338,7 @@ export default class Lexer {
           pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         } // Is this a valid closing quote?
-        else if (char === getParamValueQuote() && QUOTE_LETTERS.test(char)) {
+        else if (char === getParamValueQuote() && isQuote(char)) {
           pending.rawText += char;
           pending.param_value += char;
           commitTag(true);
@@ -357,7 +358,7 @@ export default class Lexer {
           commitTag();
           commitAndTransition(STATE_RAW_TEXT);
         } // Is this a space char inside the tag?
-        else if (SPACE_LETTERS.test(char) && !hasParamValueQuote()) {
+        else if (isSpace(char) && !hasParamValueQuote()) {
           pending.rawText += char;
           commitTag();
           transition(STATE_INSIDE_TAG);

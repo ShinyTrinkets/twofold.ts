@@ -251,6 +251,18 @@ const TESTS = [
     }],
   ],
   [
+    `<echo j1='[1, 2]' j2="[2, 3]" />`, // JSON values
+    [{
+      rawText: `<echo j1='[1, 2]' j2="[2, 3]" />`,
+      name: 'echo',
+      single: true,
+      params: {
+        j1: [1, 2],
+        j2: [2, 3],
+      },
+    }],
+  ],
+  [
     `<echo text1=" <>//<> " text2=' <>// <>' text2=\`<> //<>\` />`, // stress test
     [
       {
@@ -259,7 +271,7 @@ const TESTS = [
         single: true,
         params: {
           text1: ' <>//<> ',
-          text2: ' <>// <>',
+          //text2: ' <>// <>',
           text2: '<> //<>',
         },
       },

@@ -2,14 +2,15 @@ export interface Config {
   openTag?: string;
   closeTag?: string;
   lastStopper?: string;
+}
+
+export interface CliConfig extends Config {
   tags?: Record<string, any>;
   depth?: number;
   glob?: string;
 }
 
 export const defaultCfg: Config = {
-  // TODO :: make 2 configs, this one is only for Lexing
-  //
   // Currently, openTag, closeTag and lastStopper must be
   // strings of length 1.
 
@@ -27,6 +28,12 @@ export const defaultCfg: Config = {
   // If you change it to "?", it will become: <random-int><?random-int>
   // In double tags, the stopper only affects the start of the last tag
   lastStopper: '/',
+};
+
+export const defaultCliCfg: CliConfig = {
+  openTag: '<',
+  closeTag: '>',
+  lastStopper: '/',
 
   // walk-dir scan depth
   depth: 3,
@@ -35,7 +42,7 @@ export const defaultCfg: Config = {
   glob: '*.*',
 };
 
-export async function userCfg(): Promise<Config> {
+export async function userCfg(): Promise<CliConfig> {
   const cosmic = await import('cosmiconfig');
   const explorer = cosmic.cosmiconfig('twofold');
   // Explore all possible config locations
@@ -50,7 +57,7 @@ export async function userCfg(): Promise<Config> {
 
 const ALLOWED_LAST_STOPPER = /^[\/\?\!#]$/;
 
-export function validateCfg(cfg: Config) {
+export function validateCfg(cfg: CliConfig) {
   if (cfg.openTag && cfg.openTag.length !== 1) {
     throw new ConfigError('Open tag validation error');
   }
