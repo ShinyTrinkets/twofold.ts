@@ -150,14 +150,14 @@ const TESTS = [
     ],
   ],
   [
-    '<temp type=f deep=no nr=3 null=null>0</temp>',
+    '<temp type=f deep=no nr=3 null=null false=false>0</temp>', // JS types
     [
       {
         double: true,
-        firstTagText: '<temp type=f deep=no nr=3 null=null>',
+        firstTagText: '<temp type=f deep=no nr=3 null=null false=false>',
         secondTagText: '</temp>',
         name: 'temp',
-        params: { type: 'f', deep: 'no', nr: 3, null: null },
+        params: { type: 'f', deep: 'no', nr: 3, null: null, false: false },
         children: [{ rawText: '0' }],
       },
     ],

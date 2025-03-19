@@ -1,8 +1,9 @@
-import { expect, test } from 'bun:test';
+import { testing } from './wrap.ts';
+const { test, expect } = await testing;
 import func from '../src/functions/index.ts';
 
 test('day or night time', () => {
-  let d;
+  let d: any;
   d = { date: '01 Dec 2012 11:11 GMT' };
   expect(func.dayOrNight(0, d)).toBe('day');
   expect(func.emojiSunMoon(0, d)).toBe('☀️');
@@ -15,7 +16,7 @@ test('day or night time', () => {
 });
 
 test('emoji clock', () => {
-  let d;
+  let d: any;
   d = { date: new Date(2012, 11, 21, 11) };
   expect(func.emojiClock(0, d)).toBe('🕚');
 

@@ -291,12 +291,12 @@ const TESTS = [
     ],
   ],
   [
-    '<\tdayOrNight date=`2019-07` void=null\t/>', // convert to JS null
+    '<\tdayOrNight date=`2019-07` void=null false=false\t/>', // convert to JS types
     [
       {
         name: 'dayOrNight',
-        params: { date: '2019-07', void: null },
-        rawText: '<\tdayOrNight date=`2019-07` void=null\t/>',
+        params: { date: '2019-07', void: null, false: false },
+        rawText: '<\tdayOrNight date=`2019-07` void=null false=false\t/>',
         single: true,
       },
     ],
