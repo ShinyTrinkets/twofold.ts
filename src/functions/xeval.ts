@@ -2,7 +2,7 @@
  * Eval code in different programming languages.
  */
 
-export function jsEval(zeroExpr, args = {}) {
+export function jsEval(zeroExpr: string, args: Record<string, string> = {}) {
   /**
    * Eval Javacript and return the result. Useful for Math.
    * This uses the builtin eval function from Bun.
@@ -13,7 +13,7 @@ export function jsEval(zeroExpr, args = {}) {
   return result;
 }
 
-export async function pyEval(zeroExpr, args = {}) {
+export async function pyEval(zeroExpr: string, args: Record<string, any> = {}) {
   /**
    * Eval Python and return the result. Useful for Math.
    * Python is installed in most Linux distributions and on MacOS.
@@ -30,7 +30,7 @@ export async function pyEval(zeroExpr, args = {}) {
   return result.trim();
 }
 
-export async function rbEval(zeroExpr, args = {}) {
+export async function rbEval(zeroExpr: string, args: Record<string, any> = {}) {
   /**
    * Eval Ruby expression and return the result. Useful for Math.
    */
@@ -42,7 +42,7 @@ export async function rbEval(zeroExpr, args = {}) {
   return result.trim();
 }
 
-export async function perlEval(zeroExpr, args = {}) {
+export async function perlEval(zeroExpr: string, args: Record<string, any> = {}) {
   /**
    * Eval Perl expression and return the result. Useful for Math.
    */

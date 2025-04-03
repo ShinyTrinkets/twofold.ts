@@ -10,6 +10,7 @@ import * as request from './request.ts';
 
 import * as fmt from './fmt.ts';
 import * as xeval from './xeval.ts';
+import * as llm from './llm.ts';
 import * as tfold from './tfold.ts';
 
 export default {
@@ -24,5 +25,6 @@ export default {
   ...shell,
   ...request,
   ...xeval,
+  ...llm,
   ...tfold,
 };
