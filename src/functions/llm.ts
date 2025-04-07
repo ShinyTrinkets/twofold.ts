@@ -4,7 +4,16 @@
 
 export async function ai(zeroText: string, args: Record<string, any> = {}) {
   let text = (zeroText || args.innerText).replace(/^[ \n]+/, '');
-  const apiUrl = 'http://127.1:8080/v1/chat/completions';
+  if (text.trim() === '') return '';
+
+  let apiUrl = 'http://127.1:1234/v1/chat/completions';
+  {
+    if (args.apiUrl) {
+      apiUrl = args.apiUrl;
+    } else if (args.host || args.port) {
+      apiUrl = `http://${args.host || '127.1'}:${args.port || 1234}/v1/chat/completions`;
+    }
+  }
   const oldMessages = parseConversation(text);
 
   let foundSystem = false;
@@ -36,17 +45,20 @@ export async function ai(zeroText: string, args: Record<string, any> = {}) {
     messages: oldMessages,
   };
   if (args.model) {
-    // only used for apps like Ollama and online services like OpenAI
+    // only used for multi-model apps like Ollama and online services like OpenAI
     body.model = args.model;
   }
-  if (args.temperature) {
-    body.temperature = args.temperature;
+  if (args.temperature || args.temp) {
+    // Temperature controls the randomness of the model's output
+    // For Tavern, a good default value is 1
+    body.temperature = args.temperature || args.temp;
   }
   if (args.min_p) {
     // Minimum probability for the model to consider a token
     // Sampler will cull off all the garbage tokens from the distribution
     // A lower value (e.g., <0.1) allows for more randomness and creativity
     // A higher value (e.g., 0.2-0.3) makes the model more conservative
+    // For Tavern, a good default value is 0.025
     body.min_p = args.min_p;
   }
   if (args.top_p) {
