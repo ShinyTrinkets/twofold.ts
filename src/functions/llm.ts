@@ -8,8 +8,8 @@ export async function ai(zeroText: string, args: Record<string, any> = {}) {
 
   let apiUrl = 'http://127.1:1234/v1/chat/completions';
   {
-    if (args.apiUrl) {
-      apiUrl = args.apiUrl;
+    if (args.url) {
+      apiUrl = args.url;
     } else if (args.host || args.port) {
       apiUrl = `http://${args.host || '127.1'}:${args.port || 1234}/v1/chat/completions`;
     }
@@ -109,15 +109,21 @@ export async function ai(zeroText: string, args: Record<string, any> = {}) {
   }
 
   let content = '';
+  const headers = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    'X-Title': 'TwoFold (2xf)',
+  };
+  if (process.env.AI_API_KEY) {
+    headers['Authorization'] = `Bearer ${process.env.AI_API_KEY}`;
+  }
+
   try {
     const response = await fetch(apiUrl, {
+      headers,
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(body),
     });
-
     if (!response.ok) {
       console.error('Bad HTTP status:', response.status);
       return;
