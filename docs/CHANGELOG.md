@@ -2,8 +2,11 @@
 
 ## v0.7 WIP
 
-- more & more polished core tags
-- allow greek letters in tag names
+- re-enabled the --watch command
+- allow greek and lots of non-latin letters in tag names
+- added an AI chat tag, so you can chat with local or remote LLMs
+- hopefully, the lexer and parser are much faster
+- much better tests & some tests compatible with Deno
 
 ## v0.6
 

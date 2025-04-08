@@ -30,22 +30,24 @@ const usage = `TwoFold (2✂︎f) v${pkg.version}
 
 Process a file or folder that contains TwoFold template tags
 and overwrite the original files:
-
   $ tfold <file|folder>
 
 Scan a file or folder to see what tags might be processed,
 without processing the files:
-
   $ tfold -s|--scan <file|folder>
 
 For scan or render, you can load a folder with extra
 functions (tags):
-
   $ tfold -f|--funcs <folder> --scan <file>
+
+Watch or folder to render everytime the files change:
+  $ tfold -w|--watch <file|folder>
+
+You can also specify a glob pattern to match files, e.g.:
+  $ tfold ... -g|--glob '*.md'
 
 To test tags, or chain multiple CLI apps together,
 you can use pipes:
-
   $ echo "gimme a game card: <randomCard />" | tfold
   $ cat my-file.md | tfold
 `;
@@ -128,7 +130,7 @@ you can use pipes:
       ) {
         return;
       }
-      console.log(`(2✂︎f) Watching: ${fname}`);
+      console.log(`(2✂︎f) w :: ${fname}`);
       setTimeout(async () => {
         await twofold.renderFile(fname, funcs, config, { fname, write: true });
         if (locks[fname]) {
@@ -141,6 +143,7 @@ you can use pipes:
 
     const depth = args.depth ? args.depth : 3;
     const ignoreInitial = !args.initialRender;
+    console.log(`(2✂︎f) Watching: ${args.watch}, depth=${depth}, ignoreInitial=${ignoreInitial}`);
     const watcher = chokidar.watch(args.watch, {
       depth,
       ignoreInitial,

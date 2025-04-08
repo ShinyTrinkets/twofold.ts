@@ -5,6 +5,7 @@ export interface Config {
 }
 
 export interface CliConfig extends Config {
+  // Tag params could contain API tokens, or CLI args
   tags?: Record<string, any>;
   depth?: number;
   glob?: string;

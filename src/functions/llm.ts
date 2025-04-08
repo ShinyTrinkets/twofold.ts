@@ -123,6 +123,7 @@ export async function ai(zeroText: string, args: Record<string, any> = {}) {
       headers,
       method: 'POST',
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(args.timeout || 180_000),
     });
     if (!response.ok) {
       console.error('Bad HTTP status:', response.status);

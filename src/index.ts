@@ -131,7 +131,7 @@ export async function renderFile(fname: string, customTags = {}, cfg: config.Con
 /**
  * This is the most high level function, so it needs extra safety checks.
  */
-export async function renderFolder(dir: string, customTags = {}, cfg: config.Config = {}, meta = {}): Promise<number> {
+export async function renderFolder(dir: string, customTags = {}, cfg: config.Config = {}, meta = {}): Promise<Record<string, number>> {
   if (!cfg) {
     cfg = {};
   }
@@ -142,22 +142,26 @@ export async function renderFolder(dir: string, customTags = {}, cfg: config.Con
     meta.write = true;
   }
 
-  let index = 0;
+  const stats = { found: 0, rendered: 0 }
+  const isMatch = cfg.glob ? picomatch(cfg.glob) : null;
   const files = listTree(dir, cfg.depth || 3);
   for (const fname of files) {
     if (
-      config.glob &&
-      !picomatch.isMatch(fname, config.glob, {
+      isMatch &&
+      !isMatch(fname, {
         basename: true,
         contains: true,
-      })
+      }).isMatch
     ) {
       continue;
     }
-    await renderFile(fname, customTags, cfg, { ...meta, root: dir });
-    index++;
+    stats.found++;
+    const t = await renderFile(fname, customTags, cfg, { ...meta, root: dir });
+    if (t === '') {
+      stats.rendered++;
+    }
   }
-  return index;
+  return stats;
 }
 
 export default { renderText, renderFile, renderFolder };
