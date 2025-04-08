@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { open } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import crypto from 'node:crypto';
 import globby from 'fast-glob';
@@ -100,28 +100,30 @@ export async function renderFile(fname: string, customTags = {}, cfg: config.Con
   if (!fname) {
     throw new Error('Invalid renderFile options!');
   }
-  // const label = 'tf-' + (Math.random() * 100 * Math.random()).toFixed(6)
-  // console.time(label);
-
   if (meta.fname === undefined) {
     meta.fname = fname;
   }
   if (meta.root === undefined) {
     meta.root = path.dirname(meta.fname);
   }
-  const persist = meta.write;
+  const shouldWrite = meta.write;
   delete meta.write;
 
   const stream = createReadStream(fname, { encoding: 'utf8' });
   const result = await renderStream(stream, customTags, cfg, meta);
-  if (persist && result.changed) {
-    console.debug('Writing file:', fname);
-    await writeFile(fname, result.text, { encoding: 'utf8' });
-    // console.timeEnd(label);
+  if (shouldWrite && result.changed) {
+    let fd = null;
+    try {
+      console.debug('Writing file:', fname);
+      fd = await open(fname, 'w');
+      await fd.write(result.text, { encoding: 'utf8' });
+      await fd.sync();
+    } finally {
+      await fd?.close();
+    }
     return '';
   }
 
-  // console.timeEnd(label);
   return result.text;
 }
 

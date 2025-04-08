@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 
 import fs from 'node:fs';
-import path from 'node:path';
 
 import twofold from './index.ts';
 import tags from './functions/index.ts';
@@ -11,16 +10,19 @@ import * as scan from './scan.ts';
 import * as util from './util.ts';
 
 import pkg from '../package.json';
+import chokidar from 'chokidar';
+import micromatch from 'micromatch';
 import mri from 'mri';
 
 const options = {
-  boolean: ['help', 'version', 'tags', 'fromWatch'],
+  boolean: ['help', 'version', 'tags'],
   alias: {
     c: 'config',
     f: 'funcs',
     s: 'scan',
-    // 'glob',
-    // 'depth',
+    w: 'watch',
+    d: 'depth',
+    g: 'glob',
   },
 };
 
@@ -113,21 +115,40 @@ you can use pipes:
     return;
   }
 
-  if (args.fromWatch) {
-    // Example CLI run:
-    // watchexec --watch --debounce 1sec . -- bun run src/cli.ts --fromWatch
-    const changeDir = process.env.WATCHEXEC_COMMON_PATH;
-    const changePth = process.env.WATCHEXEC_WRITTEN_PATH;
-    if (changeDir && changePth) {
-      console.log('(2✂︎f) WatchExec:', changePth);
-      const fname = path.join(changeDir, changePth);
-      await twofold.renderFile(fname, funcs, config, {
-        fname,
-        root: changeDir,
-        write: true,
-      });
-      return;
-    }
+  if (args.watch) {
+    const locks: Record<string, boolean> = {};
+    const callback = async (fname: string) => {
+      // ignore files that don't match the pattern
+      if (
+        config.glob &&
+        !micromatch.isMatch(fname, config.glob, {
+          basename: true,
+          contains: true,
+        })
+      ) {
+        return;
+      }
+      console.log(`(2✂︎f) Watching: ${fname}`);
+      setTimeout(async () => {
+        await twofold.renderFile(fname, funcs, config, { fname, write: true });
+        if (locks[fname]) {
+          // disable writing lock
+          locks[fname] = false;
+          return false;
+        }
+      }, config.writeDelay || 100);
+    };
+
+    const depth = args.depth ? args.depth : 3;
+    const ignoreInitial = !args.initialRender;
+    const watcher = chokidar.watch(args.watch, {
+      depth,
+      ignoreInitial,
+      persistent: true,
+      followSymlinks: true,
+    });
+    watcher.on('add', callback).on('change', callback);
+    return;
   }
 
   // render paths from args

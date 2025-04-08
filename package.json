@@ -37,8 +37,8 @@
     "tfold": "./src/cli.ts"
   },
   "dependencies": {
+    "chokidar": "4.x",
     "cosmiconfig": "8.x",
-    "fast-glob": "3.x",
     "micromatch": "4.x",
     "mri": "1.x",
     "shell-quote": "1.x"
