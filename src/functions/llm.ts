@@ -2,7 +2,7 @@
  * Functions for calling a local, or remote LLM.
  */
 
-export async function ai(zeroText: string, args: Record<string, any> = {}) {
+export async function ai(zeroText: string, args: Record<string, any> = {}, meta: Record<string, any> = {}) {
   let text = (zeroText || args.innerText).replace(/^[ \n]+/, '');
   if (text.trim() === '') return '';
 
@@ -131,6 +131,10 @@ export async function ai(zeroText: string, args: Record<string, any> = {}) {
     }
 
     const data = await response.json();
+    if (data.error) {
+      console.error('Error from model API:', data.error);
+      return;
+    }
     content = data.choices[0].message.content.trim();
     if (content === '') {
       console.error('Empty response from model');

@@ -22,8 +22,9 @@ export async function pyEval(zeroExpr: string, args: Record<string, any> = {}) {
   if (!expr || !expr.trim()) return;
   // Bun.spawn(['bash', '-c', `python <<'EOF'\n${expr}\nEOF`]);
   const proc = Bun.spawn(['python'], { stdin: 'pipe' });
-  if (args.print === undefined || args.print === true) proc.stdin.write(`print( ${expr} )`);
-  else proc.stdin.write(expr.toString());
+  if (args.print === undefined || args.print === true) {
+    proc.stdin.write(`print( ${expr} )`);
+  } else proc.stdin.write(expr.toString());
   proc.stdin.flush();
   proc.stdin.end();
   const result = await new Response(proc.stdout).text();
