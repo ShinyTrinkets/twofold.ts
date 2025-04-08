@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { homedir } from 'node:os';
@@ -46,6 +47,21 @@ export function toCamelCase(str: string) {
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     })
     .join('');
+}
+
+export function listTree(dir: string, depth = Infinity): string[] {
+  if (depth <= 0) return [];
+  const files: string[] = [];
+  for (const entry of fs.readdirSync(dir)) {
+    const fullPath = path.join(dir, entry);
+    const stats = fs.statSync(fullPath);
+    if (stats.isDirectory() && depth > 1) {
+      files.push(...listTree(fullPath, depth - 1));
+    } else if (stats.isFile()) {
+      files.push(fullPath);
+    }
+  }
+  return files;
 }
 
 export function unTildify(pth: string) {

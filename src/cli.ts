@@ -11,7 +11,7 @@ import * as util from './util.ts';
 
 import pkg from '../package.json';
 import chokidar from 'chokidar';
-import micromatch from 'micromatch';
+import picomatch from 'picomatch';
 import mri from 'mri';
 
 const options = {
@@ -121,7 +121,7 @@ you can use pipes:
       // ignore files that don't match the pattern
       if (
         config.glob &&
-        !micromatch.isMatch(fname, config.glob, {
+        !picomatch.isMatch(fname, config.glob, {
           basename: true,
           contains: true,
         })

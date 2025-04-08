@@ -1,8 +1,8 @@
 import { open } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import crypto from 'node:crypto';
-import globby from 'fast-glob';
 import path from 'node:path';
+import picomatch from 'picomatch';
 
 import * as config from './config.ts';
 
@@ -11,6 +11,7 @@ import parse from './parser.ts';
 import evaluate from './evaluate.ts';
 import functions from './functions/index.ts';
 import { unParse } from './tags.ts';
+import { listTree } from './util.ts';
 
 /**
  * Render a text string. Used for rendering STDIN, and for tests.
@@ -137,21 +138,22 @@ export async function renderFolder(dir: string, customTags = {}, cfg: config.Con
   if (!customTags) {
     customTags = {};
   }
-  const glob = cfg.glob || ['*.*'];
-  const depth = cfg.depth || 3;
   if (meta.write === undefined) {
     meta.write = true;
   }
 
   let index = 0;
-  const files = await globby(glob, {
-    cwd: dir,
-    deep: depth,
-    onlyFiles: true,
-    baseNameMatch: true,
-  });
-  for (const pth of files) {
-    const fname = `${dir}/${pth}`;
+  const files = listTree(dir, cfg.depth || 3);
+  for (const fname of files) {
+    if (
+      config.glob &&
+      !picomatch.isMatch(fname, config.glob, {
+        basename: true,
+        contains: true,
+      })
+    ) {
+      continue;
+    }
     await renderFile(fname, customTags, cfg, { ...meta, root: dir });
     index++;
   }
