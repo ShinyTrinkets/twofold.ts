@@ -69,31 +69,53 @@ export function unParse(node: ParseToken): string {
   return text;
 }
 
-/**
- * Make a 1 tag string from node elements, ignoring the rawText.
- * EXPERIMENTAL, only used as a demonstration.
- * HACKY !!! the values are not quoted in the same way ...
- * This is different from unParse, because the tags are generated
- * from the name and params, so the spacing between elements is lost,
- * the quotes are normalized, the order of params can be changed...
- */
-export function makeSingleTag(node: ParseToken): string {
-  let params = ' ';
-  for (let [k, v] of Object.entries(node.params || {})) {
-    if (k === '0') {
-      params += `'${v}' `;
+export function editTag(node: ParseToken, newParams: Record<string, any>): string {
+  /**
+   * Edit a tag, replacing the rawText with the new text.
+   * This is used to edit the tag in place, by applying the new params.
+   */
+  node.params = { ...(node.params || {}), ...newParams };
+
+  if (isDoubleTag(node)) {
+    // Extract opening and closing delimiters
+    const openDelimiter = node.firstTagText?.match(/^.[ \t]*/)?.[0];
+    const closeDelimiter = node.firstTagText?.match(/[ \t]*.$/)?.[0];
+
+    // Create the opening tag content with updated params
+    const paramStr = formatParams(node.params);
+    node.firstTagText = `${openDelimiter}${node.name} ${paramStr}${closeDelimiter}`;
+  } else if (isSingleTag(node)) {
+    // Extract the delimiters
+    const openDelimiter = node.rawText?.match(/^.[ \t]*/)?.[0];
+    const closeDelimiter = node.rawText?.match(/[ \t]*..$/)?.[0];
+
+    // Create the new tag with updated params
+    const paramStr = formatParams(node.params);
+    node.rawText = `${openDelimiter}${node.name} ${paramStr}${closeDelimiter}`;
+  }
+
+  return unParse(node);
+}
+
+// Helper function to format parameters consistently
+function formatParams(params: Record<string, any>): string {
+  if (!params || Object.keys(params).length === 0) {
+    return '';
+  }
+
+  let result = '';
+  for (const [key, value] of Object.entries(params)) {
+    if (key === '0') {
+      // Positional parameter
+      result += `'${value}' `;
       continue;
     }
-    if (typeof v === 'string') {
-      // double quotes cand break the value..
-      v = `"${v}"`;
-    } else if (typeof v === 'object') {
-      // single quotes cand break the value..
-      v = `'${v}'`;
+    if (typeof value === 'number' || typeof value === 'boolean' || value === null || value === undefined) {
+      result += `${key}=${value} `;
+    } else {
+      result += `${key}=${JSON.stringify(value)} `;
     }
-    params += `${k}=${v} `;
   }
-  const openTag = node.rawText[0];
-  const closeTag = node.rawText.slice(-2);
-  return openTag + node.name + params + closeTag;
+
+  return result.trim();
 }

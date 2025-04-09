@@ -2,7 +2,7 @@ import { testing } from './wrap.ts';
 const { test, expect } = await testing;
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
-import { getText, unParse } from '../src/tags.ts';
+import { editTag, getText, unParse } from '../src/tags.ts';
 
 test('raw text getText', () => {
   const txt = ' blah blah...';
@@ -68,4 +68,22 @@ test('parse unparse 3', () => {
   const ast = parse(new Lexer().lex(txt));
   const final = unParse(ast[0]);
   expect(final).toBe(txt);
+});
+
+test('edit tag', () => {
+  let ast = parse(new Lexer().lex('<noop>1 </noop>'));
+  let final = editTag(ast[0], { a: 'b', c: 'd' });
+  expect(final).toBe(`<noop a="b" c="d">1 </noop>`);
+
+  ast = parse(new Lexer().lex('< noop a=a b=b> 1</noop >'));
+  final = editTag(ast[0], { a: 1, c: false, d: null });
+  expect(final).toBe(`< noop a=1 b="b" c=false d=null> 1</noop >`);
+
+  ast = parse(new Lexer().lex('<countDown n=5 x=x/>'));
+  final = editTag(ast[0], { n: 4 });
+  expect(final).toBe(`<countDown n=4 x="x"/>`);
+
+  ast = parse(new Lexer().lex('< countDown n=5 x=0  />'));
+  final = editTag(ast[0], { n: 3 });
+  expect(final).toBe(`< countDown n=3 x=0  />`);
 });

@@ -1,16 +1,16 @@
-import { expect, test } from "bun:test";
-import func from "../src/functions/index.ts";
+import { expect, test } from 'bun:test';
+import func from '../src/functions/index.ts';
 
-test("parse conversation", () => {
+test('parse conversation', () => {
   let body = func.parseConversation(`
   User: Hello
   Assistant: Hi there! How can I assist you today?
   `); // empty line
   expect(body).toEqual([
-    { role: "user", content: "Hello" },
+    { role: 'user', content: 'Hello' },
     {
-      role: "assistant",
-      content: "Hi there! How can I assist you today?",
+      role: 'assistant',
+      content: 'Hi there! How can I assist you today?',
       emptyLines: 1,
     },
   ]);
@@ -21,8 +21,8 @@ test("parse conversation", () => {
   User:
   `); // empty lines
   expect(body).toEqual([
-    { role: "system", content: "You are a funny assistant." },
-    { role: "user", content: "Hello\ntell me a joke", emptyLines: 1 },
+    { role: 'system', content: 'You are a funny assistant.' },
+    { role: 'user', content: 'Hello\ntell me a joke', emptyLines: 1 },
   ]);
 
   body = func.parseConversation(`
@@ -32,13 +32,13 @@ test("parse conversation", () => {
   Why did the computer go to the doctor? Because it had a virus!
   User:  more`);
   expect(body).toEqual([
-    { role: "user", content: "tell me a joke" },
+    { role: 'user', content: 'tell me a joke' },
     {
-      role: "assistant",
+      role: 'assistant',
       content:
         "Why don't scientists trust atoms? Because they make up everything!\nWhy did the scarecrow win an award? Because he was outstanding in his field!\nWhy did the computer go to the doctor? Because it had a virus!",
     },
-    { role: "user", content: "more" },
+    { role: 'user', content: 'more' },
   ]);
 
   body = func.parseConversation(`
@@ -49,8 +49,8 @@ Assistant: Hello!
 User: how are you?
 `);
   expect(body).toEqual([
-    { role: "user", content: "hi", emptyLines: 1 },
-    { role: "assistant", content: "Hello!", emptyLines: 1 },
-    { role: "user", content: "how are you?", emptyLines: 1 },
+    { role: 'user', content: 'hi', emptyLines: 1 },
+    { role: 'assistant', content: 'Hello!', emptyLines: 1 },
+    { role: 'user', content: 'how are you?', emptyLines: 1 },
   ]);
 });

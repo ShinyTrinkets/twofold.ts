@@ -163,7 +163,7 @@ const TESTS = [
   [
     '<a "1"></a>',
     [
-      { rawText: '<a "1">', name: 'a', params: { '0': '1' }, double: true },
+      { rawText: '<a "1">', name: 'a', params: { 0: '1' }, double: true },
       { rawText: '</a>', name: 'a', double: true },
     ],
   ],
@@ -291,12 +291,12 @@ const TESTS = [
     ],
   ],
   [
-    '<\tdayOrNight date=`2019-07` void=null false=false\t/>', // convert to JS types
+    '<\tdayOrNight date=`2019-07` void=null false=false true=true\t/>', // convert to JS types
     [
       {
         name: 'dayOrNight',
-        params: { date: '2019-07', void: null, false: false },
-        rawText: '<\tdayOrNight date=`2019-07` void=null false=false\t/>',
+        params: { date: '2019-07', void: null, false: false, true: true },
+        rawText: '<\tdayOrNight date=`2019-07` void=null false=false true=true\t/>',
         single: true,
       },
     ],

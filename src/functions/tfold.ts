@@ -2,8 +2,9 @@
  * TwoFold useful tags.
  */
 
+import { ee } from '../event.ts';
 import { parseNumber } from './common.ts';
-import { makeSingleTag } from '../tags.ts';
+import { editTag, unParse } from '../tags.ts';
 
 export function ignore() {
   /**
@@ -33,7 +34,7 @@ export function increment(s: string, { innerText, plus = 1 } = {}): number {
 
 export async function countDown(s: string, args: any, meta: any) {
   /**
-   * Tick tick tick!
+   * Experimental: Tick tick tick!
    */
   let n = s || args.n;
   if (n === undefined || n === null) return;
@@ -41,11 +42,36 @@ export async function countDown(s: string, args: any, meta: any) {
   n = parseNumber(n);
   if (n < 1) return;
   // keep the param in the same place
-  if (s) meta.node.params['0'] = n - 1;
-  else meta.node.params.n = n - 1;
+  let newParams: any = {};
+  if (s) newParams['0'] = n - 1;
+  else newParams.n = n - 1;
   // the delay is a backup
   await Bun.sleep(500);
-  return makeSingleTag(meta.node);
+  return editTag(meta.node, newParams);
+}
+
+export async function slowSave(s: string, args: any, meta: any) {
+  /**
+   * DOESN'T WORK YET: save file slowly, many times.
+   */
+  let n = s || args.n;
+  if (n === undefined || n === null) return;
+  if (n === '' || n === '0') return;
+  n = parseNumber(n);
+  if (n < 1) return;
+
+  for (let i = 1; i <= n; i++) {
+    // keep the param in the same place
+    if (s) meta.node.params['0'] = n - i;
+    else meta.node.params.n = n - i;
+    await Bun.sleep(1000);
+    ee.emit({
+      name: 'save',
+      text: s,
+      args,
+      meta,
+    });
+  }
 }
 
 export function debug(text: string, args: any, meta: any) {
