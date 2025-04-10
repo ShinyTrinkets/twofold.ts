@@ -2,10 +2,11 @@
  * Functions for calling a local, or remote LLM.
  */
 
-export async function ai(zeroText: string, args: Record<string, any> = {}, meta: Record<string, any> = {}) {
+export async function ai(zeroText: string, args: Record<string, any> = {}, _meta: Record<string, any> = {}) {
   let text = (zeroText || args.innerText).replace(/^[ \n]+/, '');
   if (text.trim() === '') return '';
 
+  // the default URL is just terrible, but we need something
   let apiUrl = 'http://127.1:1234/v1/chat/completions';
   {
     if (args.url) {

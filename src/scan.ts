@@ -1,13 +1,14 @@
 import { createReadStream } from 'node:fs';
-import path from 'node:path';
-import globby from 'fast-glob';
+// @ts-ignore missing types
+import picomatch from 'picomatch';
 
-import { ParseToken, ScanToken, SingleTag, DoubleTag } from './types.ts';
+import { DoubleTag, ParseToken, ScanToken, SingleTag } from './types.ts';
+import { isDoubleTag, isSingleTag } from './tags.ts';
 import { Config } from './config.ts';
+import { listTree } from './util.ts';
+import functions from './functions/index.ts';
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
-import functions from './functions/index.ts';
-import { isDoubleTag, isSingleTag } from './tags.ts';
 
 /**
  * Scan files and return info about them.
@@ -17,7 +18,10 @@ export function scanFile(
   customFunctions = {},
   customConfig: Config = {}
 ): Promise<{ validTags: number; invalidTags: number }> {
-  const allFunctions: Record<string, Function> = { ...functions, ...customFunctions };
+  const allFunctions: Record<string, Function> = {
+    ...functions,
+    ...customFunctions,
+  };
   const nodes: ScanToken[] = [];
 
   const walk = (tag: ParseToken) => {
@@ -46,7 +50,7 @@ export function scanFile(
   };
 
   return new Promise(resolve => {
-    const label = 'scan-' + fname;
+    const label = 'scan:' + fname;
     console.time(label);
 
     let len = 0;
@@ -86,26 +90,20 @@ export function scanFile(
   });
 }
 
-export async function scanFolder(dir: string, customFunctions = {}, config: Config = {}) {
-  const label = 'scan-' + dir;
+export async function scanFolder(dir: string, customFunctions = {}, cfg: Config = {}) {
+  const label = 'scan:' + dir;
   console.time(label);
-
-  const glob = config.glob || ['*.*'];
-  const depth = config.depth || 3;
-
-  const files = await globby(glob, {
-    cwd: dir,
-    deep: depth,
-    onlyFiles: true,
-    baseNameMatch: true,
-  });
 
   let validN = 0;
   let inValidN = 0;
-  for (const pth of files) {
+  const isMatch = cfg.glob ? picomatch('**/' + cfg.glob) : null;
+  const files = listTree(dir, cfg.depth || 3);
+  for (const fname of files) {
+    if (isMatch && !isMatch(fname, { basename: true }).isMatch) {
+      continue;
+    }
     try {
-      const fname = path.join(dir, pth);
-      const { validTags, invalidTags } = await scanFile(fname, customFunctions, config);
+      const { validTags, invalidTags } = await scanFile(fname, customFunctions, cfg);
       validN += validTags;
       inValidN += invalidTags;
     } catch (err) {
@@ -119,4 +117,6 @@ export async function scanFolder(dir: string, customFunctions = {}, config: Conf
   }
   console.log('-------');
   console.timeEnd(label);
+
+  return { validN, inValidN };
 }

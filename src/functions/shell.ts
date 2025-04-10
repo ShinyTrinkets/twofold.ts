@@ -1,3 +1,4 @@
+// @ts-ignore missing types
 import { parse } from 'shell-quote';
 
 export async function cmd(
@@ -15,9 +16,7 @@ export async function cmd(
    */
 
   cmd = txtCmd.trim() || cmd.trim();
-
   if (!cmd) return;
-
   const xs = args && args.length ? [cmd, ...parse(args)] : parse(cmd);
 
   args = [];

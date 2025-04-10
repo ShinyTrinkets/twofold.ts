@@ -87,9 +87,9 @@ export default class Lexer {
     }
 
     // Cache properties outside the loop
-    const openTagChar = this.lexerConfig.openTag[0];
-    const closeTagChar = this.lexerConfig.closeTag[0];
-    const lastStopperChar = this.lexerConfig.lastStopper[0];
+    const openTagChar = this.lexerConfig.openTag?.[0];
+    const closeTagChar = this.lexerConfig.closeTag?.[0];
+    const lastStopperChar = this.lexerConfig.lastStopper?.[0];
     let pending: LexToken = this._pendingState;
 
     const transition = (newState: string) => {
