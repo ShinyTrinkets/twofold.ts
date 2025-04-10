@@ -1,4 +1,5 @@
-import { expect, test } from 'bun:test';
+import { testing } from './wrap.ts';
+const { test, expect } = await testing;
 import func from '../src/functions/index.ts';
 
 test('parse conversation', () => {

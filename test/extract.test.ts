@@ -1,17 +1,20 @@
-import { expect, test } from 'bun:test';
+import { testing } from './wrap.ts';
+const { test, expect } = await testing;
 import * as fs from 'node:fs';
 
 import Lexer from '../src/lexer.ts';
 import parse from '../src/parser.ts';
 import twofold from '../src/index.ts';
 import { isDoubleTag, isRawText, isSingleTag } from '../src/tags.ts';
+
+const DIR = import.meta.dirname;
 //
 // Testing the extraction of the blocks
 // A more serious testing is done in render tests
 //
 test('no blocks found', () => {
   const o = new Lexer();
-  const txt = fs.readFileSync(__dirname + '/fixtures/text0.md', {
+  const txt = fs.readFileSync(DIR + '/fixtures/text0.md', {
     encoding: 'utf8',
   });
   const lex = o.lex(txt);
@@ -23,7 +26,7 @@ test('no blocks found', () => {
 
 test('some blocks found', async () => {
   const o = new Lexer();
-  const txt = fs.readFileSync(__dirname + '/fixtures/text1.md', {
+  const txt = fs.readFileSync(DIR + '/fixtures/text1.md', {
     encoding: 'utf8',
   });
   const lex = o.lex(txt);
@@ -41,28 +44,28 @@ test('some blocks found', async () => {
 });
 
 test('render file no tags', async () => {
-  const fname = __dirname + '/fixtures/text0.md';
+  const fname = DIR + '/fixtures/text0.md';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
   expect(final).toBe(txt);
 });
 
 test('render file some tags', async () => {
-  const fname = __dirname + '/fixtures/text1.md';
+  const fname = DIR + '/fixtures/text1.md';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
   expect(final).toBe(txt);
 });
 
 test('render XML no tags', async () => {
-  const fname = __dirname + '/fixtures/menu.xml';
+  const fname = DIR + '/fixtures/menu.xml';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
   expect(final).toBe(txt);
 });
 
 test('render HTML no tags', async () => {
-  const fname = __dirname + '/fixtures/index.html';
+  const fname = DIR + '/fixtures/index.html';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
   expect(final).toBe(txt);
@@ -70,28 +73,29 @@ test('render HTML no tags', async () => {
 
 test('render The Big List of Naughty Strings', async () => {
   // From: https://github.com/minimaxir/big-list-of-naughty-strings
-  const fname = __dirname + '/fixtures/blns.txt';
+  const fname = DIR + '/fixtures/blns.txt';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
   expect(final).toBe(txt);
 });
 
 test('render fixtures/', async () => {
-  const folder = __dirname + '/fixtures/';
+  const folder = DIR + '/fixtures/';
   let result = await twofold.renderFolder(folder);
   expect(result).toEqual({ found: 6, rendered: 0 });
   result = await twofold.renderFolder(folder, {}, { glob: '*.js' });
-  expect(result).toEqual({ found: 0, rendered: 0 });
+  expect(result).toEqual({ found: 1, rendered: 0 });
 });
 
 test('render docs/', async () => {
-  const folder = __dirname + '/../docs/';
+  const folder = DIR + '/../docs/';
   let result = await twofold.renderFolder(folder);
   expect(result).toEqual({ found: 7, rendered: 0 });
 });
 
 test('render *.md', async () => {
-  const folder = __dirname + '/../';
-  let result = await twofold.renderFolder(folder, {}, { glob: '*.md' });
-  expect(result).toEqual({ found: 0, rendered: 0 });
+  const folder = DIR + '/../';
+  const cfg = { depth: 1, glob: '*.md' };
+  let result = await twofold.renderFolder(folder, {}, cfg);
+  expect(result).toEqual({ found: 1, rendered: 0 });
 });
