@@ -7,7 +7,7 @@
     "npm:cosmiconfig@8": "8.3.6_typescript@5.8.3",
     "npm:mri@1": "1.2.0",
     "npm:picomatch@4": "4.0.2",
-    "npm:prettier@2": "2.8.8",
+    "npm:prettier@3": "3.5.3",
     "npm:shell-quote@*": "1.8.2",
     "npm:shell-quote@1": "1.8.2",
     "npm:typescript@5": "5.8.3"
@@ -129,8 +129,8 @@
     "picomatch@4.0.2": {
       "integrity": "sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg=="
     },
-    "prettier@2.8.8": {
-      "integrity": "sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q=="
+    "prettier@3.5.3": {
+      "integrity": "sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw=="
     },
     "readdirp@4.1.2": {
       "integrity": "sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg=="
@@ -163,7 +163,7 @@
         "npm:cosmiconfig@8",
         "npm:mri@1",
         "npm:picomatch@4",
-        "npm:prettier@2",
+        "npm:prettier@3",
         "npm:shell-quote@1",
         "npm:typescript@5"
       ]

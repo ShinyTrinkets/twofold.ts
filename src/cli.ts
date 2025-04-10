@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-
+// #!/usr/bin/env deno
+//
 import fs from 'node:fs';
 
 import twofold from './index.ts';
@@ -9,7 +10,7 @@ import { userCfg } from './config.ts';
 import * as scan from './scan.ts';
 import * as util from './util.ts';
 
-import pkg from '../package.json';
+import pkg from '../package.json' with { type: 'json' };
 import chokidar from 'chokidar';
 import picomatch from 'picomatch';
 import mri from 'mri';
