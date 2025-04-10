@@ -145,8 +145,6 @@ export default async function evaluateTag(
   // Inject the parsed tag into the function meta
   meta.node = { ...tag };
   delete meta.node.children;
-  // Inject safe config options into meta
-  meta.config = { openTag: cfg.openTag, closeTag: cfg.closeTag, lastStopper: cfg.lastStopper };
   // Inject the parsed parent into meta
   if (tag.parent) {
     meta.node.parent = { ...tag.parent };

@@ -284,8 +284,8 @@ export default class Lexer {
           }
           pending.param_key = char;
           transition(STATE_PARAM);
-        } // Abandon current state, back to raw text
-        else {
+        } else {
+          // Abandon current state, back to raw text
           delete pending.name;
           pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
@@ -302,6 +302,8 @@ export default class Lexer {
           pending.rawText += char;
           transition(STATE_EQUAL);
         } else {
+          // Abandon current state, back to raw text
+          delete pending.name;
           delete pending.params;
           delete pending.param_key;
           pending.rawText += char;
@@ -315,6 +317,8 @@ export default class Lexer {
           pending.param_value = char;
           transition(STATE_VALUE);
         } else {
+          // Abandon current state, back to raw text
+          delete pending.name;
           delete pending.params;
           delete pending.param_key;
           pending.rawText += char;

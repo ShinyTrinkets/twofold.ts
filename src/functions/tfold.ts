@@ -45,7 +45,7 @@ export async function countDown(s: string, args: any, meta: any) {
   let newParams: any = {};
   if (s) newParams['0'] = n - 1;
   else newParams.n = n - 1;
-  // the delay is a backup
+  // the delay is supposed to be a backup
   await Bun.sleep(500);
   return editTag(meta.node, newParams);
 }

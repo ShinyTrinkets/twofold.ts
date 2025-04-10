@@ -72,7 +72,7 @@ export function unParse(node: ParseToken): string {
 export function editTag(node: ParseToken, newParams: Record<string, any>): string {
   /**
    * Edit a tag, replacing the rawText with the new text.
-   * This is used to edit the tag in place, by applying the new params.
+   * This is used to edit the tag in place, by applying new params.
    */
   node.params = { ...(node.params || {}), ...newParams };
 

@@ -184,6 +184,36 @@ const TESTS = [
     }],
   ],
   [
+    '<sort dir=>/><sort dir=//>',
+    [
+      {
+        name: "sort",
+        params: { dir: ">" },
+        rawText: "<sort dir=>/>",
+        single: true,
+      },
+      {
+        rawText: "<sort dir=//>",
+      }
+    ]
+  ],
+  [
+    '<sort dir=>></sort>',
+    [
+      {
+        name: "sort",
+        params: { dir: ">" },
+        rawText: "<sort dir=>>",
+        double: true,
+      },
+      {
+        name: "sort",
+        rawText: "</sort>",
+        double: true,
+      }
+    ]
+  ],
+  [
     'blah <tes_ting>!!',
     [
       { rawText: 'blah ' },
