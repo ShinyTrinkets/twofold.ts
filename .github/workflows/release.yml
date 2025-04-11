@@ -1,0 +1,42 @@
+name: Build
+on:
+  push:
+    branches: ['main']
+    tags: ['*']
+
+permissions:
+  contents: write
+
+jobs:
+  draft-release:
+    name: Draft-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create draft release
+        run: |
+          gh release create "${{ github.ref_name }}" --title "TwoFold (2✂︎f) v${{ github.ref_name }}" --repo "ShinyTrinkets/twofold.ts" --draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  release:
+    name: Build-executable
+    runs-on: ubuntu-latest
+    # This condition ensures this job only runs when a tag is pushed
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - name: Build release files
+        run: |
+          bun build ./src/cli.ts --compile --production --target=bun-darwin-x64 --outfile=tfold-darwin-x64
+          bun build ./src/cli.ts --compile --production --target=bun-darwin-x64 --outfile=tfold-darwin-x64
+          bun build ./src/cli.ts --compile --production --target=bun-linux-arm64 --outfile=tfold-linux-arm64
+          bun build ./src/cli.ts --compile --production --target=bun-linux-x64 --outfile=tfold-linux-x64
+          bun build ./src/cli.ts --compile --production --target=bun-windows-x64-modern --outfile=tfold-windows-x64
+          bun build ./src/cli.ts --target=node --minify-whitespace --outfile=tfold.js
+      - name: Upload build files
+        run: |
+          gh release upload "${{ github.ref_name }}" tfold* --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}

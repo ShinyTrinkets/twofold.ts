@@ -18,9 +18,6 @@ test('camel case', () => {
 });
 
 test('import any', async () => {
-  // Doesn't work with Deno right now
-  if (!!typeof (globalThis as any).Deno) return;
-
   const importedFile = await importAny('./test/fixtures/funcs.js');
   const expected = ['magic', 'now'];
   expect(Object.keys(importedFile)).toEqual(expected);
