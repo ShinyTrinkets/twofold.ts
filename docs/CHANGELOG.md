@@ -1,12 +1,14 @@
 # TwoFold (2✂︎f) changelog
 
-## v0.7 WIP
+## v0.8 WIP
+
+## v0.7
 
 - re-enabled the --watch command
 - allow greek and lots of non-latin letters in tag names
 - added an AI chat tag, so you can chat with local or remote LLMs
 - hopefully, the lexer and parser are much faster
-- much better tests & some tests compatible with Deno
+- much better tests & tests compatible with Deno
 
 ## v0.6
 

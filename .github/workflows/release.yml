@@ -11,6 +11,8 @@ jobs:
   draft-release:
     name: Draft-release
     runs-on: ubuntu-latest
+    # Runs when a tag is pushed
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Create draft release
         run: |
@@ -21,7 +23,7 @@ jobs:
   release:
     name: Build-executable
     runs-on: ubuntu-latest
-    # This condition ensures this job only runs when a tag is pushed
+    # Runs when a tag is pushed
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +31,7 @@ jobs:
       - run: bun install
       - name: Build release files
         run: |
-          bun build ./src/cli.ts --compile --production --target=bun-darwin-x64 --outfile=tfold-darwin-x64
+          bun build ./src/cli.ts --compile --production --target=bun-darwin-arm64 --outfile=tfold-darwin-arm64
           bun build ./src/cli.ts --compile --production --target=bun-darwin-x64 --outfile=tfold-darwin-x64
           bun build ./src/cli.ts --compile --production --target=bun-linux-arm64 --outfile=tfold-linux-arm64
           bun build ./src/cli.ts --compile --production --target=bun-linux-x64 --outfile=tfold-linux-x64
@@ -37,6 +39,6 @@ jobs:
           bun build ./src/cli.ts --target=node --minify-whitespace --outfile=tfold.js
       - name: Upload build files
         run: |
-          gh release upload "${{ github.ref_name }}" tfold* --clobber
+          gh release upload "${{ github.ref_name }}" tfold* --repo "ShinyTrinkets/twofold.ts" --clobber
         env:
           GH_TOKEN: ${{ github.token }}
