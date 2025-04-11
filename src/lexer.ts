@@ -3,7 +3,7 @@ import * as config from './config.ts';
 import { isRawText } from './tags.ts';
 import { toCamelCase } from './util.ts';
 
-const STATE_RAW_TEXT = 's__text';
+const STATE_RAW_TEXT = 's__raw_';
 const STATE_OPEN_TAG = 's_<_tag';
 const STATE_CLOSE_TAG = 's_>_tag';
 const STATE_TAG_NAME = 's__tag_name';
@@ -47,6 +47,7 @@ const MAYBE_JSON_VAL = /['"`][{\[].*[}\]]['"`]$/;
  * The lexer should never crash, even if the text is "bad".
  */
 export default class Lexer {
+  index: number;
   state: string;
   priorState: string;
   lexerConfig: config.Config;
@@ -54,6 +55,7 @@ export default class Lexer {
   _processed: LexToken[];
 
   constructor(cfg: config.Config = {}) {
+    this.index = 0;
     this.state = STATE_RAW_TEXT;
     this.priorState = STATE_RAW_TEXT;
     this.lexerConfig = { ...config.defaultCfg, ...cfg };
@@ -62,7 +64,7 @@ export default class Lexer {
     this._processed = [];
 
     // Current State Data
-    this._pendingState = { rawText: '' };
+    this._pendingState = { index: 0, rawText: '' };
   }
 
   lex(text: string): LexToken[] {
@@ -93,7 +95,7 @@ export default class Lexer {
     let pending: LexToken = this._pendingState;
 
     const transition = (newState: string) => {
-      // console.log(`Transition FROM (${self.state}) TO (${newState})`)
+      // console.log(`Transition FROM (${this.state}) TO (${newState})`)
       this.priorState = this.state;
       this.state = newState;
     };
@@ -103,21 +105,26 @@ export default class Lexer {
        * Commit old state in the processed list
        * and transition to a new state.
        */
-      // console.log('Commit STATE:', this.state, this._pendingState)
+      // console.log('Commit STATE:', this.state, pending, 'processed:', this._processed)
       if (pending.name) {
         pending.name = toCamelCase(pending.name);
       }
       if (pending.rawText) {
-        let lastProcessed: LexToken = this._processed.length ? (this._processed.at(-1) as LexToken) : { rawText: '' };
+        let lastProcessed: LexToken = this._processed.length ? this._processed.at(-1)! : { index: 0, rawText: '' };
         if (joinState && newState === STATE_RAW_TEXT && !lastProcessed.single) {
           if (this._processed.length) {
             lastProcessed = this._processed.pop() as LexToken;
           }
           lastProcessed.rawText += pending.rawText;
-          this._pendingState = { rawText: lastProcessed.rawText };
+          this._pendingState = {
+            index: lastProcessed.index,
+            rawText: lastProcessed.rawText,
+          };
         } else {
+          const indexAdded = pending.rawText.length;
           this._processed.push(this._pendingState);
-          this._pendingState = { rawText: '' };
+          this.index += indexAdded;
+          this._pendingState = { index: this.index, rawText: '' };
         }
         pending = this._pendingState;
       }
@@ -372,10 +379,11 @@ export default class Lexer {
           pending.param_value += char;
         }
       } // UGH THIS SHOULDN'T HAPPEN, TIME TO PANIC
-      // SCREAM !!
+      // SCREAM 😱 !!
       else {
         console.error('Lexer ERROR! This is probably a BUG!');
         console.error(`Char: ${char}; State: ${this.state}; PriorState: ${this.priorState}`);
+        this.reset();
         return;
       }
     }
@@ -391,14 +399,14 @@ export default class Lexer {
     }
 
     if (!this._processed.length) {
-      this._processed.push({ rawText: '' });
+      this._processed.push({ index: 0, rawText: '' });
     }
 
     if (this._pendingState.rawText) {
       const lastProcessed = this._processed[this._processed.length - 1] as LexToken;
       // If the last processed state was an unfinished Tag, create a new raw-text
       if (lastProcessed.name) {
-        this._processed.push({ rawText: this._pendingState.rawText });
+        this._processed.push({ index: this._pendingState.index, rawText: this._pendingState.rawText });
       } else {
         // If the last processed state was raw-text, concatenate
         lastProcessed.rawText += this._pendingState.rawText;
@@ -416,16 +424,17 @@ export default class Lexer {
       }
     }
 
-    this._pendingState = { rawText: '' };
+    this._pendingState = { index: 0, rawText: '' };
     this._processed = final;
     this.state = STATE_FINAL;
     return this._processed;
   }
 
   reset() {
+    this.index = 0;
     this.state = STATE_RAW_TEXT;
     this.priorState = STATE_RAW_TEXT;
     this._processed = [];
-    this._pendingState = { rawText: '' };
+    this._pendingState = { index: 0, rawText: '' };
   }
 }

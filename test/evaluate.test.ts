@@ -11,12 +11,13 @@ test('simple evaluate', async () => {
   const ast = parse(new Lexer().lex(txt));
 
   await evaluate(ast[0], {}, functions, {});
-  expect(ast[0]).toEqual({ rawText: ' ' });
+  expect(ast[0]).toEqual({ index: 0, rawText: ' ' });
 
   await evaluate(ast[1], {}, functions, {});
   expect(ast[1]).toEqual({
-    name: 'main',
+    index: 1,
     double: true,
+    name: 'main',
     firstTagText: '<main>',
     secondTagText: '</main>',
     children: [

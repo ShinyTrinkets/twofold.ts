@@ -1,4 +1,5 @@
 export interface LexToken {
+  index: number;
   rawText: string;
   name?: string;
   single?: boolean;

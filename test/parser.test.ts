@@ -8,51 +8,52 @@ import parse from '../src/parser.ts';
 // Tests: raw text and expected result after parsing
 //
 const TESTS = [
-  ['?asd 123 qwe!', [{ rawText: '?asd 123 qwe!' }]],
+  ['?asd 123 qwe!', [{ index: 0, rawText: '?asd 123 qwe!' }]],
   [
     '<tag x= />',
-    [{ rawText: '<tag x= />' }], // this is raw-text
+    [{ index: 0, rawText: '<tag x= />' }], // this is raw-text
   ],
   [
     '<x1>',
-    [{ rawText: '<x1>' }], // this is raw-text
+    [{ index: 0, rawText: '<x1>' }], // this is raw-text
   ],
-  ['</x1>', [{ rawText: '</x1>' }]],
+  ['</x1>', [{ index: 0, rawText: '</x1>' }]],
   [
     '<wrong>, very wrong',
-    [{ rawText: '<wrong>, very wrong' }], // this is raw-text
+    [{ index: 0, rawText: '<wrong>, very wrong' }], // this is raw-text
   ],
-  ['wrong, very </wrong>', [{ rawText: 'wrong, very </wrong>' }]],
+  ['wrong, very </wrong>', [{ index: 0, rawText: 'wrong, very </wrong>' }]],
   [
     '<temp type=f>0</',
-    [{ rawText: '<temp type=f>0</' }], // this is raw-text
+    [{ index: 0, rawText: '<temp type=f>0</' }], // this is raw-text
   ],
   [
     'blah <tesTing>!!',
-    [{ rawText: 'blah <tesTing>!!' }], // this is raw-text
+    [{ index: 0, rawText: 'blah <tesTing>!!' }], // this is raw-text
   ],
-  ['less < and >', [{ rawText: 'less < and >' }]],
+  ['less < and >', [{ index: 0, rawText: 'less < and >' }]],
   [
     ' <a_b></b_c>',
-    [{ rawText: ' <a_b></b_c>' }], // non matching tags
+    [{ index: 0, rawText: ' <a_b></b_c>' }], // non matching tags
   ],
   [
     "<ping 'x.y'></pink>",
-    [{ rawText: "<ping 'x.y'></pink>" }], // non matching tags
+    [{ index: 0, rawText: "<ping 'x.y'></pink>" }], // non matching tags
   ],
   [
     '\n<I am doing>some</stuff>\n',
-    [{ rawText: '\n<I am doing>some</stuff>\n' }], // this is raw-text
+    [{ index: 0, rawText: '\n<I am doing>some</stuff>\n' }], // this is raw-text
   ],
   [
     '<title> <title> <title> <title> <title>',
-    [{ rawText: '<title> <title> <title> <title> <title>' }], // this is raw-text
+    [{ index: 0, rawText: '<title> <title> <title> <title> <title>' }], // this is raw-text
   ],
 
   [
     '<αλφάβητο />',
     [
       {
+        index: 0,
         single: true,
         rawText: '<αλφάβητο />',
         name: 'αλφάβητο',
@@ -62,8 +63,9 @@ const TESTS = [
   [
     'less < and > but <yesOrNo></yesOrNo>',
     [
-      { rawText: 'less < and > but ' },
+      { index: 0, rawText: 'less < and > but ' },
       {
+        index: 17,
         double: true,
         firstTagText: '<yesOrNo>',
         secondTagText: '</yesOrNo>',
@@ -74,31 +76,34 @@ const TESTS = [
   [
     'asd <tesTing/> zxc',
     [
-      { rawText: 'asd ' },
+      { index: 0, rawText: 'asd ' },
       {
+        index: 4,
         name: 'tesTing',
         rawText: '<tesTing/>',
         single: true,
       },
-      { rawText: ' zxc' },
+      { index: 14, rawText: ' zxc' },
     ],
   ],
   [
     '<asd> <tesTing/> </zxc>',
     [
-      { rawText: '<asd> ' },
+      { index: 0, rawText: '<asd> ' },
       {
+        index: 6,
         name: 'tesTing',
         rawText: '<tesTing/>',
         single: true,
       },
-      { rawText: ' </zxc>' },
+      { index: 16, rawText: ' </zxc>' },
     ],
   ],
   [
     '<cmd `bash -c "ls -la"` z=`zzz` />', // shouldn't have 2 zero props here
     [
       {
+        index: 0,
         name: 'cmd',
         single: true,
         rawText: '<cmd `bash -c "ls -la"` z=`zzz` />',
@@ -113,6 +118,7 @@ const TESTS = [
     '<cmd `bash -c "ls -la"` />',
     [
       {
+        index: 0,
         rawText: '<cmd `bash -c "ls -la"` />',
         name: 'cmd',
         single: true,
@@ -126,6 +132,7 @@ const TESTS = [
     '<curl "https://httpbin.org/uuid" t=5 />',
     [
       {
+        index: 0,
         rawText: '<curl "https://httpbin.org/uuid" t=5 />',
         name: 'curl',
         single: true,
@@ -140,6 +147,7 @@ const TESTS = [
     '<httpx url="https://httpbin.org/uuid" />',
     [
       {
+        index: 0,
         rawText: '<httpx url="https://httpbin.org/uuid" />',
         name: 'httpx',
         single: true,
@@ -153,12 +161,13 @@ const TESTS = [
     '<temp type=f deep=no nr=3 null=null false=false>0</temp>', // JS types
     [
       {
+        index: 0,
         double: true,
         firstTagText: '<temp type=f deep=no nr=3 null=null false=false>',
         secondTagText: '</temp>',
         name: 'temp',
         params: { type: 'f', deep: 'no', nr: 3, null: null, false: false },
-        children: [{ rawText: '0' }],
+        children: [{ index: 48, rawText: '0' }],
       },
     ],
   ],
@@ -166,12 +175,14 @@ const TESTS = [
     '<stuff><other /></stuff>',
     [
       {
+        index: 0,
         double: true,
         firstTagText: '<stuff>',
         secondTagText: '</stuff>',
         name: 'stuff',
         children: [
           {
+            index: 7,
             name: 'other',
             rawText: '<other />',
             single: true,
@@ -184,18 +195,20 @@ const TESTS = [
     '<aA> <bB /> </aA>',
     [
       {
+        index: 0,
         double: true,
         firstTagText: '<aA>',
         secondTagText: '</aA>',
         name: 'aA',
         children: [
-          { rawText: ' ' },
+          { index: 4, rawText: ' ' },
           {
+            index: 5,
             name: 'bB',
             rawText: '<bB />',
             single: true,
           },
-          { rawText: ' ' },
+          { index: 11, rawText: ' ' },
         ],
       },
     ],
@@ -205,29 +218,33 @@ const TESTS = [
     '<t1><t2><t3><xXx/>?</t3></t2></t1>',
     [
       {
+        index: 0,
         double: true,
         firstTagText: '<t1>',
         secondTagText: '</t1>',
         name: 't1',
         children: [
           {
+            index: 4,
             double: true,
             firstTagText: '<t2>',
             secondTagText: '</t2>',
             name: 't2',
             children: [
               {
+                index: 8,
                 double: true,
                 firstTagText: '<t3>',
                 secondTagText: '</t3>',
                 name: 't3',
                 children: [
                   {
+                    index: 12,
                     name: 'xXx',
                     rawText: '<xXx/>',
                     single: true,
                   },
-                  { rawText: '?' },
+                  { index: 18, rawText: '?' },
                 ],
               },
             ],
@@ -241,27 +258,30 @@ const TESTS = [
     '<t1><tx><t3><xXx/>?</t3></ty></t1>',
     [
       {
+        index: 0,
         double: true,
         firstTagText: '<t1>',
         secondTagText: '</t1>',
         name: 't1',
         children: [
-          { rawText: '<tx>' },
+          { index: 4, rawText: '<tx>' },
           {
+            index: 8,
             double: true,
             firstTagText: '<t3>',
             secondTagText: '</t3>',
             name: 't3',
             children: [
               {
+                index: 12,
                 name: 'xXx',
                 rawText: '<xXx/>',
                 single: true,
               },
-              { rawText: '?' },
+              { index: 18, rawText: '?' },
             ],
           },
-          { rawText: '</ty>' },
+          { index: 24, rawText: '</ty>' },
         ],
       },
     ],
@@ -271,11 +291,12 @@ const TESTS = [
     '<t1><t2></t3></t1>',
     [
       {
+        index: 0,
         double: true,
         firstTagText: '<t1>',
         secondTagText: '</t1>',
         name: 't1',
-        children: [{ rawText: '<t2></t3>' }],
+        children: [{ index: 4, rawText: '<t2></t3>' }],
       },
     ],
   ],
@@ -283,27 +304,30 @@ const TESTS = [
     // wrong nested tags, 1 level deep
     '<t1><t2> </t2></tx>',
     [
-      { rawText: '<t1>' },
+      { index: 0, rawText: '<t1>' },
       {
+        index: 4,
         double: true,
         firstTagText: '<t2>',
         secondTagText: '</t2>',
         name: 't2',
-        children: [{ rawText: ' ' }],
+        children: [{ index: 8, rawText: ' ' }],
       },
-      { rawText: '</tx>' },
+      { index: 14, rawText: '</tx>' },
     ],
   ],
   [
     '<trick1><trick2><trick3></trick1>',
     [
       {
+        index: 0,
         double: true,
         name: 'trick1',
         firstTagText: '<trick1>',
         secondTagText: '</trick1>',
         children: [
           {
+            index: 8,
             rawText: '<trick2><trick3>',
           },
         ],
@@ -314,15 +338,18 @@ const TESTS = [
     '<trick1><trick2><trick3><trick4></trick2>',
     [
       {
+        index: 0,
         rawText: '<trick1>',
       },
       {
+        index: 8,
         double: true,
         name: 'trick2',
         firstTagText: '<trick2>',
         secondTagText: '</trick2>',
         children: [
           {
+            index: 16,
             rawText: '<trick3><trick4>',
           },
         ],
@@ -333,24 +360,22 @@ const TESTS = [
     '<i><increment plus=4>6</increment><sort x=t>\n<//></i>',
     [
       {
+        index: 0,
         double: true,
         name: 'i',
         firstTagText: '<i>',
         secondTagText: '</i>',
         children: [
           {
+            index: 3,
             double: true,
             name: 'increment',
             firstTagText: '<increment plus=4>',
             secondTagText: '</increment>',
             params: { plus: 4 },
-            children: [
-              {
-                rawText: '6',
-              },
-            ],
+            children: [{ index: 21, rawText: '6' }],
           },
-          { rawText: '<sort x=t>\n<//>' },
+          { index: 34, rawText: '<sort x=t>\n<//>' },
         ],
       },
     ],
@@ -381,11 +406,11 @@ test('weird parse tests', () => {
   expect(ast).toStrictEqual([]);
 
   lex = [
-    { rawText: '1' },
+    { index: 0, rawText: '1' },
     { rawText: '2' },
     { double: true, name: 'a', rawText: '</a>' },
     { double: true, name: 'a', rawText: '<b>' },
   ];
   ast = parse(lex);
-  expect(ast).toStrictEqual([{ rawText: '12</a><b>' }]);
+  expect(ast).toEqual([{ index: 0, rawText: '12</a><b>' }]);
 });

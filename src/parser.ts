@@ -65,7 +65,10 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     const topStack = stack.pop() as ParseToken;
     // Non-matching double tags are converted to raw text here
     // Remove the tag from the stack and prepare to cleanup
-    commitToken({ rawText: topStack.firstTagText || topStack.rawText });
+    commitToken({
+      index: topStack.index,
+      rawText: topStack.firstTagText || topStack.rawText,
+    });
     if (topStack.children) {
       for (const child of topStack.children) {
         commitToken(child);
@@ -110,7 +113,7 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
             }
             commitDouble(token);
           } else {
-            commitToken({ rawText: token.rawText });
+            commitToken({ index: token.index, rawText: token.rawText });
           }
         }
       }
@@ -130,7 +133,7 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
       topAst.rawText += token.rawText;
     } else {
       // Unknown type of tag, destroy
-      ast.push({ rawText: token.rawText });
+      ast.push({ index: token.index, rawText: token.rawText });
     }
   };
 

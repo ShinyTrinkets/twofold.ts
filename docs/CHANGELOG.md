@@ -2,6 +2,8 @@
 
 ## v0.8 WIP
 
+- added index for LexTokens, useful for custom errors
+
 ## v0.7
 
 - re-enabled the --watch command
