@@ -125,10 +125,12 @@ This option works with **single tags** and **double tags**.
 
 Example: `<randomCard freeze=true></randomCard>`
 
-"Freeze" is a built-in prop that tells TwoFold to protect the tag. As long as the tag has this
+"Freeze" is a built-in prop that tells TwoFold to ignore/ lock the tag. As long as the tag has this
 option, the tag and all its children will never be executed.
 
 To make TwoFold render the tag again, you just need to delete the `freeze=true` prop inside the tag.
+
+You can also use the `<ignore>...</ignore>` tag, to ignore/ lock everything inside.
 
 This is useful in case you want to keep the previous text and make sure that TwoFold won't
 accidentally replace it.
