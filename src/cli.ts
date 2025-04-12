@@ -132,19 +132,20 @@ you can use pipes:
         return;
       }
       console.log(`(2✂︎f) w :: ${fname}`);
+      if (locks[fname]) {
+        return; // file is locked
+      } else {
+        locks[fname] = true;
+      }
       setTimeout(async () => {
         await twofold.renderFile(fname, funcs, config, { fname, write: true });
-        if (locks[fname]) {
-          // disable writing lock
-          locks[fname] = false;
-          return false;
-        }
+        delete locks[fname];
       }, config.writeDelay || 100);
     };
 
     const depth = args.depth ? args.depth : 3;
     const ignoreInitial = !args.initialRender;
-    console.log(`(2✂︎f) Watching: ${args.watch}, depth=${depth}, ignoreInitial=${ignoreInitial}`);
+    console.log(`(2✂︎f) Watching: ${args.watch} ${config.glob}, depth=${depth}, initRender=${!ignoreInitial}`);
     const watcher = chokidar.watch(args.watch, {
       depth,
       ignoreInitial,

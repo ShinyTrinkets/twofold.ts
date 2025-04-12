@@ -4,7 +4,7 @@
 
 export async function ai(zeroText: string, args: Record<string, any> = {}, _meta: Record<string, any> = {}) {
   let text = (zeroText || args.innerText).replace(/^[ \n]+/, '');
-  if (text.trim() === '') return '';
+  if (text.trim() === '') return;
 
   // the default URL is just terrible, but we need something
   let apiUrl = 'http://127.1:1234/v1/chat/completions';
@@ -16,6 +16,7 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
     }
   }
   const oldMessages = parseConversation(text);
+  if (oldMessages.length === 0) return;
 
   let foundSystem = false;
   const lines = { before: 0, after: 0 };
