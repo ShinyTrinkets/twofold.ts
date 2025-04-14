@@ -139,7 +139,9 @@ you can use pipes:
       }
       setTimeout(async () => {
         await twofold.renderFile(fname, funcs, config, { fname, write: true });
-        delete locks[fname];
+        setTimeout(async () => {
+          delete locks[fname];
+        }, config.writeDelay || 100);
       }, config.writeDelay || 100);
     };
 

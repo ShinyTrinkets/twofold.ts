@@ -2,6 +2,12 @@
  * Functions for calling a local, or remote LLM.
  */
 
+interface HistoryMessage {
+  role: string;
+  content: string;
+  emptyLines?: number;
+}
+
 export async function ai(zeroText: string, args: Record<string, any> = {}, _meta: Record<string, any> = {}) {
   let text = (zeroText || args.innerText).replace(/^[ \n]+/, '');
   if (text.trim() === '') return;
@@ -17,6 +23,13 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
   }
   const oldMessages = parseConversation(text);
   if (oldMessages.length === 0) return;
+  {
+    const lastMessage = oldMessages.at(-1);
+    // The last User message is empty
+    if (lastMessage?.role === 'user' && lastMessage.content.trim() === '') {
+      return;
+    }
+  }
 
   let foundSystem = false;
   const lines = { before: 0, after: 0 };
@@ -43,7 +56,7 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
     });
   }
 
-  const body = {
+  const body: Record<string, any> = {
     messages: oldMessages,
   };
   if (args.model) {
@@ -76,25 +89,25 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
     // Raise to to 50-100 for more varied, creative output
     body.top_k = args.top_k;
   }
-  if (args.frequency_penalty) {
-    // reduces the likelihood of the model repeating words or tokens based on how often
+  if (args.frequency_penalty || args.freq_penalty) {
+    // Reduces the likelihood of the model repeating words or tokens based on how often
     // they’ve already appeared in the generated text
     // A higher value (e.g., 0 to 2) discourages repetition by lowering the probability
     // of frequently used tokens, promoting more varied vocabulary across the entire output
-    body.frequency_penalty = args.frequency_penalty;
+    body.frequency_penalty = args.frequency_penalty || args.freq_penalty;
   }
-  if (args.presence_penalty) {
+  if (args.presence_penalty || args.pres_penalty) {
     // Discourages the model from reusing any token that has already appeared in the text,
     // regardless of how many times it’s been used
     // Unlike frequency penalty, it applies a flat penalty once a token is present,
     // encouraging the introduction of entirely new words or concepts
-    body.presence_penalty = args.presence_penalty;
+    body.presence_penalty = args.presence_penalty || args.pres_penalty;
   }
-  if (args.repeat_penalty) {
+  if (args.repetition_penalty || args.repeat_penalty) {
     // General term (sometimes used interchangeably with the above or as a distinct parameter,
     // depending on the framework) that penalizes the repetition of specific sequences, tokens, or patterns
     // Often used to prevent the model from getting stuck in loops (e.g., repeating "the the the")
-    body.repeat_penalty = args.repeat_penalty;
+    body.repetition_penalty = args.repetition_penalty || args.repeat_penalty;
   }
   if (args.max_tokens) {
     body.max_tokens = args.max_tokens;
@@ -110,6 +123,19 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
     body.dry_penalty_last_n = args.dry_penalty_last_n;
   }
 
+  const content = await makeRequest(apiUrl, body, args);
+  if (!content) return;
+
+  const linesBefore = '\n'.repeat(lines.before > 0 ? lines.before + 1 : 1);
+  const linesAfter = '\n'.repeat(lines.after > 0 ? lines.after : 1);
+  return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
+}
+
+async function makeRequest(
+  apiUrl: string,
+  body: Record<string, any>,
+  opts: Record<string, any>
+): Promise<string | undefined> {
   let content = '';
   const headers = {
     Accept: 'application/json',
@@ -117,7 +143,8 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
     'X-Title': 'TwoFold (2xf)',
   };
   if (process.env.AI_API_KEY) {
-    headers['Authorization'] = `Bearer ${process.env.AI_API_KEY}`;
+    // @ts-ignore Authorization is OK
+    headers.Authorization = `Bearer ${process.env.AI_API_KEY}`;
   }
 
   try {
@@ -125,14 +152,16 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
       headers,
       method: 'POST',
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(args.timeout || 180_000),
+      signal: AbortSignal.timeout(opts.timeout || 180_000),
+      verbose: true,
     });
     if (!response.ok) {
-      console.error('Bad HTTP status:', response.status);
+      console.error('Bad HTTP status:', response.status, response.statusText);
       return;
     }
 
-    const data = await response.json();
+    const data: Record<string, any> = await response.json();
+    console.log(`(2✂︎f) AI: ${data}`);
     if (data.error) {
       console.error('Error from model API:', data.error);
       return;
@@ -146,14 +175,11 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
     console.error('Error calling model API:', error);
     return;
   }
-
-  const linesBefore = '\n'.repeat(lines.before > 0 ? lines.before + 1 : 1);
-  const linesAfter = '\n'.repeat(lines.after > 0 ? lines.after : 1);
-  return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
+  return content;
 }
 
-export function parseConversation(text: string): { role: string; content: string; emptyLines?: number }[] {
-  const messages: { role: string; content: string; emptyLines?: number }[] = [];
+export function parseConversation(text: string): HistoryMessage[] {
+  const messages: HistoryMessage[] = [];
   let currentRole: string = 'system';
   let currentContent: string[] = [];
   let emptyLines: number = 0;
@@ -168,7 +194,7 @@ export function parseConversation(text: string): { role: string; content: string
     }
     if (line.startsWith('User:')) {
       if (currentContent.length && currentRole !== 'user') {
-        const m = {
+        const m: HistoryMessage = {
           role: currentRole,
           content: currentContent.join('\n'),
         };
@@ -180,13 +206,14 @@ export function parseConversation(text: string): { role: string; content: string
         messages.push(m);
       }
       currentRole = 'user';
-      if (line.length > 5) {
+      // We want to keep empty "User:" lines
+      if (line.length >= 5) {
         // Remove "User:" prefix
         currentContent.push(line.substring(5).replace(/^ +/, ''));
       }
     } else if (line.startsWith('Assistant:')) {
       if (currentContent.length && currentRole !== 'assistant') {
-        const m = {
+        const m: HistoryMessage = {
           role: currentRole,
           content: currentContent.join('\n'),
         };
@@ -223,7 +250,7 @@ export function parseConversation(text: string): { role: string; content: string
 
   // Push the last message if there is one
   if (currentRole && currentContent.length) {
-    const m = { role: currentRole, content: currentContent.join('\n') };
+    const m: HistoryMessage = { role: currentRole, content: currentContent.join('\n') };
     if (emptyLines > 0) {
       m.emptyLines = emptyLines;
     }

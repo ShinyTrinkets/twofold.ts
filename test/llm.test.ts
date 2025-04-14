@@ -20,10 +20,10 @@ test('parse conversation', () => {
   User: Hello
   User:  tell me a joke
   User:
-  `); // empty lines
+  `); // empty line
   expect(body).toEqual([
     { role: 'system', content: 'You are a funny assistant.' },
-    { role: 'user', content: 'Hello\ntell me a joke', emptyLines: 1 },
+    { role: 'user', content: 'Hello\ntell me a joke\n', emptyLines: 1 },
   ]);
 
   body = func.parseConversation(`
@@ -53,5 +53,14 @@ User: how are you?
     { role: 'user', content: 'hi', emptyLines: 1 },
     { role: 'assistant', content: 'Hello!', emptyLines: 1 },
     { role: 'user', content: 'how are you?', emptyLines: 1 },
+  ]);
+
+  body = func.parseConversation(`
+Assistant: Hello!
+User:
+`);
+  expect(body).toEqual([
+    { role: 'assistant', content: 'Hello!' },
+    { role: 'user', content: '', emptyLines: 1 },
   ]);
 });
