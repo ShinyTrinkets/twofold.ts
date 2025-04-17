@@ -27,8 +27,8 @@ import { listTree } from './util.ts';
  */
 export async function renderText(
   text: string,
-  customData = {},
-  customTags = {},
+  customData: Record<string, any> = {},
+  customTags: Record<string, Function> = {},
   cfg: config.Config = {},
   meta = {}
 ): Promise<string> {
@@ -43,7 +43,7 @@ export async function renderText(
   return final;
 }
 
-function renderStream(stream, customTags = {}, cfg: config.Config = {}, meta = {}): Promise {
+function renderStream(stream, customTags: Record<string, any> = {}, cfg: config.Config = {}, meta = {}): Promise {
   const allFunctions = { ...functions, ...customTags };
 
   return new Promise(resolve => {
@@ -71,10 +71,11 @@ function renderStream(stream, customTags = {}, cfg: config.Config = {}, meta = {
 
       let final = '';
       const resultHash = crypto.createHash('sha224');
+      const globals: Record<string, any> = {};
 
       // Convert single tags into raw text and deep flatten double tags
       for (const t of ast) {
-        await evaluate(t, {}, allFunctions, cfg, meta);
+        await evaluate(t, globals, allFunctions, cfg, meta);
         const chunk = unParse(t);
         resultHash.update(chunk);
         final += chunk;

@@ -3,6 +3,8 @@
  */
 import vm from 'vm';
 
+import { splitToMarker } from '../util.ts';
+
 export function jsEval(zeroExpr: string, args: Record<string, string> = {}) {
   /**
    * Eval JavaScript and return the result.
@@ -10,12 +12,7 @@ export function jsEval(zeroExpr: string, args: Record<string, string> = {}) {
    */
   let expr = (zeroExpr || args.innerText || args.expr).trim();
   if (!expr) return;
-  {
-    const m = expr.match(/(.+)✂[-]+/s);
-    if (m && m[1]) {
-      expr = m[1].trim();
-    }
-  }
+  expr = splitToMarker(expr);
   const stdout: string[] = [];
   const redirectStdout = (msg: any) => {
     stdout.push(msg.toString());
@@ -43,12 +40,7 @@ export async function pyEval(zeroExpr: string, args: Record<string, any> = {}) {
    */
   let expr = (zeroExpr || args.innerText || args.expr).trim();
   if (!expr) return;
-  {
-    const m = expr.match(/(.+)✂[-]+/s);
-    if (m && m[1]) {
-      expr = m[1].trim();
-    }
-  }
+  expr = splitToMarker(expr);
   const proc = Bun.spawn(['python3'], { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' });
   if (args.print === undefined || args.print === true) {
     const lines = expr.split('\n');

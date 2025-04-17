@@ -11,11 +11,18 @@ export const ALLOWED_ALPHA = /^[_0-9A-ZÀÁÂÃÄÆÇÈÉÊËÌÍÎÏÑÒÓÔÕ�
 
 export const NON_ALPHANUM = /[^0-9a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω\s]/gi;
 
-// TODO ? types.isGeneratorFunction(f) ?
 export const isFunction = (f: any) => typeof f === 'function' || types.isAsyncFunction(f);
 
 /**
- * Extract function name and params from the source.
+ * Split text at the ✂----- marker.
+ */
+export function splitToMarker(txt: string) {
+  const m = txt.match(/(.+)✂[-]+/s);
+  return m && m[1] ? m[1] : txt;
+}
+
+/**
+ * Extract name and params from a JS function.
  */
 export function functionParams(f: Function) {
   const m = f.toString().match(/function(.+?\(.*?\).+?)\{/);
@@ -70,6 +77,33 @@ export function unTildify(pth: string) {
     return pth.replace(/^~(?=$|\/|\\)/, homeDir);
   }
   return pth;
+}
+
+export function deepSet(target: any, path: string | ArrayLike<string | number>, value: any): void {
+  /*
+   * Original implementation: https://github.com/lukeed/dset
+   * By: Luke Edwards, @lukeed ; License: MIT
+   * Deeply set a value in an object or array.
+   */
+  path.split && (path = path.split('.'));
+  let i = 0,
+    pathLen = path.length,
+    currentVal;
+  while (i < pathLen) {
+    const key = '' + path[i++];
+    // Prevent prototype pollution
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      break;
+    }
+    target = target[key] =
+      i === pathLen
+        ? value
+        : typeof (currentVal = target[key]) === typeof path
+          ? currentVal
+          : path[i] * 0 !== 0 || ('' + path[i]).indexOf('.') >= 0
+            ? {}
+            : [];
+  }
 }
 
 /**

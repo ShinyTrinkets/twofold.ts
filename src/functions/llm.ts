@@ -21,6 +21,7 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
       apiUrl = `http://${args.host || '127.1'}:${args.port || 1234}/v1/chat/completions`;
     }
   }
+
   const oldMessages = parseConversation(text);
   if (oldMessages.length === 0) return;
   {

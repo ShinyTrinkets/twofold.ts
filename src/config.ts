@@ -13,7 +13,7 @@ export interface CliConfig extends Config {
 }
 
 export const defaultCfg: Config = {
-  // Currently, openTag, closeTag and lastStopper must be
+  // openTag, closeTag and lastStopper must be
   // strings of length 1.
 
   // In <random-int />

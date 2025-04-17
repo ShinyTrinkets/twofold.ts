@@ -4,7 +4,7 @@
 
 import { ee } from '../event.ts';
 import { parseNumber } from './common.ts';
-import { editTag, unParse } from '../tags.ts';
+import { editTag } from '../tags.ts';
 
 export function ignore() {
   /**
