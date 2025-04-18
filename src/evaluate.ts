@@ -123,17 +123,29 @@ export default async function evaluateTag(
   }
 
   if (tag.name === 'set' && tag.params) {
-    // Set (define) one or more variables
-    for (const k of Object.keys(tag.params)) {
-      customData[k] = tag.params[k];
+    if (tag.params['0']) {
+      const group = tag.params['0'];
+      delete tag.params['0'];
+      if (!customData[group]) {
+        customData[group] = {};
+      }
+      // Set (define) one or more variables inside the group
+      for (const k of Object.keys(tag.params)) {
+        customData[group][k] = tag.params[k];
+      }
+    } else {
+      // Set (define) one or more variables
+      for (const k of Object.keys(tag.params)) {
+        customData[k] = tag.params[k];
+      }
     }
   }
 
   // Deep evaluate all children, including invalid TwoFold tags
   if (tag.children) {
-    // Make a copy of the params, to create
+    // Make a deep copy of the params, to create
     // a separate variable scope for the children
-    let params = { ...customData, ...tag.params };
+    let params = structuredClone({ ...customData, ...tag.params });
     for (const c of tag.children) {
       c.parent = tag;
       await evaluateTag(c, params, allFunctions, cfg, meta);
