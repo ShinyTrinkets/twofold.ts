@@ -4,7 +4,7 @@
 
 import { randomChoice } from './common.ts';
 
-export function randomFloat(txtMax, { min = 1, max = 100, decimals = 2 }): string {
+export function randomFloat(txtMax: string, { min = 1, max = 100, decimals = 2 }): string {
   /**
    * Generate a random float number.
    * Returns a pseudo-random float in the range min–max (inclusive of min, but not max).
@@ -16,7 +16,7 @@ export function randomFloat(txtMax, { min = 1, max = 100, decimals = 2 }): strin
   return nr.toFixed(precision);
 }
 
-export function randomInt(txtMax, { min = 1, max = 100 }): number {
+export function randomInt(txtMax: string, { min = 1, max = 100 }): number {
   /**
    * Generate a random integer number.
    * Returns a pseudo-random integer in the range min–max (inclusive of min, but not max).
