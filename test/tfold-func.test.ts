@@ -212,20 +212,19 @@ test('set variable group', async () => {
   vars = {};
   // set inner variables
   txt = `<set 'g'>
-  <set 'g' x=0>
+  <set 'g' x=0 y=0>
     <set 'g' x=1/>
     <set 'g' a="a"/>
-    <set 'g' b="b"/>
     <chk1/>
   </set>
   <chk2/>
 </set>`;
   tmp = await twofold.renderText(txt, vars, {
     chk1: (_t, args) => {
-      expect(args.g).toEqual({ x: 1, a: 'a', b: 'b' });
+      expect(args.g).toEqual({ x: 1, y: 0, a: 'a' });
     },
     chk2: (_t, args) => {
-      expect(args.g).toEqual({ x: 0 });
+      expect(args.g).toEqual({ x: 0, y: 0 });
     },
   });
   expect(tmp).toBe(txt);
