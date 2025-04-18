@@ -121,11 +121,22 @@ export default async function evaluateTag(
   if (isProtectedTag(tag)) {
     return;
   }
+
+  if (tag.name === 'set' && tag.params) {
+    // Set (define) one or more variables
+    for (const k of Object.keys(tag.params)) {
+      customData[k] = tag.params[k];
+    }
+  }
+
   // Deep evaluate all children, including invalid TwoFold tags
   if (tag.children) {
+    // Make a copy of the params, to create
+    // a separate variable scope for the children
+    let params = { ...customData, ...tag.params };
     for (const c of tag.children) {
       c.parent = tag;
-      await evaluateTag(c, customData, allFunctions, cfg, meta);
+      await evaluateTag(c, params, allFunctions, cfg, meta);
     }
   }
 
@@ -133,13 +144,6 @@ export default async function evaluateTag(
   // Could be an XML, or HTML tag, not a valid TwoFold tag
   if (!isFunction(func)) {
     return;
-  }
-
-  // Params for the tag come from parsed params and config
-  let params = { ...customData, ...tag.params };
-  // Config tag params could contain API tokens, or CLI args
-  if (cfg.tags && typeof cfg.tags[tag.name] === 'object') {
-    params = { ...cfg.tags[tag.name], ...params };
   }
 
   // Inject the parsed tag into the function meta
@@ -152,6 +156,9 @@ export default async function evaluateTag(
   } else {
     meta.node.parent = {};
   }
+
+  // Params for the tag come from parsed params and config
+  let params = { ...customData, ...tag.params };
 
   // Call the specialized evaluate function
   if (isDoubleTag(tag)) {

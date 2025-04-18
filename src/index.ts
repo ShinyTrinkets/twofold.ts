@@ -1,5 +1,5 @@
 import { open } from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
+import { createReadStream, ReadStream } from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import picomatch from 'picomatch';
@@ -43,7 +43,12 @@ export async function renderText(
   return final;
 }
 
-function renderStream(stream, customTags: Record<string, any> = {}, cfg: config.Config = {}, meta = {}): Promise {
+function renderStream(
+  stream: ReadStream,
+  customTags: Record<string, any> = {},
+  cfg: config.Config = {},
+  meta = {}
+): Promise<any> {
   const allFunctions = { ...functions, ...customTags };
 
   return new Promise(resolve => {

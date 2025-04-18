@@ -9,6 +9,7 @@ import * as shell from './shell.ts';
 import * as request from './request.ts';
 
 import * as fmt from './fmt.ts';
+import * as table from './table.ts';
 import * as xeval from './xeval.ts';
 import * as llm from './llm.ts';
 import * as tfold from './tfold.ts';
@@ -23,6 +24,7 @@ export default {
   ...os,
   ...fmt,
   ...shell,
+  ...table,
   ...request,
   ...xeval,
   ...llm,

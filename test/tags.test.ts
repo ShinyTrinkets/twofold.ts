@@ -71,6 +71,8 @@ test('parse unparse 3', () => {
 });
 
 test('edit tag', () => {
+  // A tag can edit its own attributes and return
+  // its representation to create "animations"
   let ast = parse(new Lexer().lex('<noop>1 </noop>'));
   let final = editTag(ast[0], { a: 'b', c: 'd' });
   expect(final).toBe(`<noop a="b" c="d">1 </noop>`);

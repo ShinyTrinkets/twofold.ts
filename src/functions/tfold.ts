@@ -6,17 +6,26 @@ import { ee } from '../event.ts';
 import { parseNumber } from './common.ts';
 import { editTag } from '../tags.ts';
 
-export function ignore() {
-  /**
-   * When it's a double tag, all tags inside it are protected (frozen).
-   * This is similar to the freeze=true prop.
-   *
-   * The logic for this tag is in the evaluate tags functions.
-   */
-  return;
-}
+// export function set() {
+//   /**
+//    * Set (define) one or more variables.
+//    *
+//    * The logic for this tag is in the evaluate tags functions.
+//    */
+//   return;
+// }
 
-export function text(s: string, { innerText }) {
+// export function ignore() {
+//   /**
+//    * When it's a double tag, all tags inside it are protected (frozen).
+//    * This is similar to the freeze=true prop.
+//    *
+//    * The logic for this tag is in the evaluate tags functions.
+//    */
+//   return;
+// }
+
+export function text(s: string, { innerText } = {}) {
   /**
    * A tag used for DEV, that returns the text as is.
    * If this wraps some tags, they will be flattened.

@@ -109,3 +109,45 @@ test('ignore tag', async () => {
   <ignore><title>aBc</title></ignore>
   ef</lower>GH</upper></upper>`);
 });
+
+test('set global variables', async () => {
+  let vars = {};
+  let txt = '<set x=1 a="a" />';
+  let tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars.x).toBe(1);
+  expect(vars.a).toBe('a');
+
+  vars = {};
+  txt = '<set x=1 a="a" /> <set x=0 b="b" />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars.x).toBe(0);
+  expect(vars.a).toBe('a');
+  expect(vars.b).toBe('b');
+
+  vars = {};
+  // set inner variables
+  txt = '<set> <set a="a"/><set b="b"/><chk/> </set>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({ a: 'a', b: 'b' });
+    },
+  });
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+
+  vars = {};
+  // set inner variables
+  txt = '<set x=2> <set a="a" /> </set>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ x: 2 });
+
+  vars = {};
+  // ignore + set
+  txt = '<ignore> <set a="a" /> </ignore>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+});
