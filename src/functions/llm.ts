@@ -59,7 +59,7 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
 
   const body: Record<string, any> = {
     messages: oldMessages,
-    stream: true,
+    stream: !!args.stream,
   };
   if (args.model) {
     // only used for multi-model apps like Ollama and online services like OpenAI
@@ -165,7 +165,7 @@ async function makeRequest(
     return;
   }
 
-  try {
+  if (body.stream) {
     const content = [];
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
@@ -173,17 +173,24 @@ async function makeRequest(
       // Wait for next encoded chunk
       const { done, value } = await reader.read();
       if (done) break;
+      // console.log(decoder.decode(value));
       // Uint8Array to string + JSON parse
-      const data: Record<string, any> = JSON.parse(decoder.decode(value).slice(5));
-      const delta = data.choices[0].delta.content;
-      if (!delta) break;
-      process.stdout.write(delta);
-      content.push(delta);
+      if (!decoder.decode(value).startsWith('data: ')) {
+        continue;
+      }
+      try {
+        const data: Record<string, any> = JSON.parse(decoder.decode(value).slice(5));
+        const delta = data.choices[0].delta.content;
+        if (!delta) break;
+        process.stdout.write(delta);
+        content.push(delta);
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+      }
     }
     process.stdout.write('\n');
     return content.join('').trim();
-  } catch {
-    console.log('Streaming response failed, waiting for full response');
+  } else {
     const data: Record<string, any> = await response.json();
     if (data.error) {
       console.error('Error from model API:', data.error);
