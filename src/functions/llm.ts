@@ -92,6 +92,7 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
     body.top_k = args.top_k;
   }
   if (args.frequency_penalty || args.freq_penalty) {
+    // A number between -2.0 and 2.0.
     // Reduces the likelihood of the model repeating words or tokens based on how often
     // they’ve already appeared in the generated text
     // A higher value (e.g., 0 to 2) discourages repetition by lowering the probability
@@ -99,6 +100,7 @@ export async function ai(zeroText: string, args: Record<string, any> = {}, _meta
     body.frequency_penalty = args.frequency_penalty || args.freq_penalty;
   }
   if (args.presence_penalty || args.pres_penalty) {
+    // A number between -2.0 and 2.0.
     // Discourages the model from reusing any token that has already appeared in the text,
     // regardless of how many times it’s been used
     // Unlike frequency penalty, it applies a flat penalty once a token is present,

@@ -81,7 +81,7 @@ async function evaluateDoubleTag(
         if (tmp === undefined || tmp === null) tmp = '';
         // When evaluating a normal tag, it is flattened
         // These kinds of tags cannot be cut (consumed)
-        tag.children.push({ rawText: tmp.toString() });
+        tag.children.push({ index: -1, rawText: tmp.toString() });
       }
     }
   } else {
@@ -95,7 +95,7 @@ async function evaluateDoubleTag(
     // If the single tag doesn't have a result, DON'T change the tag
     if (result === undefined || result === null) return;
     // When evaluating a double tag, all children are flattened
-    tag.children = [{ rawText: result.toString() }];
+    tag.children = [{ index: -1, rawText: result.toString() }];
     // Cut (consume) the tag to make it behave like a single tag
     if (isConsumableTag(tag)) {
       consumeTag(tag);

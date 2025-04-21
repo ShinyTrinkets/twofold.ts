@@ -29,12 +29,13 @@ const TESTS = [
   ['<tag ab123456789012345678901234567890A1234567890=1 />', [{
     index: 0, rawText: '<tag ab123456789012345678901234567890A1234567890=1 />',
   }]],
-  ['<x1>', [{ index: 0, rawText: '<x1>', name: 'x1', double: true }]], // unfinished double tag
-  ['< x>', [{ index: 0, rawText: '< x>', name: 'x', double: true }]],
-  ['<x >', [{ index: 0, rawText: '<x >', name: 'x', double: true }]],
   ['<  xY >', [{ index: 0, rawText: '<  xY >' }]], // max 1 space allowed before tag name
   ['<h1></  h1>', [{ index: 0, rawText: '<h1></  h1>' }]],
   ['<   xY  >', [{ index: 0, rawText: '<   xY  >' }]],
+
+  ['<x1>', [{ index: 0, rawText: '<x1>', name: 'x1', double: true }]], // unfinished double tag
+  ['< x>', [{ index: 0, rawText: '< x>', name: 'x', double: true }]],
+  ['<x >', [{ index: 0, rawText: '<x >', name: 'x', double: true }]],
   [
     '<xY1/>',
     [{ index: 0, rawText: '<xY1/>', name: 'xY1', single: true }],
@@ -183,12 +184,12 @@ const TESTS = [
     ],
   ],
   [
-    '< ls "-la" extra="h" />',
+    '< ls "-la" extra="h x" />',
     [{
       index: 0,
       name: 'ls',
-      params: { 0: '-la', extra: 'h' },
-      rawText: '< ls "-la" extra="h" />',
+      params: { 0: '-la', extra: 'h x' },
+      rawText: '< ls "-la" extra="h x" />',
       single: true,
     }],
   ],

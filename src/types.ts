@@ -18,6 +18,7 @@ export interface ParseToken extends LexToken {
 
 // A valid single tag
 export interface SingleTag {
+  index: number;
   single: boolean;
   name: string;
   rawText: string;
@@ -26,6 +27,7 @@ export interface SingleTag {
 
 // A valid double tag
 export interface DoubleTag {
+  index: number;
   double: boolean;
   name: string;
   firstTagText: string;
