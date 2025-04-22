@@ -55,6 +55,7 @@ const TESTS = [
       {
         index: 0,
         single: true,
+        path: '0',
         rawText: '<αλφάβητο />',
         name: 'αλφάβητο',
       },
@@ -67,6 +68,7 @@ const TESTS = [
       {
         index: 17,
         double: true,
+        path: '1',
         firstTagText: '<yesOrNo>',
         secondTagText: '</yesOrNo>',
         name: 'yesOrNo',
@@ -79,9 +81,10 @@ const TESTS = [
       { index: 0, rawText: 'asd ' },
       {
         index: 4,
+        single: true,
+        path: '1',
         name: 'tesTing',
         rawText: '<tesTing/>',
-        single: true,
       },
       { index: 14, rawText: ' zxc' },
     ],
@@ -92,9 +95,10 @@ const TESTS = [
       { index: 0, rawText: '<asd> ' },
       {
         index: 6,
+        path: '1',
+        single: true,
         name: 'tesTing',
         rawText: '<tesTing/>',
-        single: true,
       },
       { index: 16, rawText: ' </zxc>' },
     ],
@@ -104,8 +108,9 @@ const TESTS = [
     [
       {
         index: 0,
-        name: 'cmd',
         single: true,
+        path: '0',
+        name: 'cmd',
         rawText: '<cmd `bash -c "ls -la"` z=`zzz` />',
         params: {
           '0': 'bash -c "ls -la"',
@@ -119,9 +124,10 @@ const TESTS = [
     [
       {
         index: 0,
+        single: true,
+        path: '0',
         rawText: '<cmd `bash -c "ls -la"` />',
         name: 'cmd',
-        single: true,
         params: {
           '0': 'bash -c "ls -la"',
         },
@@ -133,9 +139,10 @@ const TESTS = [
     [
       {
         index: 0,
+        single: true,
+        path: '0',
         rawText: '<curl "https://httpbin.org/uuid" t=5 />',
         name: 'curl',
-        single: true,
         params: {
           '0': 'https://httpbin.org/uuid',
           t: 5,
@@ -148,6 +155,7 @@ const TESTS = [
     [
       {
         index: 0,
+        path: '0',
         rawText: '<httpx url="https://httpbin.org/uuid" />',
         name: 'httpx',
         single: true,
@@ -163,6 +171,7 @@ const TESTS = [
       {
         index: 0,
         double: true,
+        path: '0',
         firstTagText: '<temp type=f deep=no nr=3 null=null false=false>',
         secondTagText: '</temp>',
         name: 'temp',
@@ -177,6 +186,7 @@ const TESTS = [
       {
         index: 0,
         double: true,
+        path: '0',
         firstTagText: '<stuff>',
         secondTagText: '</stuff>',
         name: 'stuff',
@@ -184,6 +194,7 @@ const TESTS = [
           {
             index: 7,
             name: 'other',
+            path: '0.children.0',
             rawText: '<other />',
             single: true,
           },
@@ -197,14 +208,16 @@ const TESTS = [
       {
         index: 0,
         double: true,
+        name: 'aA',
+        path: '0',
         firstTagText: '<aA>',
         secondTagText: '</aA>',
-        name: 'aA',
         children: [
           { index: 4, rawText: ' ' },
           {
             index: 5,
             name: 'bB',
+            path: '0.children.1',
             rawText: '<bB />',
             single: true,
           },
@@ -215,36 +228,41 @@ const TESTS = [
   ],
   [
     // correct deeply nested tags
-    '<t1><t2><t3><xXx/>?</t3></t2></t1>',
+    '<t1><t2><t3>!<xXx/>?</t3></t2></t1>',
     [
       {
         index: 0,
         double: true,
+        name: 't1',
+        path: '0',
         firstTagText: '<t1>',
         secondTagText: '</t1>',
-        name: 't1',
         children: [
           {
             index: 4,
             double: true,
+            name: 't2',
+            path: '0.children.0',
             firstTagText: '<t2>',
             secondTagText: '</t2>',
-            name: 't2',
             children: [
               {
                 index: 8,
                 double: true,
+                path: '0.children.0.children.0',
                 firstTagText: '<t3>',
                 secondTagText: '</t3>',
                 name: 't3',
                 children: [
+                  { index: 12, rawText: '!' },
                   {
-                    index: 12,
+                    index: 13,
                     name: 'xXx',
+                    path: '0.children.0.children.0.children.1',
                     rawText: '<xXx/>',
                     single: true,
                   },
-                  { index: 18, rawText: '?' },
+                  { index: 19, rawText: '?' },
                 ],
               },
             ],
@@ -260,14 +278,16 @@ const TESTS = [
       {
         index: 0,
         double: true,
+        name: 't1',
+        path: '0',
         firstTagText: '<t1>',
         secondTagText: '</t1>',
-        name: 't1',
         children: [
           { index: 4, rawText: '<tx>' },
           {
             index: 8,
             double: true,
+            path: '0.children.1',
             firstTagText: '<t3>',
             secondTagText: '</t3>',
             name: 't3',
@@ -275,6 +295,7 @@ const TESTS = [
               {
                 index: 12,
                 name: 'xXx',
+                path: '0.children.1.children.0',
                 rawText: '<xXx/>',
                 single: true,
               },
@@ -293,9 +314,10 @@ const TESTS = [
       {
         index: 0,
         double: true,
+        name: 't1',
+        path: '0',
         firstTagText: '<t1>',
         secondTagText: '</t1>',
-        name: 't1',
         children: [{ index: 4, rawText: '<t2></t3>' }],
       },
     ],
@@ -308,9 +330,10 @@ const TESTS = [
       {
         index: 4,
         double: true,
+        name: 't2',
+        path: '1',
         firstTagText: '<t2>',
         secondTagText: '</t2>',
-        name: 't2',
         children: [{ index: 8, rawText: ' ' }],
       },
       { index: 14, rawText: '</tx>' },
@@ -323,6 +346,7 @@ const TESTS = [
         index: 0,
         double: true,
         name: 'trick1',
+        path: '0',
         firstTagText: '<trick1>',
         secondTagText: '</trick1>',
         children: [
@@ -345,6 +369,7 @@ const TESTS = [
         index: 8,
         double: true,
         name: 'trick2',
+        path: '1',
         firstTagText: '<trick2>',
         secondTagText: '</trick2>',
         children: [
@@ -363,6 +388,7 @@ const TESTS = [
         index: 0,
         double: true,
         name: 'i',
+        path: '0',
         firstTagText: '<i>',
         secondTagText: '</i>',
         children: [
@@ -370,12 +396,137 @@ const TESTS = [
             index: 3,
             double: true,
             name: 'increment',
+            path: '0.children.0',
             firstTagText: '<increment plus=4>',
             secondTagText: '</increment>',
             params: { plus: 4 },
             children: [{ index: 21, rawText: '6' }],
           },
           { index: 34, rawText: '<sort x=t>\n<//>' },
+        ],
+      },
+    ],
+  ],
+  // HTML-like test
+  [
+    `<html>
+  <head><title>Hello world</title>
+  </head>
+  <body>
+    <h1>Hi there!</h1>
+    <b>Some text</b>
+    <p>Some more text</p>
+  </body>
+</html>`,
+    [
+      {
+        index: 0,
+        double: true,
+        name: 'html',
+        path: '0',
+        firstTagText: '<html>',
+        secondTagText: '</html>',
+        children: [
+          { index: 6, rawText: '\n  ' },
+          {
+            double: true,
+            index: 9,
+            name: 'head',
+            path: '0.children.1',
+            firstTagText: '<head>',
+            secondTagText: '</head>',
+            children: [
+              {
+                double: true,
+                index: 15,
+                name: 'title',
+                path: '0.children.1.children.0',
+                firstTagText: '<title>',
+                secondTagText: '</title>',
+                children: [{ index: 22, rawText: 'Hello world' }],
+              },
+              {
+                index: 41,
+                rawText: '\n  ',
+              },
+            ],
+          },
+          {
+            index: 51,
+            rawText: '\n  ',
+          },
+          {
+            children: [
+              {
+                index: 60,
+                rawText: '\n    ',
+              },
+              {
+                double: true,
+                index: 65,
+                name: 'h1',
+                path: '0.children.3.children.1',
+                firstTagText: '<h1>',
+                secondTagText: '</h1>',
+                children: [
+                  {
+                    index: 69,
+                    rawText: 'Hi there!',
+                  },
+                ],
+              },
+              {
+                index: 83,
+                rawText: '\n    ',
+              },
+              {
+                double: true,
+                index: 88,
+                name: 'b',
+                path: '0.children.3.children.3',
+                firstTagText: '<b>',
+                secondTagText: '</b>',
+                children: [
+                  {
+                    index: 91,
+                    rawText: 'Some text',
+                  },
+                ],
+              },
+              {
+                index: 104,
+                rawText: '\n    ',
+              },
+              {
+                double: true,
+                index: 109,
+                name: 'p',
+                path: '0.children.3.children.5',
+                firstTagText: '<p>',
+                secondTagText: '</p>',
+                children: [
+                  {
+                    index: 112,
+                    rawText: 'Some more text',
+                  },
+                ],
+              },
+              {
+                index: 130,
+                rawText: '\n  ',
+              },
+            ],
+            double: true,
+            index: 54,
+            name: 'body',
+            path: '0.children.3',
+            firstTagText: '<body>',
+            secondTagText: '</body>',
+          },
+          {
+            index: 140,
+            rawText: '\n',
+          },
         ],
       },
     ],

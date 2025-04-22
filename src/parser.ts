@@ -15,6 +15,24 @@ function addChild(parent: ParseToken, child: ParseToken): void {
 }
 
 /**
+ * Recursively adds dot-notation paths to tag nodes in the AST.
+ * Raw text nodes are ignored.
+ */
+function addPaths(nodes: ParseToken[], currentPath = ''): void {
+  nodes.forEach((node, index) => {
+    // Only add paths to single or double tags, not raw text
+    if (node.name && (node.single || node.double)) {
+      // Calculate the path based on whether it's a root node or a child node
+      node.path = currentPath ? `${currentPath}.children.${index}` : index.toString();
+      // If the node is a double tag and has children, recurse
+      if (isDoubleTag(node) && node.children) {
+        addPaths(node.children, node.path);
+      }
+    }
+  });
+}
+
+/**
  * Transform an unstructured stream of tokens (coming from the Lexer)
  * into a valid tree-like structure.
  * If the tag is double, it will have children of type raw text,
@@ -150,6 +168,8 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
       finalCommit(token);
     }
   }
+
+  addPaths(ast);
 
   return ast;
 }

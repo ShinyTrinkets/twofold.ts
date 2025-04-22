@@ -20,6 +20,7 @@ const TESTS = [
   ['<1tag />', [{ index: 0, rawText: '<1tag />' }]], // tag cannot start with Number
   ['<tag X=0 />', [{ index: 0, rawText: '<tag X=0 />' }]], // prop cannot start with Upper
   ['<tag 1=2 />', [{ index: 0, rawText: '<tag 1=2 />' }]], // prop cannot start with Number
+  ['<tag t="   ', [{ index: 0, rawText: '<tag t="   ' }]],
   ['<tag t="` />', [{ index: 0, rawText: '<tag t="` />' }]],
   ['<tag t=\'" />', [{ index: 0, rawText: '<tag t=\'" />' }]],
   ['<tag t=`"" />', [{ index: 0, rawText: '<tag t=`"" />' }]],

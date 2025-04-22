@@ -14,11 +14,13 @@ export interface ParseToken extends LexToken {
   secondTagText?: string;
   children?: ParseToken[];
   parent?: ParseToken;
+  path?: string;
 }
 
 // A valid single tag
 export interface SingleTag {
   index: number;
+  path?: string;
   single: boolean;
   name: string;
   rawText: string;
@@ -28,6 +30,7 @@ export interface SingleTag {
 // A valid double tag
 export interface DoubleTag {
   index: number;
+  path?: string;
   double: boolean;
   name: string;
   firstTagText: string;

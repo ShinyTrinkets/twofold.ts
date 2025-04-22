@@ -17,7 +17,7 @@ export const isFunction = (f: any) => typeof f === 'function' || types.isAsyncFu
  * Split text at the ✂----- marker.
  */
 export function splitToMarker(txt: string) {
-  const m = txt.match(/(.+)✂[-]+/s);
+  const m = txt.match(/(.+)✂[-]+[!]?/s);
   return m && m[1] ? m[1] : txt;
 }
 
