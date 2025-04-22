@@ -77,9 +77,9 @@ test('edit tag', () => {
   let final = editTag(ast[0], { a: 'b', c: 'd' });
   expect(final).toBe(`<noop a="b" c="d">1 </noop>`);
 
-  ast = parse(new Lexer().lex('< noop a=a b=b> 1</noop >'));
+  ast = parse(new Lexer().lex('< noop "y" a=a b=b> 1</noop >'));
   final = editTag(ast[0], { a: 1, c: false, d: null });
-  expect(final).toBe(`< noop a=1 b="b" c=false d=null> 1</noop >`);
+  expect(final).toBe(`< noop "y" a=1 b="b" c=false d=null> 1</noop >`);
 
   ast = parse(new Lexer().lex('<countDown n=5 x=x/>'));
   final = editTag(ast[0], { n: 4 });
@@ -88,4 +88,8 @@ test('edit tag', () => {
   ast = parse(new Lexer().lex('< countDown n=5 x=0  />'));
   final = editTag(ast[0], { n: 3 });
   expect(final).toBe(`< countDown n=3 x=0  />`);
+
+  ast = parse(new Lexer().lex(`<someThing 'x' z=z/>`));
+  final = editTag(ast[0], { 0: 'new' });
+  expect(final).toBe(`<someThing "new" z="z"/>`);
 });

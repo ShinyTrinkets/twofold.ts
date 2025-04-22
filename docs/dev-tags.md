@@ -99,6 +99,7 @@ Meta: {
  "root": "docs/",
  "fname": "docs//dev-tags.md",
  "node": {
+  "index": 20,
   "rawText": "debug 'a' b=c d=1 /",
   "name": "debug",
   "params": {
@@ -107,6 +108,7 @@ Meta: {
    "d": 1
   },
   "single": true,
+  "path": "1",
   "parent": {}
  }
 }

@@ -85,6 +85,9 @@ async function evaluateDoubleTag(
       }
     }
   } else {
+    // The input text for the double tag is
+    // a flat text of all children combined
+    // Probably not ideal ...
     const innerText = getText(tag);
     let result = innerText;
     try {
@@ -94,7 +97,7 @@ async function evaluateDoubleTag(
     }
     // If the single tag doesn't have a result, DON'T change the tag
     if (result === undefined || result === null) return;
-    // When evaluating a double tag, all children are flattened
+    // After evaluating a double tag, all children are flattened
     tag.children = [{ index: -1, rawText: result.toString() }];
     // Cut (consume) the tag to make it behave like a single tag
     if (isConsumableTag(tag)) {

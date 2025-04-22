@@ -413,7 +413,7 @@ const TESTS = [
   <head><title>Hello world</title>
   </head>
   <body>
-    <h1>Hi there!</h1>
+    <h1 class="large">Hi there!</h1>
     <b>Some text</b>
     <p>Some more text</p>
   </body>
@@ -456,6 +456,12 @@ const TESTS = [
             rawText: '\n  ',
           },
           {
+            double: true,
+            index: 54,
+            name: 'body',
+            path: '0.children.3',
+            firstTagText: '<body>',
+            secondTagText: '</body>',
             children: [
               {
                 index: 60,
@@ -466,65 +472,62 @@ const TESTS = [
                 index: 65,
                 name: 'h1',
                 path: '0.children.3.children.1',
-                firstTagText: '<h1>',
+                firstTagText: '<h1 class="large">',
                 secondTagText: '</h1>',
+                params: {
+                  class: 'large',
+                },
                 children: [
                   {
-                    index: 69,
+                    index: 83,
                     rawText: 'Hi there!',
                   },
                 ],
               },
               {
-                index: 83,
+                index: 97,
                 rawText: '\n    ',
               },
               {
                 double: true,
-                index: 88,
+                index: 102,
                 name: 'b',
                 path: '0.children.3.children.3',
                 firstTagText: '<b>',
                 secondTagText: '</b>',
                 children: [
                   {
-                    index: 91,
+                    index: 105,
                     rawText: 'Some text',
                   },
                 ],
               },
               {
-                index: 104,
+                index: 118,
                 rawText: '\n    ',
               },
               {
                 double: true,
-                index: 109,
+                index: 123,
                 name: 'p',
                 path: '0.children.3.children.5',
                 firstTagText: '<p>',
                 secondTagText: '</p>',
                 children: [
                   {
-                    index: 112,
+                    index: 126,
                     rawText: 'Some more text',
                   },
                 ],
               },
               {
-                index: 130,
+                index: 144,
                 rawText: '\n  ',
               },
             ],
-            double: true,
-            index: 54,
-            name: 'body',
-            path: '0.children.3',
-            firstTagText: '<body>',
-            secondTagText: '</body>',
           },
           {
-            index: 140,
+            index: 154,
             rawText: '\n',
           },
         ],

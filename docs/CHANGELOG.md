@@ -2,7 +2,10 @@
 
 ## v0.8 WIP
 
+- created "set" tag to define variables available within the file
+- created "table" tag to format ASCII tables to Markdown tables
 - added index for LexTokens, useful for custom errors
+- added path for ParseTokens, useful to know where is the tag in the AST
 
 ## v0.7
 

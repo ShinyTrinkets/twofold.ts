@@ -1,4 +1,4 @@
-import { DoubleTag, LexToken, ParseToken } from './types.ts';
+import { SingleTag, DoubleTag, LexToken, ParseToken } from './types.ts';
 
 export const isDoubleTag = (t: LexToken | ParseToken) => !!(t && t.name && t.double);
 export const isSingleTag = (t: LexToken | ParseToken) => !!(t && t.name && t.single && t.rawText);
@@ -12,7 +12,7 @@ export const isConsumableTag = (t: LexToken | ParseToken) =>
 
 export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagText && t.secondTagText;
 
-export function consumeTag(tag: ParseToken) {
+export function consumeTag(tag: SingleTag | DoubleTag) {
   for (const k of Object.keys(tag)) {
     if (k === 'rawText') continue;
     // @ts-ignore Delete is OK
@@ -23,7 +23,7 @@ export function consumeTag(tag: ParseToken) {
 /**
  * Deep extract text from a node and all its children.
  */
-export function getText(node: ParseToken): string {
+export function getText(node: SingleTag | DoubleTag): string {
   let text = '';
   if (!node.children) {
     if (isRawText(node)) {
@@ -71,8 +71,8 @@ export function unParse(node: ParseToken): string {
 
 export function editTag(node: ParseToken, newParams: Record<string, any>): string {
   /**
-   * Edit a tag, replacing the rawText with the new text.
-   * This is used to edit the tag in place, by applying new params.
+   * Edit a tag in place, by applying new params.
+   * DON'T edit the "index", "path" or "children" of the tag!
    */
   node.params = { ...(node.params || {}), ...newParams };
 
@@ -107,7 +107,7 @@ function formatParams(params: Record<string, any>): string {
   for (const [key, value] of Object.entries(params)) {
     if (key === '0') {
       // Positional parameter
-      result += `'${value}' `;
+      result += `${JSON.stringify(value)} `;
       continue;
     }
     if (typeof value === 'number' || typeof value === 'boolean' || value === null || value === undefined) {

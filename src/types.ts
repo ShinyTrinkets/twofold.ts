@@ -9,12 +9,18 @@ export interface LexToken {
   param_value?: string;
 }
 
-export interface ParseToken extends LexToken {
+export interface ParseToken {
+  index: number;
+  path?: string;
+  name?: string;
+  rawText: string;
+  single?: boolean;
+  double?: boolean;
+  params?: Record<string, any>;
   firstTagText?: string;
   secondTagText?: string;
   children?: ParseToken[];
   parent?: ParseToken;
-  path?: string;
 }
 
 // A valid single tag
@@ -25,6 +31,7 @@ export interface SingleTag {
   name: string;
   rawText: string;
   params?: Record<string, any>;
+  parent?: ParseToken;
 }
 
 // A valid double tag
@@ -35,9 +42,9 @@ export interface DoubleTag {
   name: string;
   firstTagText: string;
   secondTagText: string;
-  rawText: string;
   children?: ParseToken[];
   params?: Record<string, any>;
+  parent?: ParseToken;
 }
 
 export interface ScanToken {

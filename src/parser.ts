@@ -169,6 +169,7 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     }
   }
 
+  // Recursively add dot-notation paths
   addPaths(ast);
 
   return ast;

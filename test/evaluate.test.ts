@@ -18,6 +18,7 @@ test('simple evaluate', async () => {
     index: 1,
     double: true,
     name: 'main',
+    path: '1',
     firstTagText: '<main>',
     secondTagText: '</main>',
     children: [
