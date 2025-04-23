@@ -1,7 +1,7 @@
 import { DoubleTag, ParseToken, SingleTag } from './types.ts';
 import { isFunction } from './util.ts';
 import { Config } from './config.ts';
-import { consumeTag, getText, isConsumableTag, isDoubleTag, isProtectedTag, isSingleTag } from './tags.ts';
+import { consumeTag, getText, isConsumableTag, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
 
 /**
  * Evaluate a single tag, by calling the tag function.
@@ -29,9 +29,18 @@ async function evaluateSingleTag(
   }
   // If the single tag doesn't have a result, DON'T change the tag
   if (result === undefined || result === null) return;
-  // When evaluating a single tag, it is reduced to raw text
-  consumeTag(tag);
-  tag.rawText = result.toString();
+  // If the result is a tag object, apply on top of the current tag
+  if (typeof result === 'object' && result.single && result.name === tag.name && result.index === tag.index) {
+    tag.rawText = result.rawText;
+    tag.params = result.params;
+    syncTag(tag);
+  } else {
+    tag.rawText = result.toString();
+  }
+  // When evaluating a single tag, it is normally reduced to raw text
+  if (!tag.params || (tag.params && (tag.params.cut === undefined || !!tag.params.cut))) {
+    consumeTag(tag);
+  }
 }
 
 /*
@@ -79,6 +88,7 @@ async function evaluateDoubleTag(
           console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
         }
         if (tmp === undefined || tmp === null) tmp = '';
+        // TODO: handle the case when the result is a tag object
         // When evaluating a normal tag, it is flattened
         // These kinds of tags cannot be cut (consumed)
         tag.children.push({ index: -1, rawText: tmp.toString() });
@@ -93,14 +103,26 @@ async function evaluateDoubleTag(
     try {
       result = await func(firstParam, { ...params, innerText }, meta);
     } catch (err: any) {
+      // If the function call crashed, DON'T change the tag
       console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
     }
     // If the single tag doesn't have a result, DON'T change the tag
     if (result === undefined || result === null) return;
-    // After evaluating a double tag, all children are flattened
-    tag.children = [{ index: -1, rawText: result.toString() }];
+    // If the result is a tag object, apply on top of the current tag
+    // @ts-ignore It's fine, this is a valid double tag
+    if (typeof result === 'object' && result.double && result.name === tag.name && result.index === tag.index) {
+      // .secondTagText = result.secondTagText; // safety first; enforce to have the same name
+      tag.firstTagText = result.firstTagText;
+      tag.params = result.params;
+      tag.children = result.children;
+      syncTag(tag as ParseToken);
+    } else {
+      // After evaluating a double tag, all children are flattened
+      tag.children = [{ index: -1, rawText: result.toString() }];
+    }
     // Cut (consume) the tag to make it behave like a single tag
-    if (isConsumableTag(tag)) {
+    if (isConsumableTag(tag as ParseToken)) {
+      // BUGGY !! TODO: test !!
       consumeTag(tag);
       tag.rawText = result.toString();
     }
@@ -115,7 +137,7 @@ export default async function evaluateTag(
   tag: ParseToken,
   customData: Record<string, any>,
   allFunctions: Record<string, Function>,
-  cfg: Config,
+  cfg: Config = {},
   meta: Record<string, any> = {}
 ) {
   if (!tag || !tag.name) {
@@ -150,7 +172,10 @@ export default async function evaluateTag(
     // a separate variable scope for the children
     let params = structuredClone({ ...customData, ...tag.params });
     for (const c of tag.children) {
-      c.parent = tag;
+      c.parent = { name: tag.name, index: tag.index, params: tag.params };
+      if (tag.single) c.parent.single = true;
+      else if (tag.double) c.parent.double = true;
+      c.parent.params = { ...tag.params };
       await evaluateTag(c, params, allFunctions, cfg, meta);
     }
   }
@@ -162,12 +187,13 @@ export default async function evaluateTag(
   }
 
   // Inject the parsed tag into the function meta
-  meta.node = { ...tag };
-  delete meta.node.children;
+  meta.node = structuredClone(tag);
+  if (!tag.params) meta.node.params = {};
   // Inject the parsed parent into meta
   if (tag.parent) {
-    meta.node.parent = { ...tag.parent };
+    meta.node.parent = structuredClone(tag.parent);
     delete meta.node.parent.children;
+    delete meta.node.parent.parent;
   } else {
     meta.node.parent = {};
   }

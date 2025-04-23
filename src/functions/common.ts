@@ -5,11 +5,16 @@ export function parseNumber(text: string): number {
   if (typeof text !== 'string') {
     return text;
   }
+  let n = 0;
   if (text.includes('.')) {
-    return parseFloat(text);
+    n = parseFloat(text);
   } else {
-    return parseInt(text);
+    n = parseInt(text);
   }
+  if (isNaN(n)) {
+    return 0;
+  }
+  return n;
 }
 
 export function getDate(text: string | Date): Date {

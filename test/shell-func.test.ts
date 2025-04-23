@@ -4,8 +4,11 @@ import { cmd } from '../src/functions/shell.ts';
 
 test('shell cmd', async () => {
   // Doesn't work with Deno right now
-  if (!!typeof (globalThis as any).Deno) return;
+  if (!!(globalThis as any).Deno) return;
 
   let txt = await cmd('echo', { args: 'test1 test2' });
   expect(txt).toBe('test1 test2');
+
+  txt = await cmd('sh', { args: '--version' });
+  expect(txt).toContain(' version 3');
 });

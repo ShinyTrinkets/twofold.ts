@@ -43,10 +43,10 @@ function addPaths(nodes: ParseToken[], currentPath = ''): void {
 export default function parse(tokens: LexToken[], cfg: config.Config = {}): ParseToken[] {
   const { openTag, lastStopper } = { ...config.defaultCfg, ...cfg };
   const RE_FIRST_START = new RegExp(
-    `^${openTag as string}[ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
+    `^[${openTag as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
   );
   const RE_SECOND_START = new RegExp(
-    `^${openTag as string}[${lastStopper as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
+    `^[${openTag as string}][${lastStopper as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
   );
 
   const ast: ParseToken[] = [];

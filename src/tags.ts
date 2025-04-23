@@ -1,14 +1,13 @@
 import { SingleTag, DoubleTag, LexToken, ParseToken } from './types.ts';
 
-export const isDoubleTag = (t: LexToken | ParseToken) => !!(t && t.name && t.double);
-export const isSingleTag = (t: LexToken | ParseToken) => !!(t && t.name && t.single && t.rawText);
-export const isRawText = (t: LexToken | ParseToken) =>
+export const isDoubleTag = (t: LexToken | ParseToken): boolean => !!(t && t.name && t.double);
+export const isSingleTag = (t: LexToken | ParseToken): boolean => !!(t && t.name && t.single && t.rawText);
+export const isRawText = (t: LexToken | ParseToken): boolean =>
   t && t.name === undefined && t.single === undefined && t.double === undefined;
 
 export const isProtectedTag = (t: LexToken | ParseToken) =>
   t && (t.name === 'ignore' || (t.params && t.params.freeze === true));
-export const isConsumableTag = (t: LexToken | ParseToken) =>
-  !!(t && t.params && (t.params.cut === true || t.params.cut === 1));
+export const isConsumableTag = (t: LexToken | ParseToken) => !!(t && t.params && !!t.params.cut);
 
 export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagText && t.secondTagText;
 
@@ -69,37 +68,30 @@ export function unParse(node: ParseToken): string {
   return text;
 }
 
-export function editTag(node: ParseToken, newParams: Record<string, any>): string {
-  /**
-   * Edit a tag in place, by applying new params.
-   * DON'T edit the "index", "path" or "children" of the tag!
-   */
-  node.params = { ...(node.params || {}), ...newParams };
-
+/*
+ * Reform/ restructure a de-synced tag, in place.
+ * This can happen when a user changes parts of the tag,
+ * but the tag text is not updated.
+ */
+export function syncTag(node: ParseToken): void {
   if (isDoubleTag(node)) {
-    // Extract opening and closing delimiters
     const openDelimiter = node.firstTagText?.match(/^.[ \t]*/)?.[0];
     const closeDelimiter = node.firstTagText?.match(/[ \t]*.$/)?.[0];
-
-    // Create the opening tag content with updated params
     const paramStr = formatParams(node.params);
-    node.firstTagText = `${openDelimiter}${node.name} ${paramStr}${closeDelimiter}`;
+    // In case of double tags, only the firstTagText is updated
+    node.firstTagText = `${openDelimiter}${node.name}${paramStr}${closeDelimiter}`;
   } else if (isSingleTag(node)) {
-    // Extract the delimiters
     const openDelimiter = node.rawText?.match(/^.[ \t]*/)?.[0];
     const closeDelimiter = node.rawText?.match(/[ \t]*..$/)?.[0];
-
-    // Create the new tag with updated params
     const paramStr = formatParams(node.params);
-    node.rawText = `${openDelimiter}${node.name} ${paramStr}${closeDelimiter}`;
+    // In case of single tags, only the rawText is updated
+    node.rawText = `${openDelimiter}${node.name}${paramStr}${closeDelimiter}`;
   }
-
-  return unParse(node);
 }
 
 // Helper function to format parameters consistently
-function formatParams(params: Record<string, any>): string {
-  if (!params || Object.keys(params).length === 0) {
+function formatParams(params: undefined | Record<string, any>): string {
+  if (!params || typeof params !== 'object' || Object.keys(params).length === 0) {
     return '';
   }
 
@@ -107,15 +99,18 @@ function formatParams(params: Record<string, any>): string {
   for (const [key, value] of Object.entries(params)) {
     if (key === '0') {
       // Positional parameter
-      result += `${JSON.stringify(value)} `;
+      if (typeof value === 'string') {
+        result += ` ${JSON.stringify(value)}`;
+      } else {
+        result += ` "${value}"`;
+      }
       continue;
     }
     if (typeof value === 'number' || typeof value === 'boolean' || value === null || value === undefined) {
-      result += `${key}=${value} `;
+      result += ` ${key}=${value}`;
     } else {
-      result += `${key}=${JSON.stringify(value)} `;
+      result += ` ${key}=${JSON.stringify(value)}`;
     }
   }
-
-  return result.trim();
+  return result;
 }

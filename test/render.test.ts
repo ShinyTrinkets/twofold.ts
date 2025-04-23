@@ -216,24 +216,28 @@ test('custom double tag', async () => {
   expect(tmp).toBe('<mumu></mumu>');
   tmp = await twofold.renderText('{mumu} {#mumu}', {}, { mumu }, cfg);
   expect(tmp).toBe('{mumu}ok{#mumu}');
+
+  cfg = { openTag: '(', closeTag: ')', lastStopper: '.' };
+  tmp = await twofold.renderText('(mumu) (.mumu)', {}, { mumu }, cfg);
+  expect(tmp).toBe('(mumu)ok(.mumu)');
 });
 
 test('deep increment consume render', async () => {
   const nr = 997;
-  let txt = 'qwerty <increment cut=true><increment cut=true>';
-  txt += `<increment cut=true>${nr}</increment></increment></increment>`;
+  let txt = 'qwerty <increment cut=true><increment>';
+  txt += `<increment>${nr}</increment></increment></increment>`;
   let tmp = await twofold.renderText(txt);
-  expect(tmp).not.toBe(txt);
   expect(tmp).toBe(`qwerty ${nr + 3}`);
-});
 
-test('deep increment render', async () => {
-  const nr = 997;
-  let txt = 'qwerty <increment><increment cut=true><increment cut=true>';
+  txt = 'qwerty <increment><increment cut=true><increment cut=true>';
   txt += `${nr}</increment></increment></increment>`;
-  let tmp = await twofold.renderText(txt);
-  expect(tmp).not.toBe(txt);
+  tmp = await twofold.renderText(txt);
   expect(tmp).toBe(`qwerty <increment>${nr + 3}</increment>`);
+
+  // test that execution happens depth first
+  txt = '<increment cut=1>1<increment>2<increment>3</increment>4</increment>5</increment>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe('12456');
 });
 
 test('deep custom function render', async () => {

@@ -4,7 +4,6 @@
 
 import { ee } from '../event.ts';
 import { parseNumber } from './common.ts';
-import { editTag } from '../tags.ts';
 
 // export function set() {
 //   /**
@@ -28,7 +27,7 @@ import { editTag } from '../tags.ts';
 export function text(s: string, { innerText } = {}) {
   /**
    * A tag used for DEV, that returns the text as is.
-   * If this wraps some tags, they will be flattened.
+   * If this wraps some tags, they will be flattened/ destroyed.
    */
   return innerText || s;
 }
@@ -49,14 +48,27 @@ export async function countDown(s: string, args: any, meta: any) {
   if (n === undefined || n === null) return;
   if (n === '' || n === '0') return;
   n = parseNumber(n);
-  if (n < 1) return;
+  if (isNaN(n) || n < 1) return;
   // keep the param in the same place
-  let newParams: any = {};
-  if (s) newParams['0'] = n - 1;
-  else newParams.n = n - 1;
-  // the delay is supposed to be a backup
-  await Bun.sleep(500);
-  return editTag(meta.node, newParams);
+  if (s) meta.node.params['0'] = n - 1;
+  else meta.node.params.n = n - 1;
+  return meta.node;
+}
+
+export async function spinner(_: string, args: any, meta: any) {
+  /**
+   * Experimental: Spinner.
+   */
+  let n = args.n;
+  if (n === undefined || n === null) return;
+  n = parseNumber(n);
+  if (isNaN(n) || n < 0) return;
+  const chars = ['▁', '▃', '▄', '▅', '▆', '▇', '█', '▇', '▆', '▅', '▄', '▃', '▁'];
+  n++;
+  if (n >= chars.length) n = 0;
+  meta.node.params['0'] = chars[n];
+  meta.node.params.n = n;
+  return meta.node;
 }
 
 export async function slowSave(s: string, args: any, meta: any) {
