@@ -61,21 +61,32 @@ export async function ai(text: string, args: Record<string, any> = {}, _meta: Re
     messages: oldMessages,
     stream: !!args.stream,
   };
+  /*
+   * Many of these options are not supported by all servers
+   * and may be ignored, or even cause an error.
+   */
   if (args.model) {
-    // only used for multi-model apps like Ollama and online services like OpenAI
+    // Anly used for multi-model apps like Ollama and
+    // online services like OpenAI, OpenRouter, Groq, etc
     body.model = args.model;
   }
   if (args.temperature || args.temp) {
     // Temperature controls the randomness of the model's output
-    // For Tavern, a good default value is 1
+    // Must be a a float. Default is 1.0.
     body.temperature = args.temperature || args.temp;
   }
+  if (args.seed) {
+    // Seed for the random number generator, can be used for reproducibility
+    // Some inference servers don't support, or consider this
+    // Must be an integer. Default is 0.
+    body.seed = args.seed;
+  }
   if (args.min_p) {
-    // Minimum probability for the model to consider a token
+    // Minimum probability for the sampler to consider a token
     // Sampler will cull off all the garbage tokens from the distribution
     // A lower value (e.g., <0.1) allows for more randomness and creativity
     // A higher value (e.g., 0.2-0.3) makes the model more conservative
-    // For Tavern, a good default value is 0.025
+    // A good default value is 0.1.
     body.min_p = args.min_p;
   }
   if (args.top_p) {
@@ -83,38 +94,47 @@ export async function ai(text: string, args: Record<string, any> = {}, _meta: Re
     // a threshold "p" then samples from that "nucleus"
     // Lower to 0.7-0.8 for tighter control (e.g., concise replies)
     // Raise to 0.95-0.99 for more creative outputs
+    // Must be in range (0, 1].
     body.top_p = args.top_p;
   }
   if (args.top_k) {
-    // Limits the number of tokens to sample from to the top k most probable ones
+    // Limits the number of tokens to consider during sampling
     // Lower to 10-20 for more focused, deterministic output
     // Raise to to 50-100 for more varied, creative output
     body.top_k = args.top_k;
   }
   if (args.frequency_penalty || args.freq_penalty) {
-    // A number between -2.0 and 2.0.
     // Reduces the likelihood of the model repeating words or tokens based on how often
     // they’ve already appeared in the generated text
     // A higher value (e.g., 0 to 2) discourages repetition by lowering the probability
     // of frequently used tokens, promoting more varied vocabulary across the entire output
+    // Values > 0 encourage new tokens; < 0 encourages repetition.
+    // A number between -2.0 and 2.0.
     body.frequency_penalty = args.frequency_penalty || args.freq_penalty;
   }
   if (args.presence_penalty || args.pres_penalty) {
-    // A number between -2.0 and 2.0.
     // Discourages the model from reusing any token that has already appeared in the text,
     // regardless of how many times it’s been used
     // Unlike frequency penalty, it applies a flat penalty once a token is present,
-    // encouraging the introduction of entirely new words or concepts
+    // encouraging the introduction of entirely new words or concepts.
+    // Values > 0 encourage new tokens; < 0 encourages repetition.
+    // A number between -2.0 and 2.0.
     body.presence_penalty = args.presence_penalty || args.pres_penalty;
   }
   if (args.repetition_penalty || args.repeat_penalty) {
-    // General term (sometimes used interchangeably with the above or as a distinct parameter,
-    // depending on the framework) that penalizes the repetition of specific sequences, tokens, or patterns
-    // Often used to prevent the model from getting stuck in loops (e.g., repeating "the the the")
+    // Penalizes new tokens based on their appearance in the prompt and generated text.
+    // Bandaid fix, to prevent a model from getting stuck in loops (e.g., repeating "the the the")
+    // Values > 1 encourage new tokens; < 1 encourages repetition.
+    // A good default is 1.1.
     body.repetition_penalty = args.repetition_penalty || args.repeat_penalty;
   }
   if (args.max_tokens) {
+    // Maximum number of tokens generated per output sequence
     body.max_tokens = args.max_tokens;
+  }
+  if (args.min_tokens) {
+    // Minimum number of tokens generated per output sequence
+    body.min_tokens = args.min_tokens;
   }
   // KoboldAI / Kobold.cpp specific settings
   //
