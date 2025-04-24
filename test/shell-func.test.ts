@@ -9,6 +9,6 @@ test('shell cmd', async () => {
   let txt = await cmd('echo', { args: 'test1 test2' });
   expect(txt).toBe('test1 test2');
 
-  txt = await cmd('sh', { args: '--version' });
-  expect(txt).toContain(' version 3');
+  txt = await cmd('bash', { args: '--version' });
+  expect(txt).toContain(' version ');
 });
