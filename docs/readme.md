@@ -9,15 +9,15 @@ For example, the `increment()` function looks like this:
 
 ```js
 // src/functions/tfold.ts file
-function increment(text, { innerText, plus = 1 } = {}): number {
-    return parseNumber(text || innerText) + parseNumber(plus);
+function increment(text: string, { plus = 1 } = {}): number {
+    return parseNumber(text) + parseNumber(plus);
 }
 ```
 
 <ignore>
 
 And it can be called like: "`<increment plus=4>6</increment>`". The function will receive the args
-as: innerText="6" and plus="4".
+as: text="6" and plus="4".
 
 All tags can be called in camelCase (eg: `<emojiClock />`), or separated by underline (eg:
 `<emoji_clock />`).

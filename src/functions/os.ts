@@ -11,29 +11,35 @@ async function _resolvFname(f1: string, f2: string) {
   return fname;
 }
 
-export async function cat(txtFile: string, { f, start = 0, limit = 250 }) {
+export async function cat(txtFile: string, { f = null, start = 0, limit = 250 } = {}, meta = {}) {
   /**
    * Read a file with limit. Similar to "cat" commant from Linux.
    */
   const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
-  const fd = await fsPromises.open(fname, 'r');
   const buffer = Buffer.alloc(limit);
-  await fsPromises.read(fd, buffer, 0, limit, start);
-  return buffer.toString();
+  const fn = await fsPromises.open(fname, 'r');
+  // read(fn, buffer, offset, length, position)
+  await fsPromises.read(fn.fd, buffer, 0, limit, start);
+  await fn.close();
+  const text = buffer.toString().trim();
+  if (meta.node.double) return `\n${text}\n`;
+  return text;
 }
 
-export async function head(txtFile: string, { f, lines = 10 }) {
+export async function head(txtFile: string, { f = null, lines = 10 } = {}, meta = {}) {
   /**
    * Read a number of lines from file. Similar to "head" commant from Linux.
    */
   const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
   const input = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
-  return input.slice(0, lines).join('\n');
+  const text = input.slice(0, lines).join('\n');
+  if (meta.node.double) return `\n${text}\n`;
+  return text;
 }
 
-export async function tail(txtFile: string, { f, lines = 10 }) {
+export async function tail(txtFile: string, { f = null, lines = 10 } = {}, meta = {}) {
   /**
    * Read a number of lines from the end of file. Similar to "tail" commant from Linux.
    */
@@ -41,29 +47,12 @@ export async function tail(txtFile: string, { f, lines = 10 }) {
   if (!fname) return;
   const input = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
   const lastLine = input.length - 1;
-  return input.slice(lastLine - lines, lastLine).join('\n');
+  const text = input.slice(lastLine - lines, lastLine).join('\n');
+  if (meta.node.double) return `\n${text}\n`;
+  return text;
 }
 
-// events.on is not yet implemented in Bun :(
-// export async function head(txtFile, { file, lines = 10 }) {
-//   import { createReadStream } from 'node:fs';
-//   import { createInterface } from 'node:readline';
-//   file = path.normalize(txtFile || file);
-//   const inputStream = createReadStream(file);
-//   const result = [];
-//   try {
-//     for await (const line of createInterface(inputStream)) {
-//       result.push(line);
-//       lines -= 1;
-//       if (lines === 0) break;
-//     }
-//   } finally {
-//     inputStream.destroy();
-//   }
-//   return result.join('\n');
-// }
-
-export async function dir(txtDir: string, { d, li = '*', space = ' ' }) {
+export async function dir(txtDir: string, { d = null, li = '*', space = ' ' } = {}) {
   let dname = await resolveDirName(d);
   if (!dname) dname = await resolveDirName(txtDir);
   if (!dname) return;

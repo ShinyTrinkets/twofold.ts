@@ -1,7 +1,7 @@
 import { DoubleTag, ParseToken, SingleTag } from './types.ts';
 import { isFunction } from './util.ts';
 import { Config } from './config.ts';
-import { consumeTag, getText, isConsumableTag, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
+import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
 
 /**
  * Evaluate a single tag, by calling the tag function.
@@ -87,7 +87,7 @@ async function evaluateDoubleTag(
         meta.node = structuredClone(c);
         if (!c.params) meta.node.params = {};
         try {
-          tmp = await func(firstParam, { ...params, innerText }, meta);
+          tmp = await func(firstParam || innerText, { ...params, innerText }, meta);
         } catch (err: any) {
           console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
         }
@@ -104,7 +104,7 @@ async function evaluateDoubleTag(
     const innerText = getText(tag);
     let result = innerText;
     try {
-      result = await func(firstParam, { ...params, innerText }, meta);
+      result = await func(firstParam || innerText, { ...params, innerText }, meta);
     } catch (err: any) {
       // If the function call crashed, DON'T change the tag
       console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);

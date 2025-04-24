@@ -6,6 +6,9 @@
 - created "table" tag to format ASCII tables to Markdown tables
 - added index for LexTokens, useful for custom errors
 - added path for ParseTokens, useful to know where is the tag in the AST
+- functions for tags can now edit and return meta.node! This will allow lots of
+  interesting, advanced tag editing use-cases, that were not possible before.
+- functions for double tags now receive zeroText || innerText, makes more sense
 
 ## v0.7
 
@@ -17,7 +20,8 @@
 
 ## v0.6
 
-- moved repository to: https://github.com/ShinyTrinkets/twofold.ts ; the old repository was: https://github.com/ShinyTrinkets/twofold.js
+- moved repository to: https://github.com/ShinyTrinkets/twofold.ts ;
+  the old repository was: https://github.com/ShinyTrinkets/twofold.js
 - completele re-written for Bun, in TypeScript, which makes it 2x faster
 - can now compile a standalone CLI executable from Bun
 - also thanks to Bun, added `cmd` and `req` core tags

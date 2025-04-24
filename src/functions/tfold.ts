@@ -24,20 +24,20 @@ import { parseNumber } from './common.ts';
 //   return;
 // }
 
-export function text(s: string, { innerText } = {}) {
+export function text(s: string) {
   /**
    * A tag used for DEV, that returns the text as is.
    * If this wraps some tags, they will be flattened/ destroyed.
    */
-  return innerText || s;
+  return s;
 }
 
-export function increment(s: string, { innerText, plus = 1 } = {}): number {
+export function increment(s: string, { plus = 1 } = {}): number {
   /**
    * Very silly DEV tag, increment the input with a number.
    * The increment can be any integer, or float, positive or negative.
    */
-  return parseNumber(s || innerText) + parseNumber(plus);
+  return parseNumber(s) + parseNumber(plus);
 }
 
 export async function countDown(s: string, args: any, meta: any) {

@@ -49,6 +49,17 @@ export async function cmd(
   return stdout.trim();
 }
 
+export async function sh(txtCmd: string, { cmd, args = [], t = 5 }): Promise<string | undefined> {
+  /**
+   * Spawn SH and execute command, with options and timeout.
+   * Example: <sh "ps aux | grep sh | grep -v grep" //>
+   * Is this SH ? <sh "echo $0" //>
+   */
+  cmd = (txtCmd || cmd || '').trim();
+  if (!(cmd || args.length)) return;
+  return await spawnShell('sh', cmd, args, t);
+}
+
 export async function bash(txtCmd: string, { cmd, args = [], t = 5 }): Promise<string | undefined> {
   /**
    * Spawn Bash and execute command, with options and timeout.
@@ -91,5 +102,5 @@ async function spawnShell(name: string, cmd: string, args: string[], timeout = 5
 
   const text = await new Response(proc.stdout).text();
   clearTimeout(timeoutID);
-  return text.trim();
+  return '\n' + text.trim() + '\n';
 }

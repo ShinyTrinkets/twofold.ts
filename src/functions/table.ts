@@ -35,11 +35,12 @@ function padCell(str: string, length: number): string {
  * @param asciiTable - A string containing the ASCII table.
  * @returns A string containing the Markdown formatted table, or an empty string if input is invalid.
  */
-export function asciiTable(zeroText: string, args: Record<string, string> = {}): string | undefined {
-  const text = (args.innerText || zeroText).trim();
+export function asciiTable(text: string, args: Record<string, string> = {}): string | undefined {
+  text = text.trim();
   if (!text) return;
   const lines = text.split('\n');
   if (lines.length === 0) return;
+  text = ''; // release memory
 
   // Parse all rows into arrays of cells
   const processedRows: string[][] = lines

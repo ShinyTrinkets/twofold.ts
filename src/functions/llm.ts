@@ -8,8 +8,8 @@ interface HistoryMessage {
   emptyLines?: number;
 }
 
-export async function ai(zeroText: string, args: Record<string, any> = {}, _meta: Record<string, any> = {}) {
-  let text = (zeroText || args.innerText).replace(/^[ \n]+/, '');
+export async function ai(text: string, args: Record<string, any> = {}, _meta: Record<string, any> = {}) {
+  text = text.replace(/^[ \n]+/, '');
   if (text.trim() === '') return;
 
   // the default URL is just terrible, but we need something

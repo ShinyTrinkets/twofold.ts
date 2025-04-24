@@ -86,7 +86,7 @@ const halfHours = {
   12: '🕧',
 };
 
-export function emojiClock(txtDate, { date = null, showHalf = true } = {}): string {
+export function emojiClock(txtDate: string, { date = null, showHalf = true } = {}): string {
   /**
    * Returns the current time as emoji clock.
    */
@@ -125,7 +125,7 @@ const zodiacSigns = [
   ['♑', 'Capricorn', 21], // capricorn starts dec 21
 ];
 
-export function zodiacSign(txtDate, { date = null, emoji = true } = {}): string {
+export function zodiacSign(txtDate: string, { date = null, emoji = true } = {}): string {
   /**
    * Returns an emoji, or the name of the current zodiac sign.
    */
