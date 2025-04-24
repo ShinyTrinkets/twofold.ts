@@ -78,23 +78,30 @@ async function evaluateDoubleTag(
     for (const c of tagChildren) {
       // If the double tag has frozen/ ignored children
       // all frozen nodes must be kept untouched, in place
-      if (!c.name || isProtectedTag(c)) {
+      if (isProtectedTag(c)) {
         tag.children.push(c);
       } else {
         const innerText = getText(c);
         let tmp = innerText;
-        // Inject the parsed tag into the function meta
-        meta.node = structuredClone(c);
-        if (!c.params) meta.node.params = {};
+        if (c.name && (c.single || c.double)) {
+          // Inject the parsed tag into the function meta
+          meta.node = structuredClone(c);
+          if (!c.params) meta.node.params = {};
+        }
         try {
           tmp = await func(firstParam || innerText, { ...params, innerText }, meta);
         } catch (err: any) {
           console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
         }
         if (tmp === undefined || tmp === null) tmp = '';
-        // When evaluating a normal tag, it is flattened
-        // These kinds of tags cannot be cut (consumed)
-        tag.children.push({ index: -1, rawText: tmp.toString() });
+        if (typeof tmp === 'object') {
+          // If the result is a tag object, we cannot apply it
+          tag.children.push(c);
+        } else {
+          // When evaluating a normal tag, it is flattened
+          // These kinds of tags cannot be cut (consumed)
+          tag.children.push({ index: -1, rawText: tmp.toString() });
+        }
       }
     }
   } else {
