@@ -103,7 +103,12 @@ function renderStream(
  * @param {object} config Config options, eg: openTag, closeTag, etc
  * @param {object} meta Extra data about this text string, to send to TwoFold eval
  */
-export async function renderFile(fname: string, customTags = {}, cfg: config.Config = {}, meta = {}): Promise<string> {
+export async function renderFile(
+  fname: string,
+  customTags = {},
+  cfg: config.Config = {},
+  meta = {}
+): Promise<{ changed: boolean; text?: string }> {
   if (!fname) {
     throw new Error('Invalid renderFile options!');
   }
@@ -128,10 +133,10 @@ export async function renderFile(fname: string, customTags = {}, cfg: config.Con
     } finally {
       await fd?.close();
     }
-    return '';
+    return { changed: true };
   }
 
-  return result.text;
+  return { changed: false, text: result.text };
 }
 
 /**
@@ -142,7 +147,7 @@ export async function renderFolder(
   customTags = {},
   cfg: config.Config = {},
   meta = {}
-): Promise<Record<string, number>> {
+): Promise<{ found: number; rendered: number }> {
   if (!cfg) {
     cfg = {};
   }
@@ -161,8 +166,8 @@ export async function renderFolder(
       continue;
     }
     stats.found++;
-    const t = await renderFile(fname, customTags, cfg, { ...meta, root: dir });
-    if (t === '') {
+    const { changed } = await renderFile(fname, customTags, cfg, { ...meta, root: dir });
+    if (changed) {
       stats.rendered++;
     }
   }

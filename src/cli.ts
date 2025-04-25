@@ -119,6 +119,7 @@ you can use pipes:
   }
 
   if (args.watch) {
+    const LOOP_DELAY = 500;
     const locks: Record<string, boolean> = {};
     const callback = async (fname: string) => {
       // ignore files that don't match the pattern
@@ -131,18 +132,23 @@ you can use pipes:
       ) {
         return;
       }
-      console.log(`(2✂︎f) w :: ${fname}`);
+
+      const symbol = locks[fname] ? '! 🔒' : '? 🔓';
+      console.log(`(2✂︎f) changed :: ${fname} ; lock${symbol}`);
       if (locks[fname]) {
         return; // file is locked
-      } else {
-        locks[fname] = true;
       }
-      setTimeout(async () => {
-        await twofold.renderFile(fname, funcs, config, { fname, write: true });
-        setTimeout(async () => {
-          delete locks[fname];
-        }, config.writeDelay || 100);
-      }, config.writeDelay || 100);
+
+      locks[fname] = true;
+      while (true) {
+        const { changed } = await twofold.renderFile(fname, funcs, config, { fname, write: true });
+        if (!changed) {
+          console.log(`(2✂︎f) file ${fname} is stable`);
+          break;
+        }
+        await Bun.sleep(LOOP_DELAY);
+      }
+      delete locks[fname];
     };
 
     const depth = args.depth ? args.depth : 3;

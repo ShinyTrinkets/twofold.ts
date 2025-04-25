@@ -47,28 +47,28 @@ test('render file no tags', async () => {
   const fname = DIR + '/fixtures/text0.md';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
-  expect(final).toBe(txt);
+  expect(final.text).toBe(txt);
 });
 
 test('render file some tags', async () => {
   const fname = DIR + '/fixtures/text1.md';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
-  expect(final).toBe(txt);
+  expect(final.text).toBe(txt);
 });
 
 test('render XML no tags', async () => {
   const fname = DIR + '/fixtures/menu.xml';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
-  expect(final).toBe(txt);
+  expect(final.text).toBe(txt);
 });
 
 test('render HTML no tags', async () => {
   const fname = DIR + '/fixtures/index.html';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
-  expect(final).toBe(txt);
+  expect(final.text).toBe(txt);
 });
 
 test('render The Big List of Naughty Strings', async () => {
@@ -76,7 +76,7 @@ test('render The Big List of Naughty Strings', async () => {
   const fname = DIR + '/fixtures/blns.txt';
   const txt = fs.readFileSync(fname, { encoding: 'utf8' });
   const final = await twofold.renderFile(fname);
-  expect(final).toBe(txt);
+  expect(final.text).toBe(txt);
 });
 
 test('render fixtures/', async () => {
