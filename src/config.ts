@@ -1,3 +1,5 @@
+import { lilconfig } from 'lilconfig';
+
 export interface Config {
   openTag?: string;
   closeTag?: string;
@@ -41,11 +43,19 @@ export const defaultCliCfg: CliConfig = {
   glob: '*.*',
 };
 
-export async function userCfg(): Promise<CliConfig> {
-  const cosmic = await import('cosmiconfig');
-  const explorer = cosmic.cosmiconfig('twofold');
+export async function userCfg(path = undefined): Promise<CliConfig> {
+  const explorer = lilconfig('twofold', {
+    searchPlaces: [
+      'twofold.conf.js',
+      'twofold.conf.json',
+      'twofold.config.js',
+      'twofold.config.json',
+      '.twofold.js',
+      '.twofold.json',
+    ],
+  });
   // Explore all possible config locations
-  const cfg = await explorer.search();
+  const cfg = await explorer.search(path);
   if (cfg && cfg.config) {
     validateCfg(cfg.config);
     console.debug('(2✂︎f) User config:', cfg.config);
@@ -54,7 +64,7 @@ export async function userCfg(): Promise<CliConfig> {
   return { ...defaultCfg };
 }
 
-const ALLOWED_LAST_STOPPER = /^[\/\?\!#]$/;
+const ALLOWED_LAST_STOPPER = /^[\/\?\!\.#]$/;
 
 export function validateCfg(cfg: CliConfig) {
   if (cfg.openTag && cfg.openTag.length !== 1) {
@@ -63,13 +73,16 @@ export function validateCfg(cfg: CliConfig) {
   if (cfg.closeTag && cfg.closeTag.length !== 1) {
     throw new ConfigError('Close tag validation error');
   }
-  if (cfg.closeTag == cfg.lastStopper) {
+  if (cfg.closeTag && cfg.openTag && cfg.closeTag === cfg.openTag) {
+    throw new ConfigError('Close tag must be different from the open tag');
+  }
+  if (cfg.lastStopper && cfg.closeTag === cfg.lastStopper) {
     throw new ConfigError('Close tag must be different from the stopper');
   }
   if (cfg.lastStopper && !ALLOWED_LAST_STOPPER.test(cfg.lastStopper)) {
     throw new ConfigError('Last stopper validation error');
   }
-  if (typeof cfg.depth !== 'number') {
+  if (cfg.depth && typeof cfg.depth !== 'number') {
     throw new ConfigError('Depth validation error');
   }
 }

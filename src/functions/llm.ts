@@ -103,6 +103,14 @@ export async function ai(text: string, args: Record<string, any> = {}, _meta: Re
     // Raise to to 50-100 for more varied, creative output
     body.top_k = args.top_k;
   }
+  if (args.top_a) {
+    // Less common top sampling parameter, similar to top-p.
+    // A = absolute probability threshold.
+    // Selects all words with probabilities above a certain threshold.
+    // top-A = 0.01: all tokens with probability greater than 1%.
+    // Must be in range (0, 1]. Default is 0.
+    body.top_a = args.top_a;
+  }
   if (args.frequency_penalty || args.freq_penalty) {
     // Reduces the likelihood of the model repeating words or tokens based on how often
     // they’ve already appeared in the generated text

@@ -38,9 +38,9 @@
   },
   "dependencies": {
     "chokidar": "4.x",
-    "cosmiconfig": "8.x",
-    "picomatch": "4.x",
+    "lilconfig": "3.x",
     "mri": "1.x",
+    "picomatch": "4.x",
     "shell-quote": "1.x"
   },
   "devDependencies": {
