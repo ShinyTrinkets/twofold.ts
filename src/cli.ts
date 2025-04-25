@@ -146,7 +146,7 @@ you can use pipes:
           console.log(`(2✂︎f) file ${fname} is stable`);
           break;
         }
-        await Bun.sleep(LOOP_DELAY);
+        await util.sleep(LOOP_DELAY);
       }
       delete locks[fname];
     };

@@ -56,6 +56,11 @@ export function toCamelCase(str: string) {
     .join('');
 }
 
+export function sleep(nr: number) {
+  /** Returns a promise that resolves after a fixed time. */
+  return new Promise(r => setTimeout(r, nr));
+}
+
 export function listTree(dir: string, depth = Infinity): string[] {
   if (depth <= 0) return [];
   const files: string[] = [];

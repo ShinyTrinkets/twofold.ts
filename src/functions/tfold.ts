@@ -85,7 +85,7 @@ export async function slowSave(s: string, args: any, meta: any) {
     // keep the param in the same place
     if (s) meta.node.params['0'] = n - i;
     else meta.node.params.n = n - i;
-    await Bun.sleep(1000);
+    // await util.sleep(1000);
     ee.emit({
       name: 'save',
       text: s,
