@@ -84,6 +84,28 @@ export function unTildify(pth: string) {
   return pth;
 }
 
+const TMPL_REGEX = /{{(.*?)}}/g;
+
+export function templite(str: string, mix: any): string {
+  /*
+   * Original implementation: https://github.com/lukeed/templite
+   * By: Luke Edwards, @lukeed ; License: MIT
+   * Lightweight templating in 150 bytes.
+   * Example:
+   * - templite('Hello, {{name}}!', { name: 'world' });
+   * - templite('Howdy, {{0}}! {{1}}', ['partner', '🤠']);
+   */
+  return str.replace(TMPL_REGEX, (x, key, y) => {
+    x = 0;
+    y = mix;
+    key = key.trim().split('.');
+    while (y && x < key.length) {
+      y = y[key[x++]];
+    }
+    return y != null ? y : '';
+  });
+}
+
 export function deepSet(target: any, path: string | ArrayLike<string | number>, value: any): void {
   /*
    * Original implementation: https://github.com/lukeed/dset

@@ -6,6 +6,7 @@ import picomatch from 'picomatch';
 
 import * as config from './config.ts';
 
+import { ee } from './event.ts';
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import evaluate from './evaluate.ts';
@@ -173,5 +174,10 @@ export async function renderFolder(
   }
   return stats;
 }
+
+ee.on('save', async (event: any) => {
+  const { text, meta } = event;
+  console.log('EE :: save', text, meta);
+});
 
 export default { renderText, renderFile, renderFolder };

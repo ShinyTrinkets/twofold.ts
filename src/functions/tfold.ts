@@ -71,7 +71,7 @@ export async function spinner(_: string, args: any, meta: any) {
   return meta.node;
 }
 
-export async function slowSave(s: string, args: any, meta: any) {
+export function slowSave(s: string, args: any, meta: any) {
   /**
    * DOESN'T WORK YET: save file slowly, many times.
    */
@@ -81,18 +81,19 @@ export async function slowSave(s: string, args: any, meta: any) {
   n = parseNumber(n);
   if (n < 1) return;
 
-  for (let i = 1; i <= n; i++) {
-    // keep the param in the same place
-    if (s) meta.node.params['0'] = n - i;
-    else meta.node.params.n = n - i;
-    // await util.sleep(1000);
-    ee.emit({
-      name: 'save',
-      text: s,
-      args,
-      meta,
-    });
-  }
+  setTimeout(async () => {
+    for (let i = 1; i <= n; i++) {
+      // keep the param in the same place
+      if (s) meta.node.params['0'] = n - i;
+      else meta.node.params.n = n - i;
+      await Bun.sleep(1000);
+      ee.emit({
+        name: 'save',
+        text: s,
+        meta,
+      });
+    }
+  }, 1);
 }
 
 export function debug(text: string, args: any, meta: any) {
