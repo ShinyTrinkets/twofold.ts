@@ -2,6 +2,8 @@
  * Functions for calling a local, or remote LLM.
  */
 
+import { templite } from '../util.ts';
+
 interface HistoryMessage {
   role: string;
   content: string;
@@ -22,7 +24,7 @@ export async function ai(text: string, args: Record<string, any> = {}, _meta: Re
     }
   }
 
-  const oldMessages = parseConversation(text);
+  const oldMessages = parseConversation(templite(text, args));
   if (oldMessages.length === 0) return;
   {
     const lastMessage = oldMessages.at(-1);

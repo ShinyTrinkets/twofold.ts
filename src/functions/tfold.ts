@@ -4,6 +4,7 @@
 
 import { ee } from '../event.ts';
 import { parseNumber } from './common.ts';
+import { templite } from '../util.ts';
 
 // export function set() {
 //   /**
@@ -24,12 +25,15 @@ import { parseNumber } from './common.ts';
 //   return;
 // }
 
-export function text(s: string) {
+export function text(s: string, args: any) {
   /**
-   * A tag used for DEV, that returns the text as is.
+   * A tag used for DEV, that returns the text as is,
+   * only variable interpolation is done.
    * If this wraps some tags, they will be flattened/ destroyed.
+   * Example: Helo {{name}}! will be returned as "Helo John!",
+   * if you set name="John".
    */
-  return s;
+  return templite(s, args);
 }
 
 export function increment(s: string, { plus = 1 } = {}): number {
