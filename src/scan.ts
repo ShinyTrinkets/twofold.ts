@@ -97,7 +97,7 @@ export async function scanFolder(dir: string, customFunctions = {}, cfg: Config 
   let validN = 0;
   let inValidN = 0;
   const isMatch = cfg.glob ? picomatch('**/' + cfg.glob) : null;
-  const files = listTree(dir, cfg.depth || 3);
+  const files = listTree(dir, cfg.depth || 1);
   for (const fname of files) {
     if (isMatch && !isMatch(fname, { basename: true }).isMatch) {
       continue;

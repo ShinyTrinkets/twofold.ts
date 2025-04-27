@@ -119,7 +119,7 @@ you can use pipes:
   }
 
   if (args.watch) {
-    const LOOP_DELAY = 500;
+    const LOOP_DELAY = 1000;
     const locks: Record<string, boolean> = {};
     const callback = async (fname: string) => {
       // ignore files that don't match the pattern
@@ -151,7 +151,7 @@ you can use pipes:
       delete locks[fname];
     };
 
-    const depth = args.depth ? args.depth : 3;
+    const depth = args.depth ? args.depth : 1;
     const ignoreInitial = !args.initialRender;
     console.log(`(2✂︎f) Watching: ${args.watch} ${config.glob}, depth=${depth}, initRender=${!ignoreInitial}`);
     const watcher = chokidar.watch(args.watch, {
