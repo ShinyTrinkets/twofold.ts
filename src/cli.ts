@@ -119,7 +119,7 @@ you can use pipes:
   }
 
   if (args.watch) {
-    const LOOP_DELAY = 1000;
+    const ANIM_DELAY = 1000;
     const locks: Record<string, boolean> = {};
     const callback = async (fname: string) => {
       // ignore files that don't match the pattern
@@ -146,7 +146,7 @@ you can use pipes:
           console.log(`(2✂︎f) file ${fname} is stable`);
           break;
         }
-        await util.sleep(LOOP_DELAY);
+        await util.sleep(ANIM_DELAY);
       }
       delete locks[fname];
     };

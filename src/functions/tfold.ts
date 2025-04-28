@@ -44,7 +44,7 @@ export function increment(s: string, { plus = 1 } = {}): number {
   return parseNumber(s) + parseNumber(plus);
 }
 
-export async function countDown(s: string, args: any, meta: any) {
+export function countDown(s: string, args: any, meta: any) {
   /**
    * Experimental: Tick tick tick!
    */
@@ -59,7 +59,7 @@ export async function countDown(s: string, args: any, meta: any) {
   return meta.node;
 }
 
-export async function spinner(_: string, args: any, meta: any) {
+export function spinner(_: string, args: any, meta: any) {
   /**
    * Experimental: Spinner.
    */
