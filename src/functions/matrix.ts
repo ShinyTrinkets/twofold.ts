@@ -36,8 +36,8 @@ export function neo(_s: any, _a: any, meta: Record<string, any>) {
   }
   for (const child of meta.node.children) {
     if (child.name === 'smith' || child.name === 'smithClone') {
-        meta.node.children = child.children
-        break
+      meta.node.children = child.children;
+      break;
     }
   }
   return meta.node;

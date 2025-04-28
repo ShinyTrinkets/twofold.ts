@@ -1,6 +1,10 @@
 # TwoFold (2✂︎f) changelog
 
-## v0.8 WIP
+## v0.9 WIP
+
+-
+
+## v0.8
 
 - created "set" tag to define variables available within the file
 - created "table" tag to format ASCII tables to Markdown tables
