@@ -12,7 +12,10 @@ import * as fmt from './fmt.ts';
 import * as table from './table.ts';
 import * as xeval from './xeval.ts';
 import * as llm from './llm.ts';
+import * as llmEval from './llmEval.ts';
 import * as tfold from './tfold.ts';
+import * as matrix from './matrix.ts';
+import * as skeleton from './skeleton.ts';
 
 export default {
   // extras ...
@@ -28,5 +31,8 @@ export default {
   ...request,
   ...xeval,
   ...llm,
+  ...llmEval,
   ...tfold,
+  ...matrix,
+  ...skeleton,
 };

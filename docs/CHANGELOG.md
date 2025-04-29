@@ -13,6 +13,7 @@
 - functions for tags can now edit and return meta.node! This will allow lots of
   interesting, advanced tag editing use-cases, that were not possible before.
 - functions for double tags now receive zeroText || innerText, makes more sense
+- removed some useless dependencies
 
 ## v0.7
 

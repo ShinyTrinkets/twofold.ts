@@ -7,11 +7,18 @@ import { templite } from '../util.ts';
 interface HistoryMessage {
   role: string;
   content: string;
-  emptyLines?: number;
 }
 
-export async function ai(text: string, args: Record<string, any> = {}, _meta: Record<string, any> = {}) {
-  text = text.replace(/^[ \n]+/, '');
+interface HistoryAndLines {
+  history: HistoryMessage[];
+  lines: {
+    before: number;
+    after: number;
+  };
+}
+
+export async function ai(text: string, args: Record<string, any> = {}) {
+  text = text.trimStart();
   if (text.trim() === '') return;
 
   // the default URL is just terrible, but we need something
@@ -24,45 +31,27 @@ export async function ai(text: string, args: Record<string, any> = {}, _meta: Re
     }
   }
 
-  const oldMessages = parseConversation(templite(text, args));
-  if (oldMessages.length === 0) return;
-  {
-    const lastMessage = oldMessages.at(-1);
-    // The last User message is empty
-    if (lastMessage?.role === 'user' && lastMessage.content.trim() === '') {
-      return;
-    }
-  }
-
-  let foundSystem = false;
-  const lines = { before: 0, after: 0 };
-  for (const msg of oldMessages) {
-    if (msg.role === 'system') {
-      foundSystem = true;
-      continue;
-    }
-    if (msg.role === 'assistant') {
-      lines.before = msg.emptyLines || 0;
-    } else if (msg.role === 'user') {
-      lines.after = msg.emptyLines || 0;
-    }
-    delete msg.emptyLines;
-  }
-
-  // If there's no System role anywhere in the conversation
-  // add a default system message
-  if (!foundSystem) {
-    oldMessages.unshift({
-      role: 'system',
-      content:
-        "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful and detailed answers to the user's questions.",
-    });
-  }
+  const histAndLines = prepareConversation1(templite(text, args));
+  if (!histAndLines || histAndLines.history.length === 0) return;
 
   const body: Record<string, any> = {
-    messages: oldMessages,
+    messages: histAndLines.history,
     stream: !!args.stream,
   };
+  makeBody(body, args);
+  const content = await makeRequest(apiUrl, body, args);
+  if (!content) return;
+
+  const linesBefore = '\n'.repeat(histAndLines.lines.before > 0 ? histAndLines.lines.before + 1 : 1);
+  const linesAfter = '\n'.repeat(histAndLines.lines.after > 0 ? histAndLines.lines.after : 1);
+  return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
+}
+
+export function makeBody(body: Record<string, any>, args: Record<string, any>) {
+  //
+  // Sync body from user args.
+  //
+  // -----
   /*
    * Many of these options are not supported by all servers
    * and may be ignored, or even cause an error.
@@ -156,16 +145,9 @@ export async function ai(text: string, args: Record<string, any> = {}, _meta: Re
     // Number of tokens to look back for repeats
     body.dry_penalty_last_n = args.dry_penalty_last_n;
   }
-
-  const content = await makeRequest(apiUrl, body, args);
-  if (!content) return;
-
-  const linesBefore = '\n'.repeat(lines.before > 0 ? lines.before + 1 : 1);
-  const linesAfter = '\n'.repeat(lines.after > 0 ? lines.after : 1);
-  return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
 }
 
-async function makeRequest(
+export async function makeRequest(
   apiUrl: string,
   body: Record<string, any>,
   opts: Record<string, any>
@@ -189,7 +171,8 @@ async function makeRequest(
       signal: AbortSignal.timeout(opts.timeout || 180_000),
     });
     if (!response.ok) {
-      console.error('Bad HTTP status:', response.status, response.statusText);
+      const err = await response.text();
+      console.error('Bad HTTP status:', response.status, response.statusText, err);
       return;
     }
   } catch (error) {
@@ -199,7 +182,7 @@ async function makeRequest(
 
   if (body.stream) {
     const content = [];
-    const reader = response.body.getReader();
+    const reader = response.body!.getReader();
     const decoder = new TextDecoder('utf-8');
     while (true) {
       // Wait for next encoded chunk
@@ -241,66 +224,30 @@ export function parseConversation(text: string): HistoryMessage[] {
   const messages: HistoryMessage[] = [];
   let currentRole: string = 'system';
   let currentContent: string[] = [];
-  let emptyLines: number = 0;
+
+  const commit = (role: string, line: string) => {
+    const cutLength = role.length + 1;
+    if (currentContent.length && currentRole !== role) {
+      const content = currentContent.join('\n');
+      currentContent = [];
+      if (content.trim() !== '') {
+        messages.push({ role: currentRole, content });
+      }
+    }
+    currentRole = role;
+    if (line.length >= cutLength) {
+      currentContent.push(line.substring(cutLength).replace(/^ +/, ''));
+    }
+  };
 
   for (let line of text.split('\n')) {
     line = line.replace(/^ +/, '');
-    if (line.trim() === '') {
-      if (currentRole !== 'system') {
-        emptyLines++;
-      }
-      continue;
-    }
     if (line.startsWith('User:')) {
-      if (currentContent.length && currentRole !== 'user') {
-        const m: HistoryMessage = {
-          role: currentRole,
-          content: currentContent.join('\n'),
-        };
-        if (emptyLines > 0) {
-          m.emptyLines = emptyLines;
-          emptyLines = 0;
-        }
-        currentContent = [];
-        messages.push(m);
-      }
-      currentRole = 'user';
-      // We want to keep empty "User:" lines
-      if (line.length >= 5) {
-        // Remove "User:" prefix
-        currentContent.push(line.substring(5).replace(/^ +/, ''));
-      }
+      commit('user', line);
     } else if (line.startsWith('Assistant:')) {
-      if (currentContent.length && currentRole !== 'assistant') {
-        const m: HistoryMessage = {
-          role: currentRole,
-          content: currentContent.join('\n'),
-        };
-        if (emptyLines > 0) {
-          m.emptyLines = emptyLines;
-          emptyLines = 0;
-        }
-        currentContent = [];
-        messages.push(m);
-      }
-      currentRole = 'assistant';
-      if (line.length > 10) {
-        // Remove "Assistant:" prefix
-        currentContent.push(line.substring(10).replace(/^ +/, ''));
-      }
+      commit('assistant', line);
     } else if (line.startsWith('System:')) {
-      if (currentContent.length && currentRole !== 'system') {
-        messages.push({
-          role: currentRole,
-          content: currentContent.join('\n'),
-        });
-        currentContent = [];
-        emptyLines = 0;
-      }
-      currentRole = 'system';
-      if (line.length > 7) {
-        currentContent.push(line.substring(7).replace(/^ +/, ''));
-      }
+      commit('system', line);
     } else {
       // Continuation of the current message
       currentContent.push(line);
@@ -309,15 +256,62 @@ export function parseConversation(text: string): HistoryMessage[] {
 
   // Push the last message if there is one
   if (currentRole && currentContent.length) {
-    const m: HistoryMessage = {
+    messages.push({
       role: currentRole,
       content: currentContent.join('\n'),
-    };
-    if (emptyLines > 0) {
-      m.emptyLines = emptyLines;
-    }
-    messages.push(m);
+    });
   }
 
   return messages;
+}
+
+export function prepareConversation1(text: string): null | HistoryAndLines {
+  const history = parseConversation(text);
+  if (history.length === 0) return null;
+  {
+    const lastMessage = history.at(-1);
+    // The last User message is empty
+    if (lastMessage?.role === 'user' && lastMessage.content.trim() === '') {
+      return null;
+    }
+  }
+
+  let foundSystem = false;
+  const lines = { before: 0, after: 0 };
+  for (const msg of history) {
+    if (msg.role === 'system') {
+      foundSystem = true;
+      break;
+    }
+  }
+  for (const msg of history.slice().reverse()) {
+    if (msg.role === 'assistant') {
+      // How many new lines after the last Assistant message
+      const m = msg.content.match(/[\n]*$/);
+      if (m && m[0]) {
+        lines.before = m[0].length;
+      }
+    } else if (msg.role === 'user') {
+      // How many new lines after the last User message
+      const m = msg.content.match(/[\n]*$/);
+      if (m && m[0]) {
+        lines.after = m[0].length;
+      }
+    }
+    if (lines.before && lines.after) {
+      break;
+    }
+  }
+
+  // If there's no System role anywhere in the conversation
+  // add a default system message
+  if (!foundSystem) {
+    history.unshift({
+      role: 'system',
+      content:
+        "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful and detailed answers to the user's questions.",
+    });
+  }
+
+  return { history, lines };
 }
