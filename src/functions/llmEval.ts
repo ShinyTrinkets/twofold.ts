@@ -2,7 +2,7 @@
  * Functions for evaluating LLMs.
  */
 
-import { makeBody, makeRequest } from './llm.ts';
+import { makeBody, makeRequest, normResponse } from './llm.ts';
 import { templite } from '../util.ts';
 
 interface HistoryMessage {
@@ -11,9 +11,10 @@ interface HistoryMessage {
 }
 
 interface HistoryQAC {
-  q: string;
-  a: string;
-  c: string;
+  q: string; // Question
+  a: string; // Answer
+  c: string; // Correct Answer (Ground Truth)
+  s?: string; // Similarity Score (optional)
 }
 
 export async function llmEval(text: string, args: Record<string, any> = {}) {
@@ -41,30 +42,36 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
     return `\n${unParseQAC(history)}\n`;
   }
 
-  const msg = prepareConversation2(history);
+  // Get the first un-answered question
+  let msg: HistoryMessage | undefined;
+  let truth: string = '';
+  for (const item of history) {
+    if (item.a) continue;
+    msg = { role: 'user', content: item.q };
+    if (item.c && item.c !== '-') truth = item.c;
+    break;
+  }
   if (!msg) return;
 
   const body: Record<string, any> = {
-    messages: [{ role: 'system', content: 'Answer the question briefly.' }, { ...msg }],
+    messages: [{ role: 'system', content: 'Answer the question briefly.' }, msg],
     stream: !!args.stream,
   };
   makeBody(body, args);
+
   console.log('Asking LLM:', msg.content);
   let response = await makeRequest(apiUrl, body, args);
   if (!response) return;
 
   // Polish the response
-  // Remove blank <think> tags
-  response = response.replace(/<think>[ \n]*?<\/think>/, '').trimStart();
-  // Normalize quotes
-  if (args.norm_quote) {
-    response = response.replace(/[“”]/g, '"');
-    response = response.replace(/[‘’]/g, "'");
-  }
+  response = normResponse(response);
+  let score = 0;
+  if (truth) score = calcScore(response, truth);
 
   for (const item of history) {
     if (item.q === msg.content) {
       item.a = response;
+      if (score > 0) item.s = `${score}%`;
       break;
     }
   }
@@ -76,28 +83,33 @@ export function parseQAC(text: string): HistoryQAC[] {
   const lines = text.split('\n');
   const results: HistoryQAC[] = [];
   let currentQAC: HistoryQAC | null = null;
-  let currentField: 'q' | 'c' | 'a' | null = null;
+  let currentField: 'q' | 'c' | 'a' | 's' | null = null;
 
   for (const line of lines) {
     // Keep trailing spaces for multi-line
     const trimmedLine = line.trimStart();
+    const lowerLine = trimmedLine.toLowerCase();
 
-    if (trimmedLine.startsWith('Q:')) {
+    if (lowerLine.startsWith('ignore:')) {
+      continue; // Ignore lines starting with ignore
+    } else if (lowerLine.startsWith('q:')) {
       if (currentQAC) {
         // Trim final values before pushing
         currentQAC.q = currentQAC.q.trim();
-        currentQAC.c = currentQAC.c.trim();
         currentQAC.a = currentQAC.a.trim();
         results.push(currentQAC);
       }
       currentQAC = { q: trimmedLine.substring(2).trimStart(), c: '', a: '' };
       currentField = 'q';
-    } else if (currentQAC && trimmedLine.startsWith('C:')) {
-      currentQAC.c = trimmedLine.substring(2).trimStart();
-      currentField = 'c'; // C must be single line
-    } else if (currentQAC && trimmedLine.startsWith('A:')) {
+    } else if (currentQAC && lowerLine.startsWith('a:')) {
       currentQAC.a = trimmedLine.substring(2).trimStart();
       currentField = 'a';
+    } else if (currentQAC && lowerLine.startsWith('c:')) {
+      currentQAC.c = trimmedLine.substring(2).trim();
+      currentField = 'c'; // C must be single line
+    } else if (currentQAC && lowerLine.startsWith('s:')) {
+      currentQAC.s = trimmedLine.substring(2).trim();
+      currentField = 's'; // S must be single line
     } else if (currentQAC && currentField === 'q') {
       // Append to multi-line Q, preserving original line structure
       currentQAC.q += '\n' + line;
@@ -111,7 +123,6 @@ export function parseQAC(text: string): HistoryQAC[] {
   if (currentQAC) {
     // Trim final values before pushing the last one
     currentQAC.q = currentQAC.q.trim();
-    currentQAC.c = currentQAC.c.trim();
     currentQAC.a = currentQAC.a.trim();
     results.push(currentQAC);
   }
@@ -127,6 +138,9 @@ export function unParseQAC(history: HistoryQAC[]): string {
       lines.push(`C: ${item.c}`);
     }
     lines.push(`A: ${item.a}`);
+    if (item.s) {
+      lines.push(`S: ${item.s}`);
+    }
     // Add a blank line between entries for readability, but not after the last one
     if (history.indexOf(item) < history.length - 1) {
       lines.push('');
@@ -135,10 +149,220 @@ export function unParseQAC(history: HistoryQAC[]): string {
   return lines.join('\n');
 }
 
-export function prepareConversation2(history: HistoryQAC[]): HistoryMessage | undefined {
-  if (history.length === 0) return;
-  for (const item of history) {
-    if (item.a) continue;
-    return { role: 'user', content: item.q };
+///
+/// Evaluate the similarity of two sentences.
+///
+
+// Simple stop word filter (common English words to de-emphasize)
+const STOP_WORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'are',
+  'as',
+  'at',
+  'be',
+  'but',
+  'by',
+  'for',
+  'from',
+  'has',
+  'he',
+  'in',
+  'is',
+  'it',
+  'its',
+  'of',
+  'on',
+  'or',
+  'that',
+  'the',
+  'to',
+  'was',
+  'were',
+  'will',
+  'with',
+]);
+
+function normalizeText(text: string): string {
+  /*
+   * Preprocess text: lowercase, remove punctuation, normalize spaces.
+   */
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]|_/g, '') // Remove punctuation
+    .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
+    .trim();
+}
+
+/**
+ * Calculates the Levenshtein distance using only one array (plus temps) for O(min(m, n)) space.
+ */
+function levenshteinDistance(s1: string, s2: string): number {
+  if (s1.length > s2.length) {
+    [s1, s2] = [s2, s1];
   }
+
+  const n = s1.length;
+  const m = s2.length;
+  if (n === 0) return m;
+  if (m === 0) return n;
+
+  // Initialize the single row vector
+  let currentRow: number[] = new Array(n + 1);
+  for (let j = 0; j <= n; j++) {
+    currentRow[j] = j;
+  }
+
+  // Iterate through s2
+  for (let i = 1; i <= m; i++) {
+    let previousDiagonal = currentRow[0]; // Store value from top-left (previous row's j-1)
+    currentRow[0] = i; // Update first element (deletion cost from empty s1 prefix)
+    const char2 = s2[i - 1];
+
+    // Iterate through s1
+    for (let j = 1; j <= n; j++) {
+      const temp = currentRow[j]; // Store current cell's value (needed as 'previousDiagonal' next)
+      const char1 = s1[j - 1];
+      const cost = char1 === char2 ? 0 : 1;
+
+      // currentRow[j-1] is the updated value from the left (insertion)
+      // temp is the old value of currentRow[j] (deletion from above)
+      // previousDiagonal is the old value of currentRow[j-1] (substitution from diagonal)
+      currentRow[j] = Math.min(
+        currentRow[j - 1] + 1, // Insertion
+        temp + 1, // Deletion
+        previousDiagonal + cost // Substitution
+      );
+
+      previousDiagonal = temp; // Update previousDiagonal for the next inner loop iteration
+    }
+  }
+
+  return currentRow[n];
+}
+
+export function normalizedLevenshteinSimilarity(sentence1: string, sentence2: string): number {
+  if (sentence1 === sentence2) return 1.0;
+  const distance = levenshteinDistance(sentence1.toLowerCase(), sentence2.toLowerCase());
+  const maxLength = Math.max(sentence1.length, sentence2.length);
+  const result = 1 - distance / maxLength;
+  // console.log(`Norm Levenshtein Similarity: ${result.toFixed(6)}`);
+  return result;
+}
+
+export function calcFactualScore(response: string, truth: string): number {
+  const truthWords = normalizeText(truth)
+    .split(' ')
+    .filter(w => w.length > 0);
+  const responseWords = normalizeText(response)
+    .split(' ')
+    .filter(w => w.length > 0);
+
+  // Extract key content words (non-stop words) from ground truth
+  const keyWords = truthWords.filter(word => !STOP_WORDS.has(word));
+  if (keyWords.length === 0) return 0; // No key words to compare
+
+  // Count matches in response
+  const responseSet = new Set(responseWords);
+  let matches = 0;
+  for (const word of keyWords) {
+    if (responseSet.has(word)) matches++;
+  }
+  // Score as fraction of matched key words
+  const result = matches / keyWords.length;
+  // console.log(`Factual Score: ${result.toFixed(6)}`);
+  return result;
+}
+
+export function calcJaccardIndex(response: string, truth: string): number {
+  /*
+   * Calculate the Jaccard index between two strings.
+   * The Jaccard index is the size of the intersection divided by the size of the union.
+   * It ranges from 0 (no similarity) to 1 (identical).
+   */
+
+  // Normalize and split into words
+  const responseWords = new Set(
+    normalizeText(response)
+      .split(' ')
+      .filter(w => w.length > 0)
+  );
+  const truthWords = new Set(
+    normalizeText(truth)
+      .split(' ')
+      .filter(w => w.length > 0)
+  );
+
+  const intersection = new Set([...responseWords].filter(word => truthWords.has(word)));
+  const union = new Set([...responseWords, ...truthWords]);
+  const result = intersection.size / union.size;
+  // console.log(`Jaccard Index: ${result.toFixed(6)}`);
+  return result;
+}
+
+export function calcCosineSimilarity(response: string, truth: string): number {
+  /*
+   * Compute weighted word overlap (cosine-like similarity)
+   */
+
+  // Compute factual score based on key content words
+  const truthWords = normalizeText(truth)
+    .split(' ')
+    .filter(w => w.length > 0);
+  const responseWords = normalizeText(response)
+    .split(' ')
+    .filter(w => w.length > 0);
+
+  // Create word frequency maps with weights (content words: 1, stop words: 0.5)
+  const truthFreq: Map<string, number> = new Map();
+  const responseFreq: Map<string, number> = new Map();
+
+  for (const word of truthWords) {
+    const weight = STOP_WORDS.has(word) ? 0.5 : 1.0;
+    truthFreq.set(word, (truthFreq.get(word) || 0) + weight);
+  }
+  for (const word of responseWords) {
+    const weight = STOP_WORDS.has(word) ? 0.5 : 1.0;
+    responseFreq.set(word, (responseFreq.get(word) || 0) + weight);
+  }
+
+  // Compute dot product and magnitudes for cosine similarity
+  let dotProduct = 0;
+  for (const [word, weight] of truthFreq) {
+    if (responseFreq.has(word)) {
+      dotProduct += weight * (responseFreq.get(word) || 0);
+    }
+  }
+
+  const truthMagnitude = Math.sqrt(Array.from(truthFreq.values()).reduce((sum, w) => sum + w ** 2, 0));
+  const responseMagnitude = Math.sqrt(Array.from(responseFreq.values()).reduce((sum, w) => sum + w ** 2, 0));
+  // Avoid division by zero
+  if (truthMagnitude === 0 || responseMagnitude === 0) return 0;
+
+  const result = dotProduct / (truthMagnitude * responseMagnitude);
+  // console.log(`Cosine Similarity: ${result.toFixed(6)}`);
+  return result;
+}
+
+export function calcScore(response: string, truth: string): number {
+  const LEVENSHTEIN_WEIGHT = 0.1;
+  const FACTUAL_WEIGHT = 0.4;
+  const JACCARD_WEIGHT = 0.25;
+  const COSINE_WEIGHT = 0.25;
+
+  const levenshteinScore = normalizedLevenshteinSimilarity(response, truth);
+  const factualScore = calcFactualScore(response, truth);
+  const jaccardScore = calcJaccardIndex(response, truth);
+  const cosineScore = calcCosineSimilarity(response, truth);
+
+  return parseFloat(
+    (
+      (levenshteinScore * LEVENSHTEIN_WEIGHT +
+        factualScore * FACTUAL_WEIGHT +
+        jaccardScore * JACCARD_WEIGHT +
+        cosineScore * COSINE_WEIGHT) *
+      100
+    ).toFixed(2)
+  );
 }

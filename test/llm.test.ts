@@ -196,3 +196,39 @@ All good?
     { q: 'who are you?', c: '', a: '' },
   ]);
 });
+
+test('LLM calc result metric', () => {
+  console.log(func.calcScore('Paris is the capital city of France', 'The capital of France is Paris'));
+  console.log(func.calcScore('London is the capital of France', 'The capital of France is Paris'));
+  console.log(func.calcScore('London is the capital of England', 'The capital of France is Paris'));
+
+  // --
+  console.log(func.calcScore('Yes (US), Yes (Ireland)', 'Yes. Yes.'));
+  console.log(func.calcScore('Yes (US), No (Ireland)', 'Yes. Yes.'));
+
+  // --
+  console.log(
+    func.calcScore('Flour is not in water, it is made from grains', 'No, flour is made from grinding grains')
+  );
+
+  // --
+  console.log(func.calcScore('In 2003, the President of the United States was George W. Bush', 'George W Bush'));
+
+  // --
+  console.log(func.calcScore("The letter 'L' appears 4 times in 'lollapalooza'", '4 times'));
+  console.log(func.calcScore("The letter 'L' appears 3 times in 'lollapalooza'", '4 times'));
+
+  // --
+  console.log(
+    func.calcScore(
+      `Let's calculate step by step:
+1. You started with 15 muffins.
+2. You ate 2 muffins, so 15 - 2 = 13 muffins left.
+3. You gave 5 muffins to a neighbor, so 13 - 5 = 8 muffins left.
+4. Your friend bought 6 more muffins, so 8 + 6 = 14 muffins.
+5. Your friend ate 2 muffins, so 14 - 2 = 12 muffins.
+You now have 12 muffins.`,
+      '12 muffins'
+    )
+  );
+});
