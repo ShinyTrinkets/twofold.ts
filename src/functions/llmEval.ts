@@ -32,6 +32,15 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
 
   const history = parseQAC(templite(text, args));
   if (history.length === 0) return;
+
+  // Check if user wants to reset the answers
+  if (args.reset) {
+    for (const item of history) {
+      item.a = '';
+    }
+    return `\n${unParseQAC(history)}\n`;
+  }
+
   const msg = prepareConversation2(history);
   if (!msg) return;
 
@@ -41,12 +50,21 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
   };
   makeBody(body, args);
   console.log('Asking LLM:', msg.content);
-  const content = await makeRequest(apiUrl, body, args);
-  if (!content) return;
+  let response = await makeRequest(apiUrl, body, args);
+  if (!response) return;
+
+  // Polish the response
+  // Remove blank <think> tags
+  response = response.replace(/<think>[ \n]*?<\/think>/, '').trimStart();
+  // Normalize quotes
+  if (args.norm_quote) {
+    response = response.replace(/[“”]/g, '"');
+    response = response.replace(/[‘’]/g, "'");
+  }
 
   for (const item of history) {
     if (item.q === msg.content) {
-      item.a = content;
+      item.a = response;
       break;
     }
   }

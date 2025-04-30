@@ -94,3 +94,31 @@ export function randomCard(_, { nr = 0 } = {}): string {
   }
   return choices.join(' ');
 }
+
+function _shuff(array: any[]): any[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
+    [array[i], array[j]] = [array[j], array[i]]; // swap elements
+  }
+  return array;
+}
+
+export function shuffle(text: string, { lines = false, words = false } = {}): string {
+  /**
+   * Experimental: will animate forever!
+   * Shuffle the text.
+   * If lines is true, shuffle the lines.
+   * If words is true, shuffle the words.
+   */
+  if (!text) return '';
+  if (lines) {
+    const lines = text.trim().split('\n');
+    return `\n${_shuff(lines).join('\n')}\n`;
+  }
+  if (words) {
+    const words = text.trim().split(' ');
+    return `\n${_shuff(words).join(' ')}\n`;
+  }
+  const chars = text.trim().split('');
+  return `\n${_shuff(chars).join('')}\n`;
+}

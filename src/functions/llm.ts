@@ -39,8 +39,11 @@ export async function ai(text: string, args: Record<string, any> = {}) {
     stream: !!args.stream,
   };
   makeBody(body, args);
-  const content = await makeRequest(apiUrl, body, args);
+  let content = await makeRequest(apiUrl, body, args);
   if (!content) return;
+
+  // Polish the response
+  content = normResponse(content);
 
   const linesBefore = '\n'.repeat(histAndLines.lines.before > 0 ? histAndLines.lines.before + 1 : 1);
   const linesAfter = '\n'.repeat(histAndLines.lines.after > 0 ? histAndLines.lines.after : 1);
@@ -314,4 +317,14 @@ export function prepareConversation1(text: string): null | HistoryAndLines {
   }
 
   return { history, lines };
+}
+
+export function normResponse(text: string): string {
+  // Remove blank <think> tags
+  text = text.replace(/<think>[ \n]*?<\/think>/, '').trimStart();
+
+  // Normalize quotes
+  text = text.replace(/[“”]/g, '"');
+  text = text.replace(/[‘’]/g, "'");
+  return text;
 }
