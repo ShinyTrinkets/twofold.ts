@@ -106,7 +106,7 @@ you can use pipes:
         console.error(err);
         return;
       }
-      console.log('(2✂︎f) Scan:', fname, config.glob);
+      console.log('(2✂︎f) Scan:', fname, config.glob || '');
       if (fstat.isFile()) {
         await scan.scanFile(fname, funcs, config);
       } else if (fstat.isDirectory()) {

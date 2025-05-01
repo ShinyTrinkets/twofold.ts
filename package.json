@@ -44,8 +44,9 @@
     "shell-quote": "1.x"
   },
   "devDependencies": {
+    "@types/bun": "1.x",
+    "@types/deno": "2.x",
     "@types/node": "22.x",
-    "bun-types": "1.x",
     "prettier": "3.x",
     "typescript": "5.x"
   },

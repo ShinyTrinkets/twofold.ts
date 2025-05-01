@@ -2,22 +2,17 @@
   "include": ["src/*.ts"],
   "compilerOptions": {
     "lib": ["ESNext"],
-    "module": "esnext",
+    "module": "nodenext",
     "target": "esnext",
-    "moduleResolution": "bundler",
-    "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
     "strict": true,
-    "downlevelIteration": true,
-    "skipLibCheck": true,
     "jsx": "preserve",
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
     "noEmit": true,
+    "moduleResolution": "nodenext",
+    "allowImportingTsExtensions": true,
     "types": [
-      "@types/node",
-      "bun-types"
+      "@types/bun",
+      "@types/deno",
+      "@types/node"
     ]
   }
 }

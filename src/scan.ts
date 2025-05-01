@@ -4,7 +4,7 @@ import picomatch from 'picomatch';
 
 import { DoubleTag, ParseToken, ScanToken, SingleTag } from './types.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
-import { Config } from './config.ts';
+import { CliConfig } from './config.ts';
 import { listTree } from './util.ts';
 import functions from './functions/index.ts';
 import Lexer from '../src/lexer.ts';
@@ -16,12 +16,9 @@ import parse from '../src/parser.ts';
 export function scanFile(
   fname: string,
   customFunctions = {},
-  customConfig: Config = {}
+  customConfig: CliConfig = {}
 ): Promise<{ validTags: number; invalidTags: number }> {
-  const allFunctions: Record<string, Function> = {
-    ...functions,
-    ...customFunctions,
-  };
+  const allFunctions: Record<string, Function> = { ...functions, ...customFunctions };
   const nodes: ScanToken[] = [];
 
   const walk = (tag: ParseToken) => {
@@ -90,7 +87,7 @@ export function scanFile(
   });
 }
 
-export async function scanFolder(dir: string, customFunctions = {}, cfg: Config = {}) {
+export async function scanFolder(dir: string, customFunctions = {}, cfg: CliConfig = {}) {
   const label = 'scan:' + dir;
   console.time(label);
 

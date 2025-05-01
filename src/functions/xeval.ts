@@ -1,7 +1,7 @@
 /**
  * Eval code in different programming languages.
  */
-import vm from 'vm';
+import vm from 'node:vm';
 
 import { splitToMarker } from '../util.ts';
 

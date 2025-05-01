@@ -1,41 +1,38 @@
-import { open } from 'node:fs/promises';
-import { createReadStream, ReadStream } from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import picomatch from 'picomatch';
 
 import * as config from './config.ts';
-
+import { ParseToken } from './types.ts';
 import { ee } from './event.ts';
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import evaluate from './evaluate.ts';
 import functions from './functions/index.ts';
-import { unParse } from './tags.ts';
-import { listTree } from './util.ts';
+import { syncTag, unParse } from './tags.ts';
+import { deepSet, listTree } from './util.ts';
 
 /**
  * Render a text string. Used for rendering STDIN, and for tests.
- * For rendering a file, it's more performant to use renderFile.
+ * For rendering a file, it's more efficient to use renderFile.
  *
  * @param {string} text The text to parse and render with TwoFold
  * @param {object} customData Key-value pairs to send to all tags in the text
  *                 customData comes from CLI, library calls, or tests
  * @param {object} customTags Extra tags/ functions to send to TwoFold eval
- * @param {object} config Config options, eg: openTag, closeTag, etc
- *                 Mostly used by the Lexer and Parser
- * @param {object} meta Extra data about this text string, to send to TwoFold eval
+ * @param {object} cfg Config options, eg: openTag, closeTag, etc
+ *                 Used by the Lexer, Parser and the Evaluator
+ * @param {object} meta Extra data about this text, to send to TwoFold eval
  */
 export async function renderText(
   text: string,
   customData: Record<string, any> = {},
   customTags: Record<string, Function> = {},
   cfg: config.Config = {},
-  meta = {}
+  meta: Record<string, any> = {}
 ): Promise<string> {
-  const allFunctions = { ...functions, ...customTags };
+  const allFunctions: Record<string, Function> = { ...functions, ...customTags };
   const ast = parse(new Lexer(cfg).lex(text), cfg);
-
   let final = '';
   for (const t of ast) {
     await evaluate(t, customData, allFunctions, cfg, meta);
@@ -44,71 +41,19 @@ export async function renderText(
   return final;
 }
 
-function renderStream(
-  stream: ReadStream,
-  customTags: Record<string, any> = {},
-  cfg: config.Config = {},
-  meta = {}
-): Promise<any> {
-  const allFunctions = { ...functions, ...customTags };
-
-  return new Promise(resolve => {
-    const lex = new Lexer(cfg);
-
-    // calc a text hash to see if it has changed
-    const streamHash = crypto.createHash('sha224');
-    stream.on('data', chunk => {
-      streamHash.update(chunk);
-      lex.push(chunk);
-    });
-
-    stream.on('close', async () => {
-      const ast = parse(lex.finish(), cfg);
-      lex.reset();
-
-      // Save time and IO if the file doesn't have TwoFold tags
-      if (ast.length === 1) {
-        return resolve({
-          ast,
-          changed: false,
-          text: ast[0].rawText,
-        });
-      }
-
-      let final = '';
-      const resultHash = crypto.createHash('sha224');
-      const globals: Record<string, any> = {};
-
-      // Convert single tags into raw text and deep flatten double tags
-      for (const t of ast) {
-        await evaluate(t, globals, allFunctions, cfg, meta);
-        const chunk = unParse(t);
-        resultHash.update(chunk);
-        final += chunk;
-      }
-
-      resolve({
-        ast,
-        changed: streamHash.digest('hex') !== resultHash.digest('hex'),
-        text: final,
-      });
-    });
-  });
-}
-
 /**
  * Render a single file. By default, the result is not written on disk, unless write=true.
  *
  * @param {string} fname The file name to parse and render with TwoFold
  * @param {object} customTags Extra tags/ functions to send to TwoFold eval
- * @param {object} config Config options, eg: openTag, closeTag, etc
+ * @param {object} cfg Config options, eg: openTag, closeTag, etc
  * @param {object} meta Extra data about this text string, to send to TwoFold eval
  */
 export async function renderFile(
   fname: string,
   customTags = {},
   cfg: config.Config = {},
-  meta = {}
+  meta: Record<string, any> = {}
 ): Promise<{ changed: boolean; text?: string }> {
   if (!fname) {
     throw new Error('Invalid renderFile options!');
@@ -122,22 +67,60 @@ export async function renderFile(
   const shouldWrite = meta.write;
   delete meta.write;
 
-  const stream = createReadStream(fname, { encoding: 'utf8' });
-  const result = await renderStream(stream, customTags, cfg, meta);
-  if (shouldWrite && result.changed) {
-    let fd = null;
-    try {
-      console.debug('Writing file:', fname);
-      fd = await open(fname, 'w');
-      await fd.write(result.text, { encoding: 'utf8' });
-      await fd.sync();
-    } finally {
-      await fd?.close();
+  const lexer = new Lexer(cfg);
+  const decoder = new TextDecoder();
+  const streamHash = crypto.createHash('sha224');
+  let ast: ParseToken[] = [];
+
+  if ((globalThis as any).Bun) {
+    const file = Bun.file(fname);
+    for await (const chunk of file.stream()) {
+      streamHash.update(chunk);
+      lexer.push(decoder.decode(chunk));
+    }
+  } else if ((globalThis as any).Deno) {
+    // Read file in chunks, and parse
+    using file = await Deno.open(fname, { read: true });
+    for await (const chunk of file.readable) {
+      streamHash.update(chunk);
+      lexer.push(decoder.decode(chunk));
+    }
+  }
+
+  ast = parse(lexer.finish(), cfg);
+  lexer.reset();
+
+  // Save time and IO if the file doesn't have TwoFold tags
+  if (ast.length === 1 && typeof ast[0].rawText === 'string') {
+    return {
+      changed: false,
+      text: ast[0].rawText,
+    };
+  }
+
+  let text = '';
+  const resultHash = crypto.createHash('sha224');
+  const allFunctions: Record<string, Function> = { ...functions, ...customTags };
+  const globals: Record<string, any> = {};
+
+  for (const t of ast) {
+    await evaluate(t, globals, allFunctions, cfg, meta);
+    const chunk = unParse(t);
+    resultHash.update(chunk);
+    text += chunk;
+  }
+
+  const changed = streamHash.digest('hex') !== resultHash.digest('hex');
+  if (shouldWrite && changed) {
+    if ((globalThis as any).Bun) {
+      await Bun.write(fname, text);
+    } else if ((globalThis as any).Deno) {
+      await Deno.writeTextFile(fname, text);
     }
     return { changed: true };
   }
 
-  return { changed: false, text: result.text };
+  return { changed: false, text };
 }
 
 /**
@@ -146,8 +129,8 @@ export async function renderFile(
 export async function renderFolder(
   dir: string,
   customTags = {},
-  cfg: config.Config = {},
-  meta = {}
+  cfg: config.CliConfig = {},
+  meta: Record<string, any> = {}
 ): Promise<{ found: number; rendered: number }> {
   if (!cfg) {
     cfg = {};
@@ -167,7 +150,10 @@ export async function renderFolder(
       continue;
     }
     stats.found++;
-    const { changed } = await renderFile(fname, customTags, cfg, { ...meta, root: dir });
+    const { changed } = await renderFile(fname, customTags, cfg, {
+      ...meta,
+      root: dir,
+    });
     if (changed) {
       stats.rendered++;
     }
@@ -176,8 +162,42 @@ export async function renderFolder(
 }
 
 ee.on('save', async (event: any) => {
-  const { text, meta } = event;
-  console.log('EE :: save', text, meta);
+  const { meta } = event;
+  const { node } = meta;
+  // console.log('EE save ::', meta);
+  // Reform/ restructure de-synced tag, in place
+  syncTag(node);
+  const lexer = new Lexer();
+
+  if ((globalThis as any).Bun) {
+    const file = Bun.file(meta.fname);
+    let text = await file.text();
+    const ast = parse(lexer.lex(text));
+    lexer.reset();
+    // Apply the changes to the AST, in place
+    deepSet(ast, node.path, node);
+    text = ast.map(unParse).join('');
+    file.write(text);
+  } else if ((globalThis as any).Deno) {
+    // Read file in chunks, and parse
+    let file = await Deno.open(meta.fname, { read: true, write: true });
+    const decoder = new TextDecoder();
+    for await (const chunk of file.readable) {
+      lexer.push(decoder.decode(chunk));
+    }
+    file.close();
+    const ast = parse(lexer.finish());
+    lexer.reset();
+    // Apply the changes to the AST, in place
+    deepSet(ast, node.path, node);
+    // Save the original file in chunks
+    const encoder = new TextEncoder();
+    for (const node of ast) {
+      const text = unParse(node);
+      await file.write(encoder.encode(text));
+    }
+    file.close();
+  }
 });
 
 export default { renderText, renderFile, renderFolder };

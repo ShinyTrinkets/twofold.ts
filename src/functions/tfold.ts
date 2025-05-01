@@ -77,7 +77,7 @@ export function spinner(_: string, args: any, meta: any) {
 
 export function slowSave(s: string, args: any, meta: any) {
   /**
-   * DOESN'T WORK YET: save file slowly, many times.
+   * IT'S BUGGY: save file slowly, many times.
    */
   let n = s || args.n;
   if (n === undefined || n === null) return;
