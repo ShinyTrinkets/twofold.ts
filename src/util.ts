@@ -106,13 +106,26 @@ export function templite(str: string, mix: any): string {
   });
 }
 
-export function deepSet(target: any, path: string | ArrayLike<string | number>, value: any): void {
+export function deepGet(target: any, path: string | ArrayLike<string>, def = undefined, undef = undefined): any {
+  /*
+   * Original implementation: https://github.com/developit/dlv
+   * By: Jason Miller, @developit ; License: MIT
+   * Deeply get a value from an object or array.
+   */
+  path = path.split ? path.split('.') : path;
+  for (let p = 0; p < path.length; p++) {
+    target = target ? target[path[p]] : undef;
+  }
+  return target === undef ? def : target;
+}
+
+export function deepSet(target: any, path: string | ArrayLike<string>, value: any): void {
   /*
    * Original implementation: https://github.com/lukeed/dset
    * By: Luke Edwards, @lukeed ; License: MIT
    * Deeply set a value in an object or array.
    */
-  path.split && (path = path.split('.'));
+  path = path.split ? path.split('.') : path;
   let i = 0,
     pathLen = path.length,
     currentVal;

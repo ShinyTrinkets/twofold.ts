@@ -2,6 +2,7 @@
  * Functions for calling a local, or remote LLM.
  */
 
+import { editSave } from '../index.ts';
 import { templite } from '../util.ts';
 
 interface HistoryMessage {
@@ -17,7 +18,11 @@ interface HistoryAndLines {
   };
 }
 
-export async function ai(text: string, args: Record<string, any> = {}) {
+export async function ai(
+  text: string,
+  args: Record<string, any> = {},
+  meta: Record<string, any> = {}
+): Promise<string | undefined> {
   text = text.trimStart();
   if (text.trim() === '') return;
 
@@ -33,24 +38,32 @@ export async function ai(text: string, args: Record<string, any> = {}) {
 
   const histAndLines = prepareConversation1(templite(text, args));
   if (!histAndLines || histAndLines.history.length === 0) return;
+  const linesBefore = '\n'.repeat(histAndLines.lines.before > 0 ? histAndLines.lines.before + 1 : 1);
+  const linesAfter = '\n'.repeat(histAndLines.lines.after > 0 ? histAndLines.lines.after : 1);
+
+  // Feedback to the user, ASAP
+  setTimeout(async () => {
+    meta.node.children[0].rawText = `\n${text}Assistant: ...${linesBefore}User:${linesAfter}`;
+    await editSave(meta);
+  }, 1);
 
   const body: Record<string, any> = {
     messages: histAndLines.history,
     stream: !!args.stream,
   };
-  makeBody(body, args);
-  let content = await makeRequest(apiUrl, body, args);
+
+  const onSave = async (response: string) => {
+    meta.node.children[0].rawText = `\n${text}Assistant: ${response}${linesBefore}User:${linesAfter}`;
+    await editSave(meta);
+  };
+
+  let content = await makeRequest(apiUrl, body, args, onSave);
   if (!content) return;
 
-  // Polish the response
-  content = normResponse(content);
-
-  const linesBefore = '\n'.repeat(histAndLines.lines.before > 0 ? histAndLines.lines.before + 1 : 1);
-  const linesAfter = '\n'.repeat(histAndLines.lines.after > 0 ? histAndLines.lines.after : 1);
   return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
 }
 
-export function makeBody(body: Record<string, any>, args: Record<string, any>) {
+function makeBody(body: Record<string, any>, args: Record<string, any>) {
   //
   // Sync body from user args.
   //
@@ -153,7 +166,8 @@ export function makeBody(body: Record<string, any>, args: Record<string, any>) {
 export async function makeRequest(
   apiUrl: string,
   body: Record<string, any>,
-  opts: Record<string, any>
+  args: Record<string, any>,
+  onSave?: (text: string) => Promise<void>
 ): Promise<string | undefined> {
   const headers = {
     Accept: 'application/json',
@@ -165,13 +179,14 @@ export async function makeRequest(
     headers.Authorization = `Bearer ${process.env.AI_API_KEY}`;
   }
 
+  makeBody(body, args);
   let response: Response;
   try {
     response = await fetch(apiUrl, {
       headers,
       method: 'POST',
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(opts.timeout || 180_000),
+      signal: AbortSignal.timeout(args.timeout || 180_000),
     });
     if (!response.ok) {
       const err = await response.text();
@@ -189,25 +204,33 @@ export async function makeRequest(
     const decoder = new TextDecoder('utf-8');
     while (true) {
       // Wait for next encoded chunk
-      const { done, value } = await reader.read();
+      let { done, value } = await reader.read();
       if (done) break;
-      // console.log(decoder.decode(value));
-      // Uint8Array to string + JSON parse
-      if (!decoder.decode(value).startsWith('data: ')) {
+      value = decoder.decode(value, { stream: true });
+      // console.log('!STREAM! ', value);
+      if (!value.startsWith('data: ')) {
         continue;
       }
-      try {
-        const data: Record<string, any> = JSON.parse(decoder.decode(value).slice(5));
-        const delta = data.choices[0].delta.content;
-        if (!delta) break;
-        process.stdout.write(delta);
-        content.push(delta);
-      } catch (error) {
-        console.error('Error parsing JSON:', error);
+      for (let line of value.split('\n')) {
+        if (line.trim() === '' || line.startsWith('data: [DONE]')) {
+          continue;
+        }
+        try {
+          const data: Record<string, any> = JSON.parse(line.slice(5));
+          const delta = data.choices[0].delta.content;
+          if (!delta) break;
+
+          content.push(delta);
+          // process.stdout.write(delta);
+          if (onSave) await onSave(content.join(''));
+        } catch (error: any) {
+          console.error('Error parsing message as JSON:', error.message, 'Stream:', JSON.stringify(line.slice(5)));
+        }
       }
     }
     process.stdout.write('\n');
-    return content.join('').trim();
+    // Finally, polish the response
+    return normResponse(content.join('').trim());
   } else {
     const data: Record<string, any> = await response.json();
     if (data.error) {
@@ -219,7 +242,9 @@ export async function makeRequest(
       console.error('Empty response from model');
       return;
     }
-    return content;
+
+    // Finally, polish the response
+    return normResponse(content);
   }
 }
 

@@ -2,8 +2,8 @@
  * TwoFold useful tags.
  */
 
-import { ee } from '../event.ts';
 import { parseNumber } from './common.ts';
+import { editSave } from '../index.ts';
 import { templite } from '../util.ts';
 
 // export function set() {
@@ -75,9 +75,10 @@ export function spinner(_: string, args: any, meta: any) {
   return meta.node;
 }
 
-export function slowSave(s: string, args: any, meta: any) {
+export async function slowSave(s: string, args: any, meta: any) {
   /**
-   * IT'S BUGGY: save file slowly, many times.
+   * IT'S HACKY: demonstrates how to save intermediate results,
+   * while the tag function is still running.
    */
   let n = s || args.n;
   if (n === undefined || n === null) return;
@@ -86,18 +87,29 @@ export function slowSave(s: string, args: any, meta: any) {
   if (n < 1) return;
 
   setTimeout(async () => {
-    for (let i = 1; i <= n; i++) {
-      // keep the param in the same place
-      if (s) meta.node.params['0'] = n - i;
-      else meta.node.params.n = n - i;
+    while (n > 0) {
       await Bun.sleep(1000);
-      ee.emit({
-        name: 'save',
-        text: s,
-        meta,
-      });
+      // N is the intermediate result
+      // that we want to save on disk.
+      n--;
+      meta.node.params.n = n;
+      // Edit the node and save on disk,
+      // but also refresh the current node (usually not needed)
+      meta.node = await editSave(meta);
+      // This is not needed when receiving intermediate results
+      // from an external source.
+      // In this case, it shows how to get the latest fresh values
+      // of the node from the file, to allow the user to change the
+      // iteration count.
+      // It's buggy because you can't know how long to wait beforehand,
+      // if the user changes the value of N.
+      n = meta.node.params.n;
     }
   }, 1);
+
+  while (n > 0) {
+    await Bun.sleep(n * 1000);
+  }
 }
 
 export function debug(text: string, args: any, meta: any) {

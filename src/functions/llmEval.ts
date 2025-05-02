@@ -2,7 +2,7 @@
  * Functions for evaluating LLMs.
  */
 
-import { makeBody, makeRequest, normResponse } from './llm.ts';
+import { makeRequest } from './llm.ts';
 import { templite } from '../util.ts';
 
 interface HistoryMessage {
@@ -20,6 +20,9 @@ interface HistoryQAC {
 export async function llmEval(text: string, args: Record<string, any> = {}) {
   text = text.trimStart();
   if (text.trim() === '') return;
+
+  // Disable streaming
+  args.stream = false;
 
   // the default URL is just terrible, but we need something
   let apiUrl = 'http://127.1:1234/v1/chat/completions';
@@ -57,21 +60,15 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
     messages: [{ role: 'system', content: 'Answer the question briefly.' }, msg],
     stream: !!args.stream,
   };
-  makeBody(body, args);
 
   console.log('Asking LLM:', msg.content);
   let response = await makeRequest(apiUrl, body, args);
   if (!response) return;
 
-  // Polish the response
-  response = normResponse(response);
-  let score = 0;
-  if (truth) score = calcScore(response, truth);
-
   for (const item of history) {
     if (item.q === msg.content) {
       item.a = response;
-      if (score > 0) item.s = `${score}%`;
+      if (truth) item.s = calcScore(response, truth);
       break;
     }
   }
@@ -184,7 +181,39 @@ const STOP_WORDS = new Set([
   'with',
 ]);
 
-function normalizeText(text: string): string {
+const NUMBERS: { [key: string]: number } = {
+  zero: 0,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+  twenty: 20,
+  thirty: 30,
+  forty: 40,
+  fifty: 50,
+  sixty: 60,
+  seventy: 70,
+  eighty: 80,
+  ninety: 90,
+};
+const NUM_REGEX = new RegExp(`\\b(${Object.keys(NUMBERS).join('|')})\\b`, 'g');
+
+export function normalizeText(text: string): string {
   /*
    * Preprocess text: lowercase, remove punctuation, normalize spaces.
    */
@@ -192,6 +221,7 @@ function normalizeText(text: string): string {
     .toLowerCase()
     .replace(/[^\w\s]|_/g, '') // Remove punctuation
     .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
+    .replace(NUM_REGEX, match => NUMBERS[match] || match)
     .trim();
 }
 
@@ -244,7 +274,7 @@ function levenshteinDistance(s1: string, s2: string): number {
 
 export function normalizedLevenshteinSimilarity(sentence1: string, sentence2: string): number {
   if (sentence1 === sentence2) return 1.0;
-  const distance = levenshteinDistance(sentence1.toLowerCase(), sentence2.toLowerCase());
+  const distance = levenshteinDistance(normalizeText(sentence1), normalizeText(sentence2));
   const maxLength = Math.max(sentence1.length, sentence2.length);
   const result = 1 - distance / maxLength;
   // console.log(`Norm Levenshtein Similarity: ${result.toFixed(6)}`);
@@ -345,7 +375,7 @@ export function calcCosineSimilarity(response: string, truth: string): number {
   return result;
 }
 
-export function calcScore(response: string, truth: string): number {
+export function calcScore(response: string, truth: string): string {
   const LEVENSHTEIN_WEIGHT = 0.1;
   const FACTUAL_WEIGHT = 0.4;
   const JACCARD_WEIGHT = 0.25;
@@ -356,13 +386,12 @@ export function calcScore(response: string, truth: string): number {
   const jaccardScore = calcJaccardIndex(response, truth);
   const cosineScore = calcCosineSimilarity(response, truth);
 
-  return parseFloat(
-    (
-      (levenshteinScore * LEVENSHTEIN_WEIGHT +
-        factualScore * FACTUAL_WEIGHT +
-        jaccardScore * JACCARD_WEIGHT +
-        cosineScore * COSINE_WEIGHT) *
-      100
-    ).toFixed(2)
-  );
+  const score =
+    (levenshteinScore * LEVENSHTEIN_WEIGHT +
+      factualScore * FACTUAL_WEIGHT +
+      jaccardScore * JACCARD_WEIGHT +
+      cosineScore * COSINE_WEIGHT) *
+    100;
+
+  return `score=${score.toFixed(2)} factual=${(factualScore * 100).toFixed(2)} levenshtein=${(levenshteinScore * 100).toFixed(2)} jaccard=${(jaccardScore * 100).toFixed(2)} cosine=${(cosineScore * 100).toFixed(2)}`;
 }

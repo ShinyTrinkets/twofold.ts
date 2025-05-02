@@ -4,13 +4,12 @@ import picomatch from 'picomatch';
 
 import * as config from './config.ts';
 import { ParseToken } from './types.ts';
-import { ee } from './event.ts';
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import evaluate from './evaluate.ts';
 import functions from './functions/index.ts';
 import { syncTag, unParse } from './tags.ts';
-import { deepSet, listTree } from './util.ts';
+import { deepGet, deepSet, listTree } from './util.ts';
 
 /**
  * Render a text string. Used for rendering STDIN, and for tests.
@@ -31,7 +30,10 @@ export async function renderText(
   cfg: config.Config = {},
   meta: Record<string, any> = {}
 ): Promise<string> {
-  const allFunctions: Record<string, Function> = { ...functions, ...customTags };
+  const allFunctions: Record<string, Function> = {
+    ...functions,
+    ...customTags,
+  };
   const ast = parse(new Lexer(cfg).lex(text), cfg);
   let final = '';
   for (const t of ast) {
@@ -100,7 +102,10 @@ export async function renderFile(
 
   let text = '';
   const resultHash = crypto.createHash('sha224');
-  const allFunctions: Record<string, Function> = { ...functions, ...customTags };
+  const allFunctions: Record<string, Function> = {
+    ...functions,
+    ...customTags,
+  };
   const globals: Record<string, any> = {};
 
   for (const t of ast) {
@@ -161,12 +166,12 @@ export async function renderFolder(
   return stats;
 }
 
-ee.on('save', async (event: any) => {
-  const { meta } = event;
+export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
   const { node } = meta;
-  // console.log('EE save ::', meta);
+  // console.log('EE save ::', node);
   // Reform/ restructure de-synced tag, in place
   syncTag(node);
+  let oldNode = node;
   const lexer = new Lexer();
 
   if ((globalThis as any).Bun) {
@@ -174,30 +179,25 @@ ee.on('save', async (event: any) => {
     let text = await file.text();
     const ast = parse(lexer.lex(text));
     lexer.reset();
+    // Keep a copy of the original text
+    oldNode = structuredClone(deepGet(ast, node.path));
     // Apply the changes to the AST, in place
     deepSet(ast, node.path, node);
     text = ast.map(unParse).join('');
     file.write(text);
   } else if ((globalThis as any).Deno) {
-    // Read file in chunks, and parse
-    let file = await Deno.open(meta.fname, { read: true, write: true });
-    const decoder = new TextDecoder();
-    for await (const chunk of file.readable) {
-      lexer.push(decoder.decode(chunk));
-    }
-    file.close();
-    const ast = parse(lexer.finish());
+    let text = await Deno.readTextFile(meta.fname);
+    const ast = parse(lexer.lex(text));
     lexer.reset();
+    // Keep a copy of the original text
+    oldNode = structuredClone(deepGet(ast, node.path));
     // Apply the changes to the AST, in place
     deepSet(ast, node.path, node);
-    // Save the original file in chunks
-    const encoder = new TextEncoder();
-    for (const node of ast) {
-      const text = unParse(node);
-      await file.write(encoder.encode(text));
-    }
-    file.close();
+    text = ast.map(unParse).join('');
+    await Deno.writeTextFile(meta.fname, text);
   }
-});
+  // console.log('EE returning ::', oldNode);
+  return oldNode;
+}
 
 export default { renderText, renderFile, renderFolder };
