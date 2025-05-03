@@ -90,7 +90,7 @@ export function syncTag(node: ParseToken): void {
 
 // Helper function to format parameters consistently
 function formatParams(params: undefined | Record<string, any>): string {
-  if (!params || typeof params !== 'object' || Object.keys(params).length === 0) {
+  if (!params || Object.keys(params).length === 0) {
     return '';
   }
 
