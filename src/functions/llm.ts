@@ -207,24 +207,22 @@ export async function makeRequest(
       let { done, value } = await reader.read();
       if (done) break;
       value = decoder.decode(value, { stream: true });
-      // console.log('!STREAM! ', value);
-      if (!value.startsWith('data: ')) {
-        continue;
-      }
-      for (let line of value.split('\n')) {
-        if (line.trim() === '' || line.startsWith('data: [DONE]')) {
+      for (let line of value.split(/[\n\r]/)) {
+        // console.log('!!LINE!! ', line);
+        if (line.trim() === '' || line.startsWith('data: [DONE]') || !line.startsWith('data: ')) {
           continue;
         }
+        let delta = '';
         try {
           const data: Record<string, any> = JSON.parse(line.slice(5));
-          const delta = data.choices[0].delta.content;
-          if (!delta) break;
-
+          delta = data.choices[0].delta?.content;
+        } catch (error: any) {
+          console.error('Error parsing message as JSON:', error.message, 'Stream:', JSON.stringify(line.slice(5)));
+        }
+        if (delta) {
           content.push(delta);
           // process.stdout.write(delta);
           if (onSave) await onSave(content.join(''));
-        } catch (error: any) {
-          console.error('Error parsing message as JSON:', error.message, 'Stream:', JSON.stringify(line.slice(5)));
         }
       }
     }
