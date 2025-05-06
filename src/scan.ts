@@ -62,7 +62,7 @@ export function scanFile(
     stream.on('close', () => {
       const ast = parse(lex.finish(), customConfig);
       lex.reset();
-      console.log('Text length ::', len);
+      console.log('Txt length ::', len.toLocaleString('en-GB'));
       for (const tag of ast) {
         walk(tag);
       }
@@ -73,13 +73,12 @@ export function scanFile(
         if (allFunctions[tag.name]) {
           console.debug('✓', tag.name);
           validTags += 1;
-        }
-        // else console.debug('✗', tag.name);
+        } else console.debug('✗', tag.name);
       }
       const invalidTags = nodes.length - validTags;
       console.log('Valid tags ::', validTags);
       if (invalidTags) {
-        console.error(`Invalid tags :: ${invalidTags}!`);
+        console.error(`Invalid tags :: ${invalidTags}`);
       }
       resolve({ validTags, invalidTags });
       console.log('-------');

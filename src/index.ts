@@ -168,7 +168,6 @@ export async function renderFolder(
 
 export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
   const { node } = meta;
-  // console.log('EE save ::', node);
   // Reform/ restructure de-synced tag, in place
   syncTag(node);
   let oldNode = node;
@@ -196,7 +195,6 @@ export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
     text = ast.map(unParse).join('');
     await Deno.writeTextFile(meta.fname, text);
   }
-  // console.log('EE returning ::', oldNode);
   return oldNode;
 }
 

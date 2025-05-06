@@ -9,6 +9,7 @@ import tags from './functions/index.ts';
 import { userCfg } from './config.ts';
 import * as scan from './scan.ts';
 import * as util from './util.ts';
+import { log } from './logger.ts';
 
 import pkg from '../package.json' with { type: 'json' };
 import chokidar from 'chokidar';
@@ -68,18 +69,18 @@ you can use pipes:
   // Load all functions from specified folder
   let funcs = {};
   if (args.funcs) {
-    console.debug('(2✂︎f) Funcs:', args.funcs);
     try {
       funcs = await import(args.funcs);
     } catch {
-      funcs = util.importAny(args.funcs);
+      funcs = await util.importAny(args.funcs);
     }
+    log.info('Funcs:', args.funcs, '::', Object.keys(funcs));
   }
 
   if (args.tags) {
     const allFunctions = { ...tags, ...funcs };
-    for (const f of Object.keys(allFunctions)) {
-      console.log(f, '::', util.functionParams(allFunctions[f]));
+    for (const [n, f] of Object.entries(allFunctions)) {
+      console.log(n, '::', f);
     }
     return;
   }
@@ -102,17 +103,17 @@ you can use pipes:
       let fstat;
       try {
         fstat = fs.statSync(fname);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        log.error(err.message);
         return;
       }
-      console.log('(2✂︎f) Scan:', fname, config.glob || '');
+      log.info('::', fname, config.glob || '');
       if (fstat.isFile()) {
         await scan.scanFile(fname, funcs, config);
       } else if (fstat.isDirectory()) {
         await scan.scanFolder(fname, funcs, config);
       } else {
-        console.error('Unknown path type:', fstat);
+        log.error('Unknown path type:', fstat);
       }
     }
     return;
@@ -134,7 +135,7 @@ you can use pipes:
       }
 
       const symbol = locks[fname] ? '! 🔒' : '? 🔓';
-      console.log(`(2✂︎f) changed :: ${fname} ; lock${symbol}`);
+      log.info(`changed :: ${fname} ; lock${symbol}`);
       if (locks[fname]) {
         return; // file is locked
       }
@@ -143,7 +144,7 @@ you can use pipes:
       while (true) {
         const { changed } = await twofold.renderFile(fname, funcs, config, { fname, write: true });
         if (!changed) {
-          console.log(`(2✂︎f) file ${fname} is stable`);
+          log.info(`file :: ${fname} is stable`);
           break;
         }
         await util.sleep(ANIM_DELAY);
@@ -153,7 +154,7 @@ you can use pipes:
 
     const depth = args.depth ? args.depth : 1;
     const ignoreInitial = !args.initialRender;
-    console.log(`(2✂︎f) Watching: ${args.watch} ${config.glob}, depth=${depth}, initRender=${!ignoreInitial}`);
+    log.info(`Watching: ${args.watch} ${config.glob || ''} depth=${depth} render0=${!ignoreInitial}`);
     const watcher = chokidar.watch(args.watch, {
       depth,
       ignoreInitial,
@@ -173,24 +174,24 @@ you can use pipes:
       let fstat;
       try {
         fstat = fs.statSync(fname);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        log.error(err.message);
         continue;
       }
       if (fstat.isFile()) {
-        console.log('(2✂︎f)', fname);
+        log.info('::', fname);
         await twofold.renderFile(fname, funcs, config, { write: true });
       } else if (fstat.isDirectory()) {
         await twofold.renderFolder(fname, funcs, config, { write: true });
       } else {
-        console.error('Unknown path type:', fstat);
+        log.error('Unknown path type:', fstat);
         continue;
       }
     }
   } // render text from STDIN
   else {
     if (process.stdin.isTTY) {
-      console.error('(2✂︎f) Nothing to to!');
+      log.warn('Nothing to to!');
       process.exit();
     }
 

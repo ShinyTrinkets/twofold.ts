@@ -36,7 +36,6 @@ jobs:
           bun build ./src/cli.ts --compile --production --target=bun-linux-arm64 --outfile=tfold-linux-arm64
           bun build ./src/cli.ts --compile --production --target=bun-linux-x64 --outfile=tfold-linux-x64
           bun build ./src/cli.ts --compile --production --target=bun-windows-x64-modern --outfile=tfold-windows-x64
-          bun build ./src/cli.ts --target=node --minify-whitespace --outfile=tfold.js
       - name: Upload build files
         run: |
           gh release upload "${{ github.ref_name }}" tfold* --repo "ShinyTrinkets/twofold.ts" --clobber

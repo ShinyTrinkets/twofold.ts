@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { homedir } from 'node:os';
 import { types } from 'node:util';
+import { log } from './logger.js';
 
 // lower latin + greek alphabet letters
 export const LOWER_LETTERS = /^[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]/;
@@ -19,14 +20,6 @@ export const isFunction = (f: any) => typeof f === 'function' || types.isAsyncFu
 export function splitToMarker(txt: string) {
   const m = txt.match(/(.+)✂[-]+[!]?/s);
   return m && m[1] ? m[1] : txt;
-}
-
-/**
- * Extract name and params from a JS function.
- */
-export function functionParams(f: Function) {
-  const m = f.toString().match(/function(.+?\(.*?\).+?)\{/);
-  if (m && m[1]) return m[1].trim();
 }
 
 // Credits:
@@ -155,6 +148,6 @@ export async function importAny(dir: string) {
   try {
     return await import(dir);
   } catch (err: any) {
-    console.warn(`Import ERR: ${err.message}, import '${dir}'`);
+    log.warn(`Importing '${dir}', ERR: ${err.message} !`);
   }
 }

@@ -2,6 +2,7 @@ import { LexToken } from './types.ts';
 import * as config from './config.ts';
 import { isRawText } from './tags.ts';
 import { toCamelCase } from './util.ts';
+import { log } from './logger.ts';
 
 const STATE_RAW_TEXT = 's__raw_';
 const STATE_OPEN_TAG = 's_<_tag';
@@ -95,7 +96,7 @@ export default class Lexer {
     let pending: LexToken = this._pendingState;
 
     const transition = (newState: string) => {
-      // console.log(`Transition FROM (${this.state}) TO (${newState})`)
+      // log.info(`Transition FROM (${this.state}) TO (${newState})`)
       this.priorState = this.state;
       this.state = newState;
     };
@@ -105,7 +106,7 @@ export default class Lexer {
        * Commit old state in the processed list
        * and transition to a new state.
        */
-      // console.log('Commit STATE:', this.state, pending, 'processed:', this._processed)
+      // log.info('Commit STATE:', this.state, pending, 'processed:', this._processed)
       if (pending.name) {
         pending.name = toCamelCase(pending.name);
       }
@@ -137,7 +138,7 @@ export default class Lexer {
        * and delete the temporary variables.
        * quote=t is for wrapping in a JSON compatible quote.
        */
-      // console.log('Commit TAG:', quote, this.state, pending)
+      // log.info('Commit TAG:', quote, this.state, pending)
       const key = pending.param_key!;
       let value = pending.param_value!;
       if (quote && value && value.length > 2) {
@@ -164,7 +165,7 @@ export default class Lexer {
             /* No need to handle the error */
           }
         }
-        // console.error('Cannot parse param value:', key, value)
+        // log.error('Cannot parse param value:', key, value)
       }
       if (key) {
         pending.params![key] = value;
@@ -184,7 +185,7 @@ export default class Lexer {
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
       const code: number = text.charCodeAt(i);
-      // console.log(`STATE :: ${this.state} ;; new CHAR :: ${char}`)
+      // log.info(`STATE :: ${this.state} ;; new CHAR :: ${char}`)
 
       if (this.state === STATE_RAW_TEXT) {
         // Could this be the beginning of a new tag?
@@ -381,8 +382,8 @@ export default class Lexer {
       } // UGH THIS SHOULDN'T HAPPEN, TIME TO PANIC
       // SCREAM 😱 !!
       else {
-        console.error('Lexer ERROR! This is probably a BUG!');
-        console.error(`Char: ${char}; State: ${this.state}; PriorState: ${this.priorState}`);
+        log.error('Lexer ERROR! This is probably a BUG!');
+        log.error(`Char: ${char}; State: ${this.state}; PriorState: ${this.priorState}`);
         this.reset();
         return;
       }

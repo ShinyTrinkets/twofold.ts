@@ -98,7 +98,7 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     if (!token || !token.rawText) {
       continue;
     }
-    // console.log('TOKEN ::', token);
+    // log.info('TOKEN ::', token);
 
     if (isDoubleTag(token)) {
       // Is this the start of a double tag?

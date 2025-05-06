@@ -1,7 +1,8 @@
-import { DoubleTag, ParseToken, SingleTag } from './types.ts';
-import { isFunction } from './util.ts';
 import { Config } from './config.ts';
 import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
+import { DoubleTag, ParseToken, SingleTag } from './types.ts';
+import { isFunction } from './util.ts';
+import { log } from './logger.ts';
 
 /**
  * Evaluate a single tag, by calling the tag function.
@@ -25,7 +26,7 @@ async function evaluateSingleTag(
   } catch (err: any) {
     let info = JSON.stringify(params);
     if (info.length > 120) info = info.slice(0, 120) + '...';
-    console.warn(`Cannot evaluate single tag "${tag.name}" with "${info}"! ERROR:`, err.message);
+    log.warn(`Cannot evaluate single tag "${tag.name}" with "${info}"! ERROR:`, err.message);
   }
   // If the single tag doesn't have a result, DON'T change the tag
   if (result === undefined || result === null) return;
@@ -91,7 +92,7 @@ async function evaluateDoubleTag(
         try {
           tmp = await func(firstParam || innerText, { ...params, innerText }, meta);
         } catch (err: any) {
-          console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
+          log.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
         }
         if (tmp === undefined || tmp === null) tmp = '';
         if (typeof tmp === 'object') {
@@ -114,7 +115,7 @@ async function evaluateDoubleTag(
       result = await func(firstParam || innerText, { ...params, innerText }, meta);
     } catch (err: any) {
       // If the function call crashed, DON'T change the tag
-      console.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
+      log.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
     }
     // If the single tag doesn't have a result, DON'T change the tag
     if (result === undefined || result === null) return;

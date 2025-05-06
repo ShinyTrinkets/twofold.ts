@@ -1,4 +1,5 @@
 import { lilconfig } from 'lilconfig';
+import { log } from './logger.js';
 
 export interface Config {
   openTag?: string;
@@ -58,7 +59,7 @@ export async function userCfg(path = undefined): Promise<CliConfig> {
   const cfg = await explorer.search(path);
   if (cfg && cfg.config) {
     validateCfg(cfg.config);
-    console.debug('(2✂︎f) User config:', cfg.config);
+    log.debug('User config:', cfg.config);
     return { ...defaultCfg, ...cfg.config };
   }
   return { ...defaultCfg };

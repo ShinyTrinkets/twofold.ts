@@ -5,25 +5,26 @@
 import { parseNumber } from './common.ts';
 import { editSave } from '../index.ts';
 import { templite } from '../util.ts';
+import * as logger from '../logger.ts';
 
-// export function set() {
-//   /**
-//    * Set (define) one or more variables.
-//    *
-//    * The logic for this tag is in the evaluate tags functions.
-//    */
-//   return;
-// }
+export function set() {
+  /**
+   * Set (define) one or more variables.
+   *
+   * The logic for this tag is in the evaluate tags functions.
+   */
+  return;
+}
 
-// export function ignore() {
-//   /**
-//    * When it's a double tag, all tags inside it are protected (frozen).
-//    * This is similar to the freeze=true prop.
-//    *
-//    * The logic for this tag is in the evaluate tags functions.
-//    */
-//   return;
-// }
+export function ignore() {
+  /**
+   * When it's a double tag, all tags inside it are protected (frozen).
+   * This is similar to the freeze=true prop.
+   *
+   * The logic for this tag is in the evaluate tags functions.
+   */
+  return;
+}
 
 export function text(s: string, args: any) {
   /**
@@ -34,6 +35,13 @@ export function text(s: string, args: any) {
    * if you set name="John".
    */
   return templite(s, args);
+}
+
+export function log(_: string, args: any) {
+  const level = args.level || args.l || args['0'] || 'info';
+  if (args['0']) delete args['0'];
+  if (args.l) delete args.l;
+  logger.log._log(level, [args]);
 }
 
 export function increment(s: string, { plus = 1 } = {}): number {
