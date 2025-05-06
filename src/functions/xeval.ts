@@ -14,8 +14,8 @@ export function jsEval(expr: string, args: Record<string, string> = {}) {
   if (!expr) return;
   expr = splitToMarker(expr);
   const stdout: string[] = [];
-  const redirectStdout = (msg: any) => {
-    stdout.push(msg.toString());
+  const redirectStdout = (...args: any) => {
+    stdout.push(args.join(' '));
   };
   const customContext = {
     console: {

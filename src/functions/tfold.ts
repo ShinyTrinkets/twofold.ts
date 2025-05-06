@@ -38,6 +38,9 @@ export function text(s: string, args: any) {
 }
 
 export function log(_: string, args: any) {
+  /**
+   * A tag used for DEV, that logs the args to the logger.
+   */
   const level = args.level || args.l || args['0'] || 'info';
   if (args['0']) delete args['0'];
   if (args.l) delete args.l;

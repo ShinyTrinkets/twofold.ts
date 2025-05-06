@@ -79,8 +79,13 @@ you can use pipes:
 
   if (args.tags) {
     const allFunctions = { ...tags, ...funcs };
+    console.log();
+    // const funcParams = (f: Function) => {
+    //   const m = f.toString().match(/^(?:async )?function (\w+?\(.*?\))\{/);
+    //   if (m && m[1]) return m[1];
+    // }
     for (const [n, f] of Object.entries(allFunctions)) {
-      console.log(n, '::', f);
+      console.log(n, '::', f, '\n');
     }
     return;
   }
@@ -120,7 +125,7 @@ you can use pipes:
   }
 
   if (args.watch) {
-    const ANIM_DELAY = 1000;
+    const ANIM_DELAY = 1000; // hardcoded for now
     const locks: Record<string, boolean> = {};
     const callback = async (fname: string) => {
       // ignore files that don't match the pattern
@@ -134,7 +139,7 @@ you can use pipes:
         return;
       }
 
-      const symbol = locks[fname] ? '! 🔒' : '? 🔓';
+      const symbol = locks[fname] ? '! 🔐' : '? 🔓';
       log.info(`changed :: ${fname} ; lock${symbol}`);
       if (locks[fname]) {
         return; // file is locked

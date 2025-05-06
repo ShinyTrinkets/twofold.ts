@@ -22,8 +22,8 @@ as: text="6" and plus="4".
 All tags can be called in camelCase (eg: `<emojiClock />`), or separated by underline (eg:
 `<emoji_clock />`).
 
-You can customize the tag markers, so you can make them look like jinja2, nunjucks, etc. (eg:
-`{emojiClock %}`).
+You can customize the tag markers, so you can make them look like jinja2, nunjucks (eg:
+`{emojiClock %}`), or like LISP (eg: `(emojiClock .)`), etc.
 
 The built-in tags are located in `/src/functions/` and are available automatically. To create extra
 tags, make a folder eg: "mkdir myFuncs" and create your TypeScript/ JavaScript files and expose the
@@ -40,8 +40,9 @@ Example:
 - `<line '80' />`
 - `<randomFloat decimals=2 />`
 - `<jsEval "1 + 7 * 9" />`
+- `<set name="John" />`
 
-Single tags are **consumed** after they are rendered, so they are **one use only**.
+Single tags are usually **consumed** after they are rendered, so they are **one use only**.
 
 Some functions are better suited as single tags, such as `<emojiClock />`, or `<line '40' />`.
 
@@ -59,6 +60,13 @@ Example:
 * c
 * b
 </sortLines>
+
+<jsEval>
+const x = 1;
+const y = 7;
+console.log(`x: ${x}, y: ${y}`);
+(x + y) * 9
+</jsEval>
 ```
 
 Double tags are **persistent** and are normally rendered every time the file is processed by
@@ -71,7 +79,7 @@ Some functions make more sense as double tags, particularly when they involve pr
 significant amount of text, which is impractical to add inside a single tag.
 
 They are useful in case of documentation, to keep the document in sync with other external sources,
-or to format and correct a paragraph, etc.
+to format and correct a paragraph, to chat with an LLM, etc.
 
 ## Tag options
 
@@ -83,7 +91,7 @@ In this example, the 3 options are: `'readme.md' start=0 limit=90`.
 
 Usually all options are... optional, but they don't always have a default; for example calculating
 or executing an expression **absolutely requires** an expression. When a tag doesn't have all the
-required values, it will not run.
+required values, it will not run, and will not be consumed.
 
 If the values contain space, they can be surrounded by a matching single quotes, double quotes, or
 ticks.
@@ -154,13 +162,15 @@ to convert it into a single tag.
 The value of cut can be either "true", or "1", eg: `cut=1` is shorter to write.
 
 It is useful to wrap a big chunk of text within a double tag, and consume the tag after processing,
-eg in case of jsEval, pyEval, or cmd.
+eg in case of jsEval, cmd, or llm.
 
 This option works only with **double tags**.
 
 </ignore>
 
 ## Built-in tags
+
+You can also see this list by running `tfold --tags`.
 
 TODO: Replace this manual list with the auto-generated list, when it's ready...
 
@@ -169,42 +179,108 @@ available to start with. There are extra tags available in the
 [twofold-extras](https://github.com/ShinyTrinkets/twofold-extras) repository. You can of course,
 write your own tags, and load them with the `--funcs` cmd line switch.
 
-#### increment nr=1
+upper :: upper(text)
 
-#### randomInt min=1 max=100
+trim :: trim(text)
 
-#### randomFloat min=1 max=100 decimals=2
+titleAll :: titleAll(text)
 
-#### yesOrNo emoji=true
+sortLines :: sortLines(text,{caseSensitive=false}={})
 
-#### leftOrRight emoji=true
+lower :: lower(text)
 
-#### upOrDown
+line :: line(len,{c="-"}={})
 
-#### randomSlice
+yesOrNo :: yesOrNo()
 
-#### randomDice
+upOrDown :: upOrDown(_,{emoji=true}={})
 
-#### randomCard nr=1
+shuffle :: shuffle(text,{lines=false,words=false}={})
 
-#### lower
+randomSlice :: randomSlice()
 
-#### upper
+randomInt :: randomInt(txtMax,{min=1,max=100})
 
-#### sortLines caseSensitive=false
+randomFloat :: randomFloat(txtMax,{min=1,max=100,decimals=2})
 
-#### dayOrNight date=now
+randomDice :: randomDice()
 
-#### emojiSunMoon date=now
+randomCard :: randomCard(_,{nr:nr2=0}={})
 
-#### emojiDayNight date=now
+leftOrRight :: leftOrRight(_,{emoji=true}={})
 
-#### emojiClock date=now showHalf=true
+zodiacSign :: zodiacSign(txtDate,{date:date2=null,emoji=true}={})
 
-#### cat pth start=0 limit=250
+now :: now(txtDate,{date=null}={})
 
-#### dir pth li='\*' space=' '
+emojiSunMoon :: emojiSunMoon(txtDate,{date:date2=null,splitHour=6}={})
 
-#### req url headers
+emojiDayNight :: emojiDayNight(txtDate,{date:date2=null,splitHour=6}={})
 
-#### cmd cmd
+emojiClock :: emojiClock(txtDate,{date:date2=null,showHalf=true}={})
+
+dayOrNight :: dayOrNight(txtDate,{date:date2=null,splitHour=6}={})
+
+date :: date(txtDate,{date:date2=null}={})
+
+tail :: tail(txtFile,{f=null,lines=10}={},meta={})
+
+head :: head(txtFile,{f=null,lines=10}={},meta={})
+
+dir :: dir(txtDir,{d=null,li="*",space=" "}={})
+
+cat :: cat(txtFile,{f=null,start=0,limit=250}={},meta={})
+
+fmtYapf :: fmtYapf(pyTxt,{based_on_style="pep8",column_limit=120},meta={})
+
+fmtPrettier :: fmtPrettier(text,{print_width=120},meta={})
+
+fmtBlue :: fmtBlue(pyTxt,args,meta={})
+
+fmtBlack :: fmtBlack(pyTxt,args,meta={})
+
+zsh :: zsh(txtCmd,{cmd:cmd2,args=[],t=5})
+
+sh :: sh(txtCmd,{cmd:cmd2,args=[],t=5})
+
+cmd :: cmd(txtCmd,{cmd:cmd2,args=[]},_meta={})
+
+bash :: bash(txtCmd,{cmd:cmd2,args=[],t=5})
+
+asciiTable :: asciiTable(text,args={})
+
+req :: req(txtUrl,{url:url2="",headers={}})
+
+rbEval :: rbEval(expr,args={})
+
+pyEval :: pyEval(expr,args={})
+
+perlEval :: perlEval(expr,args={})
+
+jsEval :: jsEval(expr,args={})
+
+ai :: ai(text,args={},meta={})
+
+llmEval :: llmEval(text,args={})
+
+text :: text(s,args)
+
+set :: set()
+
+log :: log(_,args)
+
+increment :: increment(s,{plus=1}={})
+
+ignore :: ignore()
+
+debug :: debug(text2,args,meta)
+
+countDown :: countDown(s,args,meta)
+
+smith :: smith(_s,_a,meta)
+
+neo :: neo(_s,_a,meta)
+
+getRandomDialog :: getRandomDialog()
+
+skeleton :: skeleton(_,args,meta)
