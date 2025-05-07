@@ -1,9 +1,10 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import func from '../src/functions/index.ts';
+import * as llm from '../src/functions/llm.ts';
+import * as llmEval from '../src/functions/llmEval.ts';
 
 test('parse conversation', () => {
-  let body = func._parseConversation(`
+  let body = llm._parseConversation(`
   User: Hello
   Assistant: Hi there! How can I assist you today?
   `); // empty line
@@ -15,7 +16,7 @@ test('parse conversation', () => {
     },
   ]);
 
-  body = func._parseConversation(`System: You are a funny assistant.
+  body = llm._parseConversation(`System: You are a funny assistant.
   User: Hello
   User:  tell me a joke
   User:
@@ -25,7 +26,7 @@ test('parse conversation', () => {
     { role: 'user', content: 'Hello\ntell me a joke\n\n' },
   ]);
 
-  body = func._parseConversation(`
+  body = llm._parseConversation(`
     User:  tell me a joke
     Assistant: Why don't scientists trust atoms? Because they make up everything!
     Assistant: Why did the scarecrow win an award? Because he was outstanding in his field!
@@ -41,7 +42,7 @@ test('parse conversation', () => {
     { role: 'user', content: 'more' },
   ]);
 
-  body = func._parseConversation(`
+  body = llm._parseConversation(`
   User: hi
 
   Assistant: Hello!
@@ -54,7 +55,7 @@ test('parse conversation', () => {
     { role: 'user', content: 'how are you?\n' },
   ]);
 
-  body = func._parseConversation(`
+  body = llm._parseConversation(`
       Assistant: No, the **Apple M4 CPU** does not natively support **FP8 (8-bit floating point)**.
 
   ---
@@ -75,7 +76,7 @@ test('parse conversation', () => {
     },
   ]);
 
-  body = func._parseConversation(`
+  body = llm._parseConversation(`
   Assistant: Hello!
   User:
   `);
@@ -86,13 +87,13 @@ test('parse conversation', () => {
 });
 
 test('prepare conversation', () => {
-  let body = func._prepareConversation1(`System: You are a funny assistant.
+  let body = llm._prepareConversation1(`System: You are a funny assistant.
   Assistant: Hello!
   User:
   `); // empty line
   expect(body).toBe(null);
 
-  body = func._prepareConversation1(
+  body = llm._prepareConversation1(
     `
 
   User:  tell me a joke
@@ -119,7 +120,7 @@ test('prepare conversation', () => {
     lines: { before: 0, after: 0 },
   });
 
-  body = func._prepareConversation1(`System: You are a helpful assistant.
+  body = llm._prepareConversation1(`System: You are a helpful assistant.
     User: hi
 
     Assistant: Hello!
@@ -136,7 +137,7 @@ test('prepare conversation', () => {
     lines: { before: 1, after: 1 },
   });
 
-  body = func._prepareConversation1(`System: You are a helpful assistant.
+  body = llm._prepareConversation1(`System: You are a helpful assistant.
 
 User: Does an Apple M4 CPU hardware support FP8 ?
 
@@ -170,7 +171,7 @@ Assistant: No, the **Apple M4 CPU** does not natively support **FP8 (8-bit float
 });
 
 test('parse LLM eval', () => {
-  let body = func._parseQAC(
+  let body = llmEval._parseQAC(
     `
 Q: hi!
 A: Hello!
