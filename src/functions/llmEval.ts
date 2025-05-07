@@ -2,7 +2,7 @@
  * Functions for evaluating LLMs.
  */
 
-import { makeRequest } from './llm.ts';
+import { _makeRequest } from './llm.ts';
 import { templite } from '../util.ts';
 
 interface HistoryMessage {
@@ -34,7 +34,7 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
     }
   }
 
-  const history = parseQAC(templite(text, args));
+  const history = _parseQAC(templite(text, args));
   if (history.length === 0) return;
 
   // Check if user wants to reset the answers
@@ -42,7 +42,7 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
     for (const item of history) {
       item.a = '';
     }
-    return `\n${unParseQAC(history)}\n`;
+    return `\n${_unParseQAC(history)}\n`;
   }
 
   // Get the first un-answered question
@@ -62,7 +62,7 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
   };
 
   console.log('Asking LLM:', msg.content);
-  let response = await makeRequest(apiUrl, body, args);
+  let response = await _makeRequest(apiUrl, body, args);
   if (!response) return;
 
   for (const item of history) {
@@ -73,10 +73,10 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
     }
   }
 
-  return `\n${unParseQAC(history)}\n`;
+  return `\n${_unParseQAC(history)}\n`;
 }
 
-export function parseQAC(text: string): HistoryQAC[] {
+export function _parseQAC(text: string): HistoryQAC[] {
   const lines = text.split('\n');
   const results: HistoryQAC[] = [];
   let currentQAC: HistoryQAC | null = null;
@@ -127,7 +127,7 @@ export function parseQAC(text: string): HistoryQAC[] {
   return results;
 }
 
-export function unParseQAC(history: HistoryQAC[]): string {
+export function _unParseQAC(history: HistoryQAC[]): string {
   const lines: string[] = [];
   for (const item of history) {
     lines.push(`Q: ${item.q}`);
@@ -213,7 +213,7 @@ const NUMBERS: { [key: string]: number } = {
 };
 const NUM_REGEX = new RegExp(`\\b(${Object.keys(NUMBERS).join('|')})\\b`, 'g');
 
-export function normalizeText(text: string): string {
+function _normText(text: string): string {
   /*
    * Preprocess text: lowercase, remove punctuation, normalize spaces.
    */
@@ -272,20 +272,20 @@ function levenshteinDistance(s1: string, s2: string): number {
   return currentRow[n];
 }
 
-export function normalizedLevenshteinSimilarity(sentence1: string, sentence2: string): number {
+export function _normalizedLevenshteinSimilarity(sentence1: string, sentence2: string): number {
   if (sentence1 === sentence2) return 1.0;
-  const distance = levenshteinDistance(normalizeText(sentence1), normalizeText(sentence2));
+  const distance = levenshteinDistance(_normText(sentence1), _normText(sentence2));
   const maxLength = Math.max(sentence1.length, sentence2.length);
   const result = 1 - distance / maxLength;
   // console.log(`Norm Levenshtein Similarity: ${result.toFixed(6)}`);
   return result;
 }
 
-export function calcFactualScore(response: string, truth: string): number {
-  const truthWords = normalizeText(truth)
+export function _calcFactualScore(response: string, truth: string): number {
+  const truthWords = _normText(truth)
     .split(' ')
     .filter(w => w.length > 0);
-  const responseWords = normalizeText(response)
+  const responseWords = _normText(response)
     .split(' ')
     .filter(w => w.length > 0);
 
@@ -305,7 +305,7 @@ export function calcFactualScore(response: string, truth: string): number {
   return result;
 }
 
-export function calcJaccardIndex(response: string, truth: string): number {
+export function _calcJaccardIndex(response: string, truth: string): number {
   /*
    * Calculate the Jaccard index between two strings.
    * The Jaccard index is the size of the intersection divided by the size of the union.
@@ -314,12 +314,12 @@ export function calcJaccardIndex(response: string, truth: string): number {
 
   // Normalize and split into words
   const responseWords = new Set(
-    normalizeText(response)
+    _normText(response)
       .split(' ')
       .filter(w => w.length > 0)
   );
   const truthWords = new Set(
-    normalizeText(truth)
+    _normText(truth)
       .split(' ')
       .filter(w => w.length > 0)
   );
@@ -331,16 +331,16 @@ export function calcJaccardIndex(response: string, truth: string): number {
   return result;
 }
 
-export function calcCosineSimilarity(response: string, truth: string): number {
+export function _calcCosineSimilarity(response: string, truth: string): number {
   /*
    * Compute weighted word overlap (cosine-like similarity)
    */
 
   // Compute factual score based on key content words
-  const truthWords = normalizeText(truth)
+  const truthWords = _normText(truth)
     .split(' ')
     .filter(w => w.length > 0);
-  const responseWords = normalizeText(response)
+  const responseWords = _normText(response)
     .split(' ')
     .filter(w => w.length > 0);
 
@@ -381,10 +381,10 @@ export function calcScore(response: string, truth: string): string {
   const JACCARD_WEIGHT = 0.25;
   const COSINE_WEIGHT = 0.25;
 
-  const levenshteinScore = normalizedLevenshteinSimilarity(response, truth);
-  const factualScore = calcFactualScore(response, truth);
-  const jaccardScore = calcJaccardIndex(response, truth);
-  const cosineScore = calcCosineSimilarity(response, truth);
+  const levenshteinScore = _normalizedLevenshteinSimilarity(response, truth);
+  const factualScore = _calcFactualScore(response, truth);
+  const jaccardScore = _calcJaccardIndex(response, truth);
+  const cosineScore = _calcCosineSimilarity(response, truth);
 
   const score =
     (levenshteinScore * LEVENSHTEIN_WEIGHT +

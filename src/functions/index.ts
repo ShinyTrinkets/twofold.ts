@@ -15,24 +15,37 @@ import * as llm from './llm.ts';
 import * as llmEval from './llmEval.ts';
 import * as tfold from './tfold.ts';
 import * as matrix from './matrix.ts';
+import * as globe from './globe.ts';
 import * as skeleton from './skeleton.ts';
+
+// Filter exports to include only those starting with a letter
+const filterPublicExports = (moduleExports: Record<string, any>): Record<string, any> => {
+  const publicExports: Record<string, any> = {};
+  for (const key in moduleExports) {
+    if (Object.prototype.hasOwnProperty.call(moduleExports, key) && /^[a-z]/.test(key)) {
+      publicExports[key] = moduleExports[key];
+    }
+  }
+  return publicExports;
+};
 
 export default {
   // extras ...
   // ...tfExtras,
   // core tags
-  ...string,
-  ...random,
-  ...time,
-  ...os,
-  ...fmt,
-  ...shell,
-  ...table,
-  ...request,
-  ...xeval,
-  ...llm,
-  ...llmEval,
-  ...tfold,
+  ...filterPublicExports(string),
+  ...filterPublicExports(random),
+  ...filterPublicExports(time),
+  ...filterPublicExports(os),
+  ...filterPublicExports(fmt),
+  ...filterPublicExports(shell),
+  ...filterPublicExports(table),
+  ...filterPublicExports(request),
+  ...filterPublicExports(xeval),
+  ...filterPublicExports(llm),
+  ...filterPublicExports(llmEval),
+  ...filterPublicExports(tfold),
   ...matrix,
+  ...globe,
   ...skeleton,
 };

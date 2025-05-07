@@ -3,7 +3,7 @@ const { test, expect } = await testing;
 import func from '../src/functions/index.ts';
 
 test('parse conversation', () => {
-  let body = func.parseConversation(`
+  let body = func._parseConversation(`
   User: Hello
   Assistant: Hi there! How can I assist you today?
   `); // empty line
@@ -15,7 +15,7 @@ test('parse conversation', () => {
     },
   ]);
 
-  body = func.parseConversation(`System: You are a funny assistant.
+  body = func._parseConversation(`System: You are a funny assistant.
   User: Hello
   User:  tell me a joke
   User:
@@ -25,7 +25,7 @@ test('parse conversation', () => {
     { role: 'user', content: 'Hello\ntell me a joke\n\n' },
   ]);
 
-  body = func.parseConversation(`
+  body = func._parseConversation(`
     User:  tell me a joke
     Assistant: Why don't scientists trust atoms? Because they make up everything!
     Assistant: Why did the scarecrow win an award? Because he was outstanding in his field!
@@ -41,7 +41,7 @@ test('parse conversation', () => {
     { role: 'user', content: 'more' },
   ]);
 
-  body = func.parseConversation(`
+  body = func._parseConversation(`
   User: hi
 
   Assistant: Hello!
@@ -54,7 +54,7 @@ test('parse conversation', () => {
     { role: 'user', content: 'how are you?\n' },
   ]);
 
-  body = func.parseConversation(`
+  body = func._parseConversation(`
       Assistant: No, the **Apple M4 CPU** does not natively support **FP8 (8-bit floating point)**.
 
   ---
@@ -75,7 +75,7 @@ test('parse conversation', () => {
     },
   ]);
 
-  body = func.parseConversation(`
+  body = func._parseConversation(`
   Assistant: Hello!
   User:
   `);
@@ -86,13 +86,13 @@ test('parse conversation', () => {
 });
 
 test('prepare conversation', () => {
-  let body = func.prepareConversation1(`System: You are a funny assistant.
+  let body = func._prepareConversation1(`System: You are a funny assistant.
   Assistant: Hello!
   User:
   `); // empty line
   expect(body).toBe(null);
 
-  body = func.prepareConversation1(
+  body = func._prepareConversation1(
     `
 
   User:  tell me a joke
@@ -119,7 +119,7 @@ test('prepare conversation', () => {
     lines: { before: 0, after: 0 },
   });
 
-  body = func.prepareConversation1(`System: You are a helpful assistant.
+  body = func._prepareConversation1(`System: You are a helpful assistant.
     User: hi
 
     Assistant: Hello!
@@ -136,7 +136,7 @@ test('prepare conversation', () => {
     lines: { before: 1, after: 1 },
   });
 
-  body = func.prepareConversation1(`System: You are a helpful assistant.
+  body = func._prepareConversation1(`System: You are a helpful assistant.
 
 User: Does an Apple M4 CPU hardware support FP8 ?
 
@@ -170,7 +170,7 @@ Assistant: No, the **Apple M4 CPU** does not natively support **FP8 (8-bit float
 });
 
 test('parse LLM eval', () => {
-  let body = func.parseQAC(
+  let body = func._parseQAC(
     `
 Q: hi!
 A: Hello!
@@ -195,40 +195,4 @@ All good?
     { q: '2 + 2 = ?', c: '4', a: '' },
     { q: 'who are you?', c: '', a: '' },
   ]);
-});
-
-test('LLM calc result metric', () => {
-  console.log(func.calcScore('Paris is the capital city of France', 'The capital of France is Paris'));
-  console.log(func.calcScore('London is the capital of France', 'The capital of France is Paris'));
-  console.log(func.calcScore('London is the capital of England', 'The capital of France is Paris'));
-
-  // --
-  console.log(func.calcScore('Yes (US), Yes (Ireland)', 'Yes. Yes.'));
-  console.log(func.calcScore('Yes (US), No (Ireland)', 'Yes. Yes.'));
-
-  // --
-  console.log(
-    func.calcScore('Flour is not in water, it is made from grains', 'No, flour is made from grinding grains')
-  );
-
-  // --
-  console.log(func.calcScore('In 2003, the President of the United States was George W. Bush', 'George W Bush'));
-
-  // --
-  console.log(func.calcScore("The letter 'L' appears 4 times in 'lollapalooza'", '4 times'));
-  console.log(func.calcScore("The letter 'L' appears 3 times in 'lollapalooza'", '4 times'));
-
-  // --
-  console.log(
-    func.calcScore(
-      `Let's calculate step by step:
-1. You started with 15 muffins.
-2. You ate 2 muffins, so 15 - 2 = 13 muffins left.
-3. You gave 5 muffins to a neighbor, so 13 - 5 = 8 muffins left.
-4. Your friend bought 6 more muffins, so 8 + 6 = 14 muffins.
-5. Your friend ate 2 muffins, so 14 - 2 = 12 muffins.
-You now have 12 muffins.`,
-      '12 muffins'
-    )
-  );
 });

@@ -281,6 +281,4 @@ smith :: smith(_s,_a,meta)
 
 neo :: neo(_s,_a,meta)
 
-getRandomDialog :: getRandomDialog()
-
 skeleton :: skeleton(_,args,meta)

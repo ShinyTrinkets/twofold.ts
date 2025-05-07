@@ -4,6 +4,7 @@
 
 import { editSave } from '../index.ts';
 import { templite } from '../util.ts';
+import { log } from '../logger.ts';
 
 interface HistoryMessage {
   role: string;
@@ -36,7 +37,7 @@ export async function ai(
     }
   }
 
-  const histAndLines = prepareConversation1(templite(text, args));
+  const histAndLines = _prepareConversation1(templite(text, args));
   if (!histAndLines || histAndLines.history.length === 0) return;
   const linesBefore = '\n'.repeat(histAndLines.lines.before > 0 ? histAndLines.lines.before + 1 : 1);
   const linesAfter = '\n'.repeat(histAndLines.lines.after > 0 ? histAndLines.lines.after : 1);
@@ -57,8 +58,12 @@ export async function ai(
     await editSave(meta);
   };
 
-  let content = await makeRequest(apiUrl, body, args, onSave);
-  if (!content) return;
+  let content = await _makeRequest(apiUrl, body, args, onSave);
+  if (!content) {
+    meta.node.children[0].rawText = `\n${text}`;
+    await editSave(meta);
+    return;
+  }
 
   return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
 }
@@ -163,7 +168,7 @@ function makeBody(body: Record<string, any>, args: Record<string, any>) {
   }
 }
 
-export async function makeRequest(
+export async function _makeRequest(
   apiUrl: string,
   body: Record<string, any>,
   args: Record<string, any>,
@@ -190,11 +195,11 @@ export async function makeRequest(
     });
     if (!response.ok) {
       const err = await response.text();
-      console.error('Bad HTTP status:', response.status, response.statusText, err);
+      log.error('Bad HTTP status:', response.status, response.statusText, err);
       return;
     }
   } catch (error) {
-    console.error('Error calling model API:', error);
+    log.error('Error calling model API:', error);
     return;
   }
 
@@ -217,7 +222,7 @@ export async function makeRequest(
           const data: Record<string, any> = JSON.parse(line.slice(5));
           delta = data.choices[0].delta?.content;
         } catch (error: any) {
-          console.error('Error parsing message as JSON:', error.message, 'Stream:', JSON.stringify(line.slice(5)));
+          log.error('Error parsing JSON:', error.message, 'Stream:', JSON.stringify(line.slice(5)));
         }
         if (delta) {
           content.push(delta);
@@ -228,25 +233,27 @@ export async function makeRequest(
     }
     process.stdout.write('\n');
     // Finally, polish the response
-    return normResponse(content.join('').trim());
+    return _normResponse(content.join('').trim());
   } else {
+    // Non-streaming/ blocking response
     const data: Record<string, any> = await response.json();
     if (data.error) {
-      console.error('Error from model API:', data.error);
+      log.error('Error from model API:', data.error);
       return;
     }
+
     const content = data.choices[0].message.content.trim();
     if (content === '') {
-      console.error('Empty response from model');
+      log.error('Empty response from model');
       return;
     }
 
     // Finally, polish the response
-    return normResponse(content);
+    return _normResponse(content);
   }
 }
 
-export function parseConversation(text: string): HistoryMessage[] {
+export function _parseConversation(text: string): HistoryMessage[] {
   const messages: HistoryMessage[] = [];
   let currentRole: string = 'system';
   let currentContent: string[] = [];
@@ -291,8 +298,8 @@ export function parseConversation(text: string): HistoryMessage[] {
   return messages;
 }
 
-export function prepareConversation1(text: string): null | HistoryAndLines {
-  const history = parseConversation(text);
+export function _prepareConversation1(text: string): null | HistoryAndLines {
+  const history = _parseConversation(text);
   if (history.length === 0) return null;
   {
     const lastMessage = history.at(-1);
@@ -342,7 +349,7 @@ export function prepareConversation1(text: string): null | HistoryAndLines {
   return { history, lines };
 }
 
-export function normResponse(text: string): string {
+function _normResponse(text: string): string {
   // Remove blank <think> tags
   text = text.replace(/<think>[ \n]*?<\/think>/, '').trimStart();
 

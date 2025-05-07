@@ -1,4 +1,4 @@
-export function getRandomDialog() {
+function getRandomDialog() {
   const dialog = ['MORE!', 'Mooore!!', 'We need more!', 'More of me!', 'More, more, more!'];
   const randomIndex = Math.floor(Math.random() * dialog.length);
   return dialog[randomIndex];
