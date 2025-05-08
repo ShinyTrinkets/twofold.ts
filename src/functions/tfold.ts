@@ -1,10 +1,13 @@
 /**
  * TwoFold useful tags.
  */
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { parseNumber } from './common.ts';
 import { editSave } from '../index.ts';
 import { templite } from '../util.ts';
+import { extractFunctions } from '../docs.ts';
 import * as logger from '../logger.ts';
 
 export function set() {
@@ -123,7 +126,43 @@ export async function slowSave(s: string, args: any, meta: any) {
   }
 }
 
-export function debug(_: string, args: any, meta: any) {
+export function jsDocs(_: string, args: any, meta: any): string | undefined {
+  /**
+   * Scan a file or directory for TypeScript function declarations.
+   */
+  const fpath = args['0'] || args.z || args.f;
+  let fstat;
+  try {
+    fstat = fs.statSync(fpath);
+  } catch (err: any) {
+    logger.log.error(err.message);
+    return;
+  }
+  const results = [];
+  if (fstat.isFile()) {
+    results.push(...extractFunctions(fpath));
+  } else if (fstat.isDirectory()) {
+    for (const fname of fs.readdirSync(fpath)) {
+      results.push(...extractFunctions(path.join(fpath, fname)));
+    }
+  } else {
+    logger.log.error('Unknown path type:', fstat);
+    return;
+  }
+  let text = '\n\n';
+  for (const { funcName, args, docs } of results) {
+    text += `## ${funcName} (${args})\n\n`;
+    if (docs) {
+      text += docs.replace(/^\s*\* ?/gm, '').trim();
+    } else {
+      text += 'No documentation.';
+    }
+    text += `\n\n---\n\n`;
+  }
+  return text;
+}
+
+export function debug(_: string, args: any, meta: any): string {
   /**
    * A tag used for DEV, to echo the parsed tag metadata.
    */

@@ -5,7 +5,7 @@
  * @param rowString - The raw string for a single table row.
  * @returns An array of trimmed cell strings.
  */
-export function parseRow(rowString: string): string[] {
+export function _parseRow(rowString: string): string[] {
   // Split by the pipe character '|'
   const cells = rowString.split('|');
 
@@ -27,15 +27,12 @@ function padCell(str: string, length: number): string {
   return str.padEnd(length, ' ');
 }
 
-/**
- * Beautifies an ASCII table string into a Markdown formatted table string.
- * It aligns columns based on the widest content in each column and adds
- * the Markdown separator line. It's robust against extra spaces and pipes.
- *
- * @param asciiTable - A string containing the ASCII table.
- * @returns A string containing the Markdown formatted table, or an empty string if input is invalid.
- */
 export function asciiTable(text: string, args: Record<string, string> = {}): string | undefined {
+  /**
+   * Beautifies an ASCII table string into a Markdown formatted table string.
+   * It aligns columns based on the widest content in each column and adds
+   * the Markdown separator line. It's robust against extra spaces and pipes.
+   */
   text = text.trim();
   if (!text) return;
   const lines = text.split('\n');
@@ -44,7 +41,7 @@ export function asciiTable(text: string, args: Record<string, string> = {}): str
 
   // Parse all rows into arrays of cells
   const processedRows: string[][] = lines
-    .map(parseRow)
+    .map(_parseRow)
     // Filter out any lines that became empty after parsing (e.g., lines with only '|')
     .filter(row => row.length > 0);
 

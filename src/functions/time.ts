@@ -5,11 +5,19 @@
 import { getDate } from './common.ts';
 
 export function now(txtDate: string, { date = null } = {}): string {
+  /**
+   * Returns the current date and time as a string.
+   * The format is YYYY-MM-DD HH:MM:SS ;
+   */
   date = getDate(txtDate || date);
   return date.toISOString().split('.')[0].replace('T', ' ');
 }
 
 export function date(txtDate: string, { date = null } = {}): string {
+  /**
+   * Returns the current date as a string.
+   * The format is YYYY-MM-DD ;
+   */
   date = getDate(txtDate || date);
   return date.toISOString().split('T')[0];
 }
@@ -127,7 +135,7 @@ const zodiacSigns = [
 
 export function zodiacSign(txtDate: string, { date = null, emoji = true } = {}): string {
   /**
-   * Returns an emoji, or the name of the current zodiac sign.
+   * Returns a zodiac sign as emoji, or text.
    */
   date = getDate(txtDate || date);
   const day = date.getDate();

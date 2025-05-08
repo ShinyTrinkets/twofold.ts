@@ -53,6 +53,10 @@ export async function tail(txtFile: string, { f = null, lines = 10 } = {}, meta 
 }
 
 export async function dir(txtDir: string, { d = null, li = '*', space = ' ' } = {}) {
+  /**
+   * List files in a directory. Similar to "ls" command from Linux,
+   * or "dir" command from Windows.
+   */
   let dname = await resolveDirName(d);
   if (!dname) dname = await resolveDirName(txtDir);
   if (!dname) return;

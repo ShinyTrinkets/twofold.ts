@@ -1,18 +1,18 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import { asciiTable, parseRow } from '../src/functions/table.ts';
+import { asciiTable, _parseRow } from '../src/functions/table.ts';
 
 test('parse row', () => {
-  expect(parseRow('A | B | C')).toEqual(['A', 'B', 'C']);
-  expect(parseRow('| A | B | C |')).toEqual(['A', 'B', 'C']);
-  expect(parseRow('  A  |  B  |  C  ')).toEqual(['A', 'B', 'C']);
-  expect(parseRow('A || C')).toEqual(['A', 'C']);
-  expect(parseRow('A |  | C |  ')).toEqual(['A', 'C']);
+  expect(_parseRow('A | B | C')).toEqual(['A', 'B', 'C']);
+  expect(_parseRow('| A | B | C |')).toEqual(['A', 'B', 'C']);
+  expect(_parseRow('  A  |  B  |  C  ')).toEqual(['A', 'B', 'C']);
+  expect(_parseRow('A || C')).toEqual(['A', 'C']);
+  expect(_parseRow('A |  | C |  ')).toEqual(['A', 'C']);
 
-  expect(parseRow('')).toEqual([]);
-  expect(parseRow('|||')).toEqual([]);
-  expect(parseRow('   |   |   ')).toEqual([]);
-  expect(parseRow('| Content |   | More |')).toEqual(['Content', 'More']);
+  expect(_parseRow('')).toEqual([]);
+  expect(_parseRow('|||')).toEqual([]);
+  expect(_parseRow('   |   |   ')).toEqual([]);
+  expect(_parseRow('| Content |   | More |')).toEqual(['Content', 'More']);
 });
 
 test('ascii table', () => {

@@ -5,6 +5,11 @@ function getRandomDialog() {
 }
 
 export function smith(_s: any, _a: any, meta: Record<string, any>) {
+  /**
+   * Agent Smith tag, that creates clones if itself.
+   * Demonstrates how to create a tag with animations,
+   * and how to use the meta object to modify the tree.
+   */
   if (!meta.node.children) {
     meta.node.children = [];
   }
@@ -31,6 +36,11 @@ export function smith(_s: any, _a: any, meta: Record<string, any>) {
 }
 
 export function neo(_s: any, _a: any, meta: Record<string, any>) {
+  /**
+   * Matrix Neo tag, that destroys Smith agents inside it.
+   * Demonstrates how to create a tag with animations,
+   * and how to use the meta object to modify the tree.
+   */
   if (!meta.node.children) {
     meta.node.children = [];
   }

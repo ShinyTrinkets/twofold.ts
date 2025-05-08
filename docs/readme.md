@@ -172,113 +172,429 @@ This option works only with **double tags**.
 
 You can also see this list by running `tfold --tags`.
 
-TODO: Replace this manual list with the auto-generated list, when it's ready...
+This list is generated with the `jsDocs` built-in tag.
 
-Note: The built-in tags are simple and ZERO ext dependencies, just enough to have some tags
+<jsDocs "src/functions">
+
+## lower (text: string)
+
+Lower-case all the text.
+
+---
+
+## upper (text: string)
+
+Upper-case all the text.
+
+---
+
+## titleAll (text: string)
+
+Title case for all the words.
+It would be nice if this was called just "title", but
+there is an HTML tag called "title" already.
+
+---
+
+## trim (text: string)
+
+Trim whitespaces from both ends of the text.
+
+---
+
+## line (len: string, { c = '-' } = {})
+
+Draw a long line, of specified length.
+
+---
+
+## sortLines (text: string, { caseSensitive = false } = {})
+
+Sort lines of text alphabetically.
+By default, the sorting is case insensitive.
+
+---
+
+## asciiTable (text: string, args: Record<string, string> = {})
+
+Beautifies an ASCII table string into a Markdown formatted table string.
+It aligns columns based on the widest content in each column and adds
+the Markdown separator line. It's robust against extra spaces and pipes.
+
+---
+
+## llmEval (text: string, args: Record<string, any> = {})
+
+Evaluate LLM answers, step by step.
+
+---
+
+## set ()
+
+Set (define) one or more variables.
+
+The logic for this tag is in the evaluate tags functions.
+
+---
+
+## ignore ()
+
+When it's a double tag, all tags inside it are protected (frozen).
+This is similar to the freeze=true prop.
+
+The logic for this tag is in the evaluate tags functions.
+
+---
+
+## text (s: string, args: any)
+
+No documentation.
+
+---
+
+## log (_: string, args: any)
+
+A tag used for DEV, that logs the args to the logger.
+
+---
+
+## increment (s: string, { plus = 1 } = {})
+
+Very silly DEV tag, increment the input with a number.
+The increment can be any integer, or float, positive or negative.
+
+---
+
+## countDown (s: string, args: any, meta: any)
+
+Experimental: Tick tick tick!
+
+---
+
+## spinner (_: string, args: any, meta: any)
+
+Experimental: Spinner.
+
+---
+
+## slowSave (s: string, args: any, meta: any)
+
+IT'S HACKY: demonstrates how to save intermediate results,
+while the tag function is still running.
+
+---
+
+## jsDocs (_: string, args: any, meta: any)
+
+Scan a file or directory for TypeScript function declarations.
+
+---
+
+## debug (_: string, args: any, meta: any)
+
+A tag used for DEV, to echo the parsed tag metadata.
+
+---
+
+## parseNumber (text: string)
+
+No documentation.
+
+---
+
+## getDate (text: string | Date)
+
+No documentation.
+
+---
+
+## randomChoice (choices: any[])
+
+No documentation.
+
+---
+
+## resolveFileName (fname: string)
+
+No documentation.
+
+---
+
+## resolveDirName (dname: string)
+
+No documentation.
+
+---
+
+## jsEval (expr: string, args: Record<string, string> = {})
+
+Eval JavaScript and return the result.
+This uses the builtin eval function from Bun.
+
+---
+
+## pyEval (expr: string, args: Record<string, any> = {})
+
+Eval Python and return the result. Useful for Math.
+Python is installed in most Linux distributions and on MacOS.
+
+---
+
+## rbEval (expr: string, args: Record<string, any> = {})
+
+Eval Ruby expression and return the result. Useful for Math.
+
+---
+
+## perlEval (expr: string, args: Record<string, any> = {})
+
+Eval Perl expression and return the result. Useful for Math.
+
+---
+
+## randomFloat (txtMax: string, { min = 1, max = 100, decimals = 2 })
+
+Generate a random float number.
+Returns a pseudo-random float in the range min–max (inclusive of min, but not max).
+
+---
+
+## randomInt (txtMax: string, { min = 1, max = 100 })
+
+Generate a random integer number.
+Returns a pseudo-random integer in the range min–max (inclusive of min, but not max).
+
+---
+
+## yesOrNo ()
+
+Random Yes or No.
+
+---
+
+## leftOrRight (_, { emoji = true } = {})
+
+Random left or right (arrow, or text).
+
+---
+
+## upOrDown (_, { emoji = true } = {})
+
+Random up or down arrow (arrow, or text).
+
+---
+
+## randomSlice ()
+
+Random quadrant (the quarter of a pizza).
+
+---
+
+## randomDice ()
+
+Random die from 1 to 6.
+
+---
+
+## randomCard (_, { nr = 0 } = {})
+
+Fetch one, or more random game cards.
+Aces, Twos, Threes, Fours, Fives, Sixes, Sevens, Eights, Nines, Tens,
+Jacks, Queens, Kings
+Spades (♠) Hearts (♥) Diamonds (♦) Clubs (♣)
+
+---
+
+## shuffle (text: string, { lines = false, words = false } = {})
+
+Experimental: will animate forever!
+Shuffle the text.
+If lines is true, shuffle the lines.
+If words is true, shuffle the words.
+
+---
+
+## ai (text: string, args: Record<string, any> = {}, meta: Record<string, any> = {})
+
+Chat with a local or remote LLM.
+
+---
+
+## req (txtUrl: string, { url = '', headers = {} })
+
+Make an HTTP request.
+
+---
+
+## globe (_: string, args: any, meta: any)
+
+Draws an ASCII globe, frame by frame.
+Demonstrates how to create a tag with animations,
+and how to use the meta object to modify the tree.
+
+---
+
+## cat (txtFile: string, { f = null, start = 0, limit = 250 } = {}, meta = {})
+
+Read a file with limit. Similar to "cat" commant from Linux.
+
+---
+
+## head (txtFile: string, { f = null, lines = 10 } = {}, meta = {})
+
+Read a number of lines from file. Similar to "head" commant from Linux.
+
+---
+
+## tail (txtFile: string, { f = null, lines = 10 } = {}, meta = {})
+
+Read a number of lines from the end of file. Similar to "tail" commant from Linux.
+
+---
+
+## dir (txtDir: string, { d = null, li = '*', space = ' ' } = {})
+
+List files in a directory. Similar to "ls" command from Linux,
+or "dir" command from Windows.
+
+---
+
+## cmd (txtCmd: string, { cmd, args = [] }, _meta: Record<string, any> = {})
+
+Execute a system command and return the output, without spawning a shell;
+you probably want to use Bash, or Zsh instead of this.
+
+In Node.js, this could be done with execa, zx, child_process, etc.
+In Bun, you just need to call Bun.spawn(...)
+https://bun.sh/docs/api/spawn
+
+---
+
+## sh (txtCmd: string, { cmd, args = [], t = 5 })
+
+Spawn SH and execute command, with options and timeout.
+Example: <sh "ps aux | grep sh | grep -v grep" //>
+Is this SH ? <sh "echo $0" //>
+
+---
+
+## bash (txtCmd: string, { cmd, args = [], t = 5 })
+
+Spawn Bash and execute command, with options and timeout.
+Example: <bash "ps aux | grep bash | grep -v grep" //>
+Is this Bash ? <bash "echo $0" //>
+
+---
+
+## zsh (txtCmd: string, { cmd, args = [], t = 5 })
+
+Spawn ZSH and execute command, with options and timeout.
+Example: <zsh "ps aux | grep zsh | grep -v grep" //>
+The version of ZSH : <zsh args="--version" //>
+
+---
+
+## skeleton (_: string, args: any, meta: any)
+
+Draws a cute skeleton, frame by frame.
+Demonstrates how to create a tag with animations,
+and how to use the meta object to modify the tree.
+
+---
+
+## fmtYapf (pyTxt: string, { based_on_style = 'pep8', column_limit = 120 }, meta = {})
+
+Format Python code with YAPF. Of course, YAPF needs to be installed.
+YAPF is called within a Shell to allow it to read local config files, ENV options, etc.
+
+---
+
+## fmtBlack (pyTxt: string, args: any, meta = {})
+
+Format Python code with Black. Of course, Black needs to be installed.
+Black is called within a Shell to allow it to read local config files, ENV options, etc.
+
+---
+
+## fmtBlue (pyTxt: string, args: any, meta = {})
+
+Format Python code with Blue. Of course, Blue needs to be installed.
+Blue is called within a Shell to allow it to read local config files, ENV options, etc.
+
+---
+
+## fmtPrettier (text: string, { print_width = 120 }, meta = {})
+
+Format Javascript code with Prettier. Of course, Prettier needs to be installed.
+Prettier is called within a Shell to allow it to read local config files.
+
+---
+
+## smith (_s: any, _a: any, meta: Record<string, any>)
+
+Agent Smith tag, that creates clones if itself.
+Demonstrates how to create a tag with animations,
+and how to use the meta object to modify the tree.
+
+---
+
+## neo (_s: any, _a: any, meta: Record<string, any>)
+
+Matrix Neo tag, that destroys Smith agents inside it.
+Demonstrates how to create a tag with animations,
+and how to use the meta object to modify the tree.
+
+---
+
+## now (txtDate: string, { date = null } = {})
+
+Returns the current date and time as a string.
+The format is YYYY-MM-DD HH:MM:SS ;
+
+---
+
+## date (txtDate: string, { date = null } = {})
+
+Returns the current date as a string.
+The format is YYYY-MM-DD ;
+
+---
+
+## dayOrNight (txtDate: string, { date = null, splitHour = 6 } = {})
+
+Returns the text: day or night.
+
+---
+
+## emojiSunMoon (txtDate: string, { date = null, splitHour = 6 } = {})
+
+Returns an emoji representing day or night.
+Day=☀️ ; Night=🌙 ;
+
+---
+
+## emojiDayNight (txtDate: string, { date = null, splitHour = 6 } = {})
+
+Returns an emoji representing day or night.
+Day=🏙 ; Night=🌃 ;
+
+---
+
+## emojiClock (txtDate: string, { date = null, showHalf = true } = {})
+
+Returns the current time as emoji clock.
+
+---
+
+## zodiacSign (txtDate: string, { date = null, emoji = true } = {})
+
+Returns a zodiac sign as emoji, or text.
+
+---
+
+</jsDocs>
+
+**Note**: The built-in tags are simple and ZERO ext dependencies, just enough to have some tags
 available to start with. There are extra tags available in the
 [twofold-extras](https://github.com/ShinyTrinkets/twofold-extras) repository. You can of course,
 write your own tags, and load them with the `--funcs` cmd line switch.
-
-upper :: upper(text)
-
-trim :: trim(text)
-
-titleAll :: titleAll(text)
-
-sortLines :: sortLines(text,{caseSensitive=false}={})
-
-lower :: lower(text)
-
-line :: line(len,{c="-"}={})
-
-yesOrNo :: yesOrNo()
-
-upOrDown :: upOrDown(_,{emoji=true}={})
-
-shuffle :: shuffle(text,{lines=false,words=false}={})
-
-randomSlice :: randomSlice()
-
-randomInt :: randomInt(txtMax,{min=1,max=100})
-
-randomFloat :: randomFloat(txtMax,{min=1,max=100,decimals=2})
-
-randomDice :: randomDice()
-
-randomCard :: randomCard(_,{nr:nr2=0}={})
-
-leftOrRight :: leftOrRight(_,{emoji=true}={})
-
-zodiacSign :: zodiacSign(txtDate,{date:date2=null,emoji=true}={})
-
-now :: now(txtDate,{date=null}={})
-
-emojiSunMoon :: emojiSunMoon(txtDate,{date:date2=null,splitHour=6}={})
-
-emojiDayNight :: emojiDayNight(txtDate,{date:date2=null,splitHour=6}={})
-
-emojiClock :: emojiClock(txtDate,{date:date2=null,showHalf=true}={})
-
-dayOrNight :: dayOrNight(txtDate,{date:date2=null,splitHour=6}={})
-
-date :: date(txtDate,{date:date2=null}={})
-
-tail :: tail(txtFile,{f=null,lines=10}={},meta={})
-
-head :: head(txtFile,{f=null,lines=10}={},meta={})
-
-dir :: dir(txtDir,{d=null,li="*",space=" "}={})
-
-cat :: cat(txtFile,{f=null,start=0,limit=250}={},meta={})
-
-fmtYapf :: fmtYapf(pyTxt,{based_on_style="pep8",column_limit=120},meta={})
-
-fmtPrettier :: fmtPrettier(text,{print_width=120},meta={})
-
-fmtBlue :: fmtBlue(pyTxt,args,meta={})
-
-fmtBlack :: fmtBlack(pyTxt,args,meta={})
-
-zsh :: zsh(txtCmd,{cmd:cmd2,args=[],t=5})
-
-sh :: sh(txtCmd,{cmd:cmd2,args=[],t=5})
-
-cmd :: cmd(txtCmd,{cmd:cmd2,args=[]},_meta={})
-
-bash :: bash(txtCmd,{cmd:cmd2,args=[],t=5})
-
-asciiTable :: asciiTable(text,args={})
-
-req :: req(txtUrl,{url:url2="",headers={}})
-
-rbEval :: rbEval(expr,args={})
-
-pyEval :: pyEval(expr,args={})
-
-perlEval :: perlEval(expr,args={})
-
-jsEval :: jsEval(expr,args={})
-
-ai :: ai(text,args={},meta={})
-
-llmEval :: llmEval(text,args={})
-
-text :: text(s,args)
-
-set :: set()
-
-log :: log(_,args)
-
-increment :: increment(s,{plus=1}={})
-
-ignore :: ignore()
-
-debug :: debug(text2,args,meta)
-
-countDown :: countDown(s,args,meta)
-
-smith :: smith(_s,_a,meta)
-
-neo :: neo(_s,_a,meta)
-
-skeleton :: skeleton(_,args,meta)
