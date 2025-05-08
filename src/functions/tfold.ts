@@ -123,7 +123,7 @@ export async function slowSave(s: string, args: any, meta: any) {
   }
 }
 
-export function debug(text: string, args: any, meta: any) {
+export function debug(_: string, args: any, meta: any) {
   /**
    * A tag used for DEV, to echo the parsed tag metadata.
    */
@@ -147,8 +147,8 @@ export function debug(text: string, args: any, meta: any) {
   const isDouble = meta.node.double || meta.node.parent.double;
   args = JSON.stringify(args, null, ' ');
   meta = JSON.stringify(meta, null, ' ');
-  text = `---\nText: ${text}\nArgs: ${args}\nMeta: ${meta}\n---`;
 
+  let text = `---\nArgs: ${args}\nMeta: ${meta}\n---`;
   if (isDouble) text = '\n' + text + '\n';
   return text;
 }

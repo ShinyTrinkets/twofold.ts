@@ -1,6 +1,6 @@
 # TwoFold (2✂︎f)
 
-[![Project name][project-img]][project-url]
+[![Project name][project-img]][project-url] [![CLI app][cli-img]](#)
 
 <!-- deno-fmt-ignore-start -->
 
@@ -172,5 +172,6 @@ For creating your own tags, read the **[Tags development](/docs/dev-tags.md) doc
 
 [MIT](LICENSE) © Shiny Trinkets.
 
-[project-img]: https://badgen.net/badge/%E2%AD%90/Trinkets/4B0082
+[cli-img]: https://badgen.net/static/❯_/CLI/101016
+[project-img]: https://badgen.net/static/%E2%AD%90/Trinkets/4B0082
 [project-url]: https://github.com/ShinyTrinkets

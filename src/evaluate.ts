@@ -158,20 +158,62 @@ export default async function evaluateTag(
   }
 
   if (tag.name === 'set' && tag.params) {
-    if (tag.params['0']) {
-      const group = tag.params['0'];
+    if (tag.params['0'] || tag.params.z) {
+      // Set (define) one or more variables inside the group
+      const group = tag.params['0'] || tag.params.z;
       delete tag.params['0'];
+      delete tag.params.z;
       if (!customData[group]) {
         customData[group] = {};
       }
-      // Set (define) one or more variables inside the group
+      // the new variables are added to the group
       for (const k of Object.keys(tag.params)) {
         customData[group][k] = tag.params[k];
       }
     } else {
-      // Set (define) one or more variables
-      for (const k of Object.keys(tag.params)) {
-        customData[k] = tag.params[k];
+      // Set (define) one or more variables globally
+      for (const [k, v] of Object.entries(tag.params)) {
+        customData[k] = v;
+      }
+    }
+  } else if (tag.name === 'json') {
+    if (tag.params && (tag.params['0'] || tag.params.z)) {
+      // Set (define) JSON data inside the group
+      const group = tag.params['0'] || tag.params.z;
+      delete tag.params['0'];
+      delete tag.params.z;
+      try {
+        const data = JSON.parse(getText(tag as DoubleTag));
+        if (typeof data !== 'object' || Array.isArray(data)) {
+          // Not an object, data is overwritten
+          customData[group] = data;
+        } else {
+          if (!customData[group]) {
+            customData[group] = {};
+          }
+          // Object, new variables are added to the group
+          customData[group] = Object.assign(customData[group], data);
+        }
+      } catch (err: any) {
+        log.warn(`Cannot parse JSON group tag!`, err.message);
+      }
+    } else {
+      // Set (define) JSON object globally
+      const text = tag.params?.['0'] || tag.params?.z || getText(tag as DoubleTag);
+      if (text) {
+        try {
+          const data = JSON.parse(text);
+          if (typeof data !== 'object' || Array.isArray(data)) {
+            log.warn(`Cannot use JSON tag! ERROR:`, 'Not an object');
+          } else {
+            // must be an object
+            for (const [k, v] of Object.entries(data)) {
+              customData[k] = v;
+            }
+          }
+        } catch (err: any) {
+          log.warn(`Cannot parse JSON glob tag!`, err.message);
+        }
       }
     }
   }

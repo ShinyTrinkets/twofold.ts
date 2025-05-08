@@ -24,6 +24,9 @@ export async function ai(
   args: Record<string, any> = {},
   meta: Record<string, any> = {}
 ): Promise<string | undefined> {
+  /**
+   * Chat with a local or remote LLM.
+   */
   text = text.trimStart();
   if (text.trim() === '') return;
 

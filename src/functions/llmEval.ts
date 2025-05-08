@@ -18,6 +18,9 @@ interface HistoryQAC {
 }
 
 export async function llmEval(text: string, args: Record<string, any> = {}) {
+  /**
+   * Evaluate LLM answers, step by step.
+   */
   text = text.trimStart();
   if (text.trim() === '') return;
 
@@ -68,7 +71,7 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
   for (const item of history) {
     if (item.q === msg.content) {
       item.a = response;
-      if (truth) item.s = calcScore(response, truth);
+      if (truth) item.s = _calcScore(response, truth);
       break;
     }
   }
@@ -375,7 +378,7 @@ export function _calcCosineSimilarity(response: string, truth: string): number {
   return result;
 }
 
-export function calcScore(response: string, truth: string): string {
+export function _calcScore(response: string, truth: string): string {
   const LEVENSHTEIN_WEIGHT = 0.1;
   const FACTUAL_WEIGHT = 0.4;
   const JACCARD_WEIGHT = 0.25;
