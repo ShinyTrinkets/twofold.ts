@@ -182,7 +182,13 @@ export async function _makeRequest(
     'Content-Type': 'application/json',
     'X-Title': 'TwoFold (2xf)',
   };
-  if (process.env.AI_API_KEY) {
+
+  // If the user specified the name of the API key ENV
+  // Never use the API key directly in the text !
+  if (args.keyName && process.env[args.keyName]) {
+    // @ts-ignore Authorization is OK
+    headers.Authorization = `Bearer ${process.env[args.keyName]}`;
+  } else if (process.env.AI_API_KEY) {
     // @ts-ignore Authorization is OK
     headers.Authorization = `Bearer ${process.env.AI_API_KEY}`;
   }

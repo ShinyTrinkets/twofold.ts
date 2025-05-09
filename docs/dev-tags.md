@@ -27,8 +27,8 @@ As a double tag, it can be called like this:
 ```md
 Some text. **<increment>1</increment>**.
 
-In this case ^, the function will receive the params: s='1'. The result will be 2, written inside
-the tag.
+In this case ^, the function will receive the params: s='1', innerText='1'. The result will be 2,
+written inside the tag.
 
 More text. **<increment '2' plus=3>4</increment>**.
 

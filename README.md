@@ -55,6 +55,15 @@ where "myFolder" will be a local folder with TypeScript/ JavaScript files.<br/> 
 TwoFold is not published on NPM, because it's not working with Node.js. Therefore, you have to
 download it and launch it with [Bun](https://bun.sh).
 
+Running with Bunx (similar to Npx):
+
+```sh
+bunx https://github.com/ShinyTrinkets/twofold.ts --help
+```
+
+You can download pre-built executabled for every platform at:
+https://github.com/ShinyTrinkets/twofold.ts/releases/latest/
+
 Git clone and run example:
 
 ```sh
@@ -76,13 +85,13 @@ cd twofold.ts-main
 bun tfold --help
 ```
 
-You can also build a standalone executable and use it instead of the code, it takes less than a
-second:
+Once you have the source, you can build a standalone executable and use it instead of the code, it
+takes less than a second:
 
 ```sh
-bun build ./src/cli.ts --compile --outfile tfold
+bun build ./src/cli.ts --compile --production --outfile tfold
 
-tfold --help
+./tfold --help
 ```
 
 You can move the executable anywhere you need, eg: `/usr/local/bin/`.

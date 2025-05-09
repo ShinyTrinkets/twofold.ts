@@ -23,7 +23,8 @@ All tags can be called in camelCase (eg: `<emojiClock />`), or separated by unde
 `<emoji_clock />`).
 
 You can customize the tag markers, so you can make them look like jinja2, nunjucks (eg:
-`{emojiClock %}`), or like LISP (eg: `(emojiClock .)`), etc.
+`{emojiClock %}`), or like LISP (eg: `(emojiClock .)`), or with square brackets (eg:
+`[emojiClock !]`), etc.
 
 The built-in tags are located in `/src/functions/` and are available automatically. To create extra
 tags, make a folder eg: "mkdir myFuncs" and create your TypeScript/ JavaScript files and expose the
@@ -190,9 +191,8 @@ Upper-case all the text.
 
 ## titleAll (text: string)
 
-Title case for all the words.
-It would be nice if this was called just "title", but
-there is an HTML tag called "title" already.
+Title case for all the words. It would be nice if this was called just "title", but there is an HTML
+tag called "title" already.
 
 ---
 
@@ -210,16 +210,15 @@ Draw a long line, of specified length.
 
 ## sortLines (text: string, { caseSensitive = false } = {})
 
-Sort lines of text alphabetically.
-By default, the sorting is case insensitive.
+Sort lines of text alphabetically. By default, the sorting is case insensitive.
 
 ---
 
 ## asciiTable (text: string, args: Record<string, string> = {})
 
-Beautifies an ASCII table string into a Markdown formatted table string.
-It aligns columns based on the widest content in each column and adds
-the Markdown separator line. It's robust against extra spaces and pipes.
+Beautifies an ASCII table string into a Markdown formatted table string. It aligns columns based on
+the widest content in each column and adds the Markdown separator line. It's robust against extra
+spaces and pipes.
 
 ---
 
@@ -239,8 +238,8 @@ The logic for this tag is in the evaluate tags functions.
 
 ## ignore ()
 
-When it's a double tag, all tags inside it are protected (frozen).
-This is similar to the freeze=true prop.
+When it's a double tag, all tags inside it are protected (frozen). This is similar to the
+freeze=true prop.
 
 The logic for this tag is in the evaluate tags functions.
 
@@ -260,8 +259,8 @@ A tag used for DEV, that logs the args to the logger.
 
 ## increment (s: string, { plus = 1 } = {})
 
-Very silly DEV tag, increment the input with a number.
-The increment can be any integer, or float, positive or negative.
+Very silly DEV tag, increment the input with a number. The increment can be any integer, or float,
+positive or negative.
 
 ---
 
@@ -279,8 +278,7 @@ Experimental: Spinner.
 
 ## slowSave (s: string, args: any, meta: any)
 
-IT'S HACKY: demonstrates how to save intermediate results,
-while the tag function is still running.
+IT'S HACKY: demonstrates how to save intermediate results, while the tag function is still running.
 
 ---
 
@@ -328,15 +326,14 @@ No documentation.
 
 ## jsEval (expr: string, args: Record<string, string> = {})
 
-Eval JavaScript and return the result.
-This uses the builtin eval function from Bun.
+Eval JavaScript and return the result. This uses the builtin eval function from Bun.
 
 ---
 
 ## pyEval (expr: string, args: Record<string, any> = {})
 
-Eval Python and return the result. Useful for Math.
-Python is installed in most Linux distributions and on MacOS.
+Eval Python and return the result. Useful for Math. Python is installed in most Linux distributions
+and on MacOS.
 
 ---
 
@@ -354,15 +351,15 @@ Eval Perl expression and return the result. Useful for Math.
 
 ## randomFloat (txtMax: string, { min = 1, max = 100, decimals = 2 })
 
-Generate a random float number.
-Returns a pseudo-random float in the range min–max (inclusive of min, but not max).
+Generate a random float number. Returns a pseudo-random float in the range min–max (inclusive of
+min, but not max).
 
 ---
 
 ## randomInt (txtMax: string, { min = 1, max = 100 })
 
-Generate a random integer number.
-Returns a pseudo-random integer in the range min–max (inclusive of min, but not max).
+Generate a random integer number. Returns a pseudo-random integer in the range min–max (inclusive of
+min, but not max).
 
 ---
 
@@ -398,19 +395,15 @@ Random die from 1 to 6.
 
 ## randomCard (_, { nr = 0 } = {})
 
-Fetch one, or more random game cards.
-Aces, Twos, Threes, Fours, Fives, Sixes, Sevens, Eights, Nines, Tens,
-Jacks, Queens, Kings
-Spades (♠) Hearts (♥) Diamonds (♦) Clubs (♣)
+Fetch one, or more random game cards. Aces, Twos, Threes, Fours, Fives, Sixes, Sevens, Eights,
+Nines, Tens, Jacks, Queens, Kings Spades (♠) Hearts (♥) Diamonds (♦) Clubs (♣)
 
 ---
 
 ## shuffle (text: string, { lines = false, words = false } = {})
 
-Experimental: will animate forever!
-Shuffle the text.
-If lines is true, shuffle the lines.
-If words is true, shuffle the words.
+Experimental: will animate forever! Shuffle the text. If lines is true, shuffle the lines. If words
+is true, shuffle the words.
 
 ---
 
@@ -428,9 +421,8 @@ Make an HTTP request.
 
 ## globe (_: string, args: any, meta: any)
 
-Draws an ASCII globe, frame by frame.
-Demonstrates how to create a tag with animations,
-and how to use the meta object to modify the tree.
+Draws an ASCII globe, frame by frame. Demonstrates how to create a tag with animations, and how to
+use the meta object to modify the tree.
 
 ---
 
@@ -454,109 +446,99 @@ Read a number of lines from the end of file. Similar to "tail" commant from Linu
 
 ## dir (txtDir: string, { d = null, li = '*', space = ' ' } = {})
 
-List files in a directory. Similar to "ls" command from Linux,
-or "dir" command from Windows.
+List files in a directory. Similar to "ls" command from Linux, or "dir" command from Windows.
 
 ---
 
 ## cmd (txtCmd: string, { cmd, args = [] }, _meta: Record<string, any> = {})
 
-Execute a system command and return the output, without spawning a shell;
-you probably want to use Bash, or Zsh instead of this.
+Execute a system command and return the output, without spawning a shell; you probably want to use
+Bash, or Zsh instead of this.
 
-In Node.js, this could be done with execa, zx, child_process, etc.
-In Bun, you just need to call Bun.spawn(...)
-https://bun.sh/docs/api/spawn
+In Node.js, this could be done with execa, zx, child_process, etc. In Bun, you just need to call
+Bun.spawn(...) https://bun.sh/docs/api/spawn
 
 ---
 
 ## sh (txtCmd: string, { cmd, args = [], t = 5 })
 
-Spawn SH and execute command, with options and timeout.
-Example: <sh "ps aux | grep sh | grep -v grep" //>
-Is this SH ? <sh "echo $0" //>
+Spawn SH and execute command, with options and timeout. Example: <sh "ps aux | grep sh | grep -v
+grep" //> Is this SH ? <sh "echo $0" //>
 
 ---
 
 ## bash (txtCmd: string, { cmd, args = [], t = 5 })
 
-Spawn Bash and execute command, with options and timeout.
-Example: <bash "ps aux | grep bash | grep -v grep" //>
-Is this Bash ? <bash "echo $0" //>
+Spawn Bash and execute command, with options and timeout. Example: <bash "ps aux | grep bash | grep
+-v grep" //> Is this Bash ? <bash "echo $0" //>
 
 ---
 
 ## zsh (txtCmd: string, { cmd, args = [], t = 5 })
 
-Spawn ZSH and execute command, with options and timeout.
-Example: <zsh "ps aux | grep zsh | grep -v grep" //>
-The version of ZSH : <zsh args="--version" //>
+Spawn ZSH and execute command, with options and timeout. Example: <zsh "ps aux | grep zsh | grep -v
+grep" //> The version of ZSH : <zsh args="--version" //>
 
 ---
 
 ## skeleton (_: string, args: any, meta: any)
 
-Draws a cute skeleton, frame by frame.
-Demonstrates how to create a tag with animations,
-and how to use the meta object to modify the tree.
+Draws a cute skeleton, frame by frame. Demonstrates how to create a tag with animations, and how to
+use the meta object to modify the tree.
 
 ---
 
 ## fmtYapf (pyTxt: string, { based_on_style = 'pep8', column_limit = 120 }, meta = {})
 
-Format Python code with YAPF. Of course, YAPF needs to be installed.
-YAPF is called within a Shell to allow it to read local config files, ENV options, etc.
+Format Python code with YAPF. Of course, YAPF needs to be installed. YAPF is called within a Shell
+to allow it to read local config files, ENV options, etc.
 
 ---
 
 ## fmtBlack (pyTxt: string, args: any, meta = {})
 
-Format Python code with Black. Of course, Black needs to be installed.
-Black is called within a Shell to allow it to read local config files, ENV options, etc.
+Format Python code with Black. Of course, Black needs to be installed. Black is called within a
+Shell to allow it to read local config files, ENV options, etc.
 
 ---
 
 ## fmtBlue (pyTxt: string, args: any, meta = {})
 
-Format Python code with Blue. Of course, Blue needs to be installed.
-Blue is called within a Shell to allow it to read local config files, ENV options, etc.
+Format Python code with Blue. Of course, Blue needs to be installed. Blue is called within a Shell
+to allow it to read local config files, ENV options, etc.
 
 ---
 
 ## fmtPrettier (text: string, { print_width = 120 }, meta = {})
 
-Format Javascript code with Prettier. Of course, Prettier needs to be installed.
-Prettier is called within a Shell to allow it to read local config files.
+Format Javascript code with Prettier. Of course, Prettier needs to be installed. Prettier is called
+within a Shell to allow it to read local config files.
 
 ---
 
 ## smith (_s: any, _a: any, meta: Record<string, any>)
 
-Agent Smith tag, that creates clones if itself.
-Demonstrates how to create a tag with animations,
+Agent Smith tag, that creates clones if itself. Demonstrates how to create a tag with animations,
 and how to use the meta object to modify the tree.
 
 ---
 
 ## neo (_s: any, _a: any, meta: Record<string, any>)
 
-Matrix Neo tag, that destroys Smith agents inside it.
-Demonstrates how to create a tag with animations,
-and how to use the meta object to modify the tree.
+Matrix Neo tag, that destroys Smith agents inside it. Demonstrates how to create a tag with
+animations, and how to use the meta object to modify the tree.
 
 ---
 
 ## now (txtDate: string, { date = null } = {})
 
-Returns the current date and time as a string.
-The format is YYYY-MM-DD HH:MM:SS ;
+Returns the current date and time as a string. The format is YYYY-MM-DD HH:MM:SS ;
 
 ---
 
 ## date (txtDate: string, { date = null } = {})
 
-Returns the current date as a string.
-The format is YYYY-MM-DD ;
+Returns the current date as a string. The format is YYYY-MM-DD ;
 
 ---
 
@@ -568,15 +550,13 @@ Returns the text: day or night.
 
 ## emojiSunMoon (txtDate: string, { date = null, splitHour = 6 } = {})
 
-Returns an emoji representing day or night.
-Day=☀️ ; Night=🌙 ;
+Returns an emoji representing day or night. Day=☀️ ; Night=🌙 ;
 
 ---
 
 ## emojiDayNight (txtDate: string, { date = null, splitHour = 6 } = {})
 
-Returns an emoji representing day or night.
-Day=🏙 ; Night=🌃 ;
+Returns an emoji representing day or night. Day=🏙 ; Night=🌃 ;
 
 ---
 
