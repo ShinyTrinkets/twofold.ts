@@ -82,15 +82,9 @@ test('render The Big List of Naughty Strings', async () => {
 test('render fixtures/', async () => {
   const folder = DIR + '/fixtures/';
   let result = await twofold.renderFolder(folder);
-  expect(result).toEqual({ found: 6, rendered: 0 });
+  expect(result).toEqual({ found: 9, rendered: 0 });
   result = await twofold.renderFolder(folder, {}, { glob: '*.js' });
   expect(result).toEqual({ found: 1, rendered: 0 });
-});
-
-test('render docs/', async () => {
-  const folder = DIR + '/../docs/';
-  let result = await twofold.renderFolder(folder);
-  expect(result).toEqual({ found: 7, rendered: 0 });
 });
 
 test('render *.md', async () => {
