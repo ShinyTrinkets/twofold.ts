@@ -24,12 +24,24 @@ const TESTS = [
   ['<tag t="` />', [{ index: 0, rawText: '<tag t="` />' }]],
   ['<tag t=\'" />', [{ index: 0, rawText: '<tag t=\'" />' }]],
   ['<tag t=`"" />', [{ index: 0, rawText: '<tag t=`"" />' }]],
-  ['<tag123456789012345678901234567890A123456789 />', [{
-    index: 0, rawText: '<tag123456789012345678901234567890A123456789 />',
-  }]],
-  ['<tag ab123456789012345678901234567890A1234567890=1 />', [{
-    index: 0, rawText: '<tag ab123456789012345678901234567890A1234567890=1 />',
-  }]],
+  [
+    '<tag123456789012345678901234567890A123456789 />',
+    [
+      {
+        index: 0,
+        rawText: '<tag123456789012345678901234567890A123456789 />',
+      },
+    ],
+  ],
+  [
+    '<tag ab123456789012345678901234567890A1234567890=1 />',
+    [
+      {
+        index: 0,
+        rawText: '<tag ab123456789012345678901234567890A1234567890=1 />',
+      },
+    ],
+  ],
   ['<  xY >', [{ index: 0, rawText: '<  xY >' }]], // max 1 space allowed before tag name
   ['<h1></  h1>', [{ index: 0, rawText: '<h1></  h1>' }]],
   ['<   xY  >', [{ index: 0, rawText: '<   xY  >' }]],
@@ -37,22 +49,10 @@ const TESTS = [
   ['<x1>', [{ index: 0, rawText: '<x1>', name: 'x1', double: true }]], // unfinished double tag
   ['< x>', [{ index: 0, rawText: '< x>', name: 'x', double: true }]],
   ['<x >', [{ index: 0, rawText: '<x >', name: 'x', double: true }]],
-  [
-    '<xY1/>',
-    [{ index: 0, rawText: '<xY1/>', name: 'xY1', single: true }],
-  ],
-  [
-    '< x/>',
-    [{ index: 0, rawText: '< x/>', name: 'x', single: true }],
-  ],
-  [
-    '<x />',
-    [{ index: 0, rawText: '<x />', name: 'x', single: true }],
-  ],
-  [
-    '<x  />',
-    [{ index: 0, rawText: '<x  />', name: 'x', single: true }],
-  ],
+  ['<xY1/>', [{ index: 0, rawText: '<xY1/>', name: 'xY1', single: true }]],
+  ['< x/>', [{ index: 0, rawText: '< x/>', name: 'x', single: true }]],
+  ['<x />', [{ index: 0, rawText: '<x />', name: 'x', single: true }]],
+  ['<x  />', [{ index: 0, rawText: '<x  />', name: 'x', single: true }]],
   [
     'q <X/> a',
     [{ index: 0, rawText: 'q <X/> a' }], // this is raw-text
@@ -121,10 +121,7 @@ const TESTS = [
     '0</ tag',
     [{ index: 0, rawText: '0</ tag' }], // this is raw-text
   ],
-  [
-    '<<<x<<<',
-    [{ index: 0, rawText: '<<<x<<<' }],
-  ],
+  ['<<<x<<<', [{ index: 0, rawText: '<<<x<<<' }]],
   [
     '<< tag <<',
     [{ index: 0, rawText: '<< tag <<' }], // this is raw-text
@@ -133,20 +130,20 @@ const TESTS = [
     '</ tag <',
     [{ index: 0, rawText: '</ tag <' }], // this is raw-text
   ],
-  ['<tag t=""" />', [{ index: 0, rawText: '<tag t=""" />' }] // this is raw-text (escaped quotes not supported)
+  [
+    '<tag t=""" />',
+    [{ index: 0, rawText: '<tag t=""" />' }], // this is raw-text (escaped quotes not supported)
   ],
   [
     '<echo text="\n" />',
     [{ index: 0, rawText: '<echo text="\n" />' }], // raw-text (newline not allowed in param values)
   ],
-  [ // test ZERO tags
+  [
+    // test ZERO tags
     '<a "1" />',
     [{ name: 'a', params: { 0: '1' }, rawText: '<a "1" />', single: true, index: 0 }],
   ],
-  [
-    '<a ` ` />',
-    [{ name: 'a', params: { 0: ' ' }, rawText: '<a ` ` />', single: true, index: 0 }],
-  ],
+  ['<a ` ` />', [{ name: 'a', params: { 0: ' ' }, rawText: '<a ` ` />', single: true, index: 0 }]],
   [
     '<a "`" /><a `"` />',
     [
@@ -158,13 +155,13 @@ const TESTS = [
     '<a "1" "2" />', // only 1 zero tag allowed
     [{ index: 0, rawText: '<a "1" "2" />' }],
   ],
-  [
-    '<a "1" "" /> <a "1" `` />',
-    [{ index: 0, rawText: '<a "1" "" /> <a "1" `` />' }],
-  ],
+  ['<a "1" "" /> <a "1" `` />', [{ index: 0, rawText: '<a "1" "" /> <a "1" `` />' }]],
   [
     '<a "1" ""></a>',
-    [{ index: 0, rawText: '<a "1" "">' }, { index: 10,  double: true, name: 'a', rawText: '</a>' }],
+    [
+      { index: 0, rawText: '<a "1" "">' },
+      { index: 10, double: true, name: 'a', rawText: '</a>' },
+    ],
   ],
   [
     '<a \'\' /> <ls `` /> <ping "" />',
@@ -186,29 +183,31 @@ const TESTS = [
   ],
   [
     '< ls "-la" extra="h x" />',
-    [{
-      index: 0,
-      name: 'ls',
-      params: { 0: '-la', extra: 'h x' },
-      rawText: '< ls "-la" extra="h x" />',
-      single: true,
-    }],
+    [
+      {
+        index: 0,
+        name: 'ls',
+        params: { 0: '-la', extra: 'h x' },
+        rawText: '< ls "-la" extra="h x" />',
+        single: true,
+      },
+    ],
   ],
   [
     '<sort dir=>/><sort dir=//>',
     [
       {
         index: 0,
-        name: "sort",
-        params: { dir: ">" },
-        rawText: "<sort dir=>/>",
+        name: 'sort',
+        params: { dir: '>' },
+        rawText: '<sort dir=>/>',
         single: true,
       },
       {
         index: 13,
-        rawText: "<sort dir=//>",
-      }
-    ]
+        rawText: '<sort dir=//>',
+      },
+    ],
   ],
   [
     '<sort dir=>></sort>',
@@ -302,11 +301,11 @@ const TESTS = [
     ],
   ],
   [
-    `<echo j1='[1, 2]' j2="[2, 3]" />`, // JSON values
+    '<echo j1=`[1, 2]` j2=`[2, 3]` />', // JSON values
     [
       {
         index: 0,
-        rawText: `<echo j1='[1, 2]' j2="[2, 3]" />`,
+        rawText: '<echo j1=`[1, 2]` j2=`[2, 3]` />',
         name: 'echo',
         single: true,
         params: {
@@ -347,17 +346,32 @@ const TESTS = [
     ],
   ],
   [
-    '<\tdayOrNight date=`2019-07` void=null false=false true=true\t/>', // convert to JS types
+    // convert to JS types
+    // undefined is not a JSON type
+    '<\tdayOrNight date="2019-07" void=null f=false t=true u=undefined\t/>',
     [
       {
         index: 0,
         name: 'dayOrNight',
-        params: { date: '2019-07', void: null, false: false, true: true },
-        rawText: '<\tdayOrNight date=`2019-07` void=null false=false true=true\t/>',
+        params: { date: '2019-07', void: null, f: false, t: true, u: 'undefined' },
+        rawText: '<\tdayOrNight date="2019-07" void=null f=false t=true u=undefined\t/>',
         single: true,
       },
     ],
   ],
+  // [
+  //   // convert to JS function
+  //   '<test fn=`(x)=> x.trim()` />',
+  //   [
+  //     {
+  //       index: 0,
+  //       name: 'test',
+  //       params: { fn: x => x.trim() },
+  //       rawText: '<test fn=`(x)=> x.trim()` />',
+  //       single: true,
+  //     },
+  //   ],
+  // ],
   [
     '<temp_f>0</temp_f>',
     [

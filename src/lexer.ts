@@ -18,6 +18,7 @@ const isSpace = (char: string) => char === ' ' || char === '\t';
 const isQuote = (char: string) => char === "'" || char === '"' || char === '`';
 
 // lower latin + greek alphabet letters
+// the beginning of a tag name, or param name
 const isLowerLetter = (code: number) => {
   return (
     (code >= 97 && code <= 122) || // a-z
@@ -26,6 +27,7 @@ const isLowerLetter = (code: number) => {
   );
 };
 // arabic numbers, all latin + greek alphabet
+// inside the tag name, or param name
 const isAllowedAlpha = (code: number) => {
   return (
     (code >= 48 && code <= 57) || // 0-9
@@ -37,7 +39,18 @@ const isAllowedAlpha = (code: number) => {
   );
 };
 const MAX_NAME_LEN = 42;
-const MAYBE_JSON_VAL = /['"`][{\[].*[}\]]['"`]$/;
+const MAYBE_JSON_VAL = /^`[{[].*[}\]]`$/;
+const MAYBE_JS_FUNC = /^`\((.*?)\)\s*=>\s*(.*)`$/;
+
+function stringToFunction(params: string, body: string): Function {
+  body = body.trim();
+  // If body is a block (starts with {), assume it has a return statement
+  // If not, wrap it in a return statement
+  if (!body.startsWith('{')) {
+    body = `return ${body};`;
+  }
+  return new Function(...params.split(',').map(p => p.trim()), body);
+}
 
 /**
  * A lexer is a state machine.
@@ -132,7 +145,7 @@ export default class Lexer {
       transition(newState);
     };
 
-    const commitTag = (quote = false) => {
+    const commitTag = () => {
       /*
        * Commit pending tag key + value as a dict
        * and delete the temporary variables.
@@ -141,33 +154,38 @@ export default class Lexer {
       // log.info('Commit TAG:', quote, this.state, pending)
       const key = pending.param_key!;
       let value = pending.param_value!;
-      if (quote && value && value.length > 2) {
-        if (MAYBE_JSON_VAL.test(value)) {
-          value = value.slice(1, -1);
-        } else {
-          value = JSON.stringify(value.slice(1, -1));
-        }
-      } else if (quote) {
-        value = '""';
-      }
-      // This bit can be improved
-      try {
-        // Try to convert string value into Object
-        // @ts-ignore JSON value
-        value = JSON.parse(value);
-      } catch {
-        if (MAYBE_JSON_VAL.test(value)) {
-          try {
-            // Remove quotes and try again
-            // @ts-ignore JSON value
-            value = JSON.parse(value.slice(1, -1));
-          } catch {
-            /* No need to handle the error */
+      if (key) {
+        if (value) {
+          // If the value is a number, or boolean, or null,
+          // convert it to an actual JS value
+          if (!isQuote(value[0]) && !isQuote(value.at(-1)!)) {
+            try {
+              // @ts-ignore JSON value
+              value = JSON.parse(value);
+            } catch {
+              // log.error('Cannot parse param value:', key, value)
+            }
+          } else if (value.length > 5 && MAYBE_JS_FUNC.test(value)) {
+            // If the value looks like a JS function,
+            // convert it to an actual JS function
+            const match = value.match(MAYBE_JS_FUNC);
+            if (match && match[1] && match[2]) {
+              // @ts-ignore JSON value
+              value = stringToFunction(match[1], match[2]);
+            }
+          } else if (value.length > 2 && MAYBE_JSON_VAL.test(value)) {
+            // If the value looks like a JSON array or object,
+            // convert it to an actual JS value
+            try {
+              // @ts-ignore JSON value
+              value = JSON.parse(value.slice(1, -1));
+            } catch {
+              // log.error('Cannot parse param value:', key, value)
+            }
+          } else {
+            value = value.slice(1, -1);
           }
         }
-        // log.error('Cannot parse param value:', key, value)
-      }
-      if (key) {
         pending.params![key] = value;
         delete pending.param_key;
         delete pending.param_value;
@@ -353,7 +371,7 @@ export default class Lexer {
         else if (char === getParamValueQuote() && isQuote(char)) {
           pending.rawText += char;
           pending.param_value += char;
-          commitTag(true);
+          commitTag();
           transition(STATE_INSIDE_TAG);
         } // Is this a tag stopper? And the prop value not a string?
         // In this case, it's a single tag
@@ -407,7 +425,10 @@ export default class Lexer {
       const lastProcessed = this._processed[this._processed.length - 1] as LexToken;
       // If the last processed state was an unfinished Tag, create a new raw-text
       if (lastProcessed.name) {
-        this._processed.push({ index: this._pendingState.index, rawText: this._pendingState.rawText });
+        this._processed.push({
+          index: this._pendingState.index,
+          rawText: this._pendingState.rawText,
+        });
       } else {
         // If the last processed state was raw-text, concatenate
         lastProcessed.rawText += this._pendingState.rawText;

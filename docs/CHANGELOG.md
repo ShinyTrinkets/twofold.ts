@@ -2,7 +2,17 @@
 
 ## v0.9 WIP
 
--
+- BREAKING change: JSON props must be wrapped in \`...\`.
+  Before v0.9, they could be wrapped in single or double quotes.
+- experimental: functions can be passes as tag values
+- ai/llm tag is now streaming live inside the file, thanks to the new
+  editSave function, that edits the AST and saves the changes on disk
+- the app is now logging the output, instead of just console.log
+- created "log" tag to log messages using the new logger
+- created "json" tag to define variables available within the file
+- created "jsDocs" tag to auto-generate documentation in docs/readme
+- created Matrix "smith" and "neo" tags, to demonstrate animations,
+  and changing the node properties and children
 
 ## v0.8
 
@@ -19,7 +29,7 @@
 
 - re-enabled the --watch command
 - allow greek and lots of non-latin letters in tag names
-- added an AI chat tag, so you can chat with local or remote LLMs
+- added an AI/LLM chat tag, so you can chat with local or remote LLMs
 - hopefully, the lexer and parser are much faster
 - much better tests & tests compatible with Deno
 

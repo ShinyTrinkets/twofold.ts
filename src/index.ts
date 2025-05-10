@@ -167,6 +167,10 @@ export async function renderFolder(
   return stats;
 }
 
+/**
+ * Edit a file, and save the changes.
+ * This works by editing the AST in place.
+ */
 export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
   const { node } = meta;
   // Reform/ restructure de-synced tag, in place
@@ -175,6 +179,8 @@ export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
   const lexer = new Lexer();
 
   if ((globalThis as any).Bun) {
+    // Tag meta contains the file name
+    // and the path to the node in the AST
     const file = Bun.file(meta.fname);
     let text = await file.text();
     const ast = parse(lexer.lex(text));
@@ -184,6 +190,7 @@ export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
     // Apply the changes to the AST, in place
     deepSet(ast, node.path, node);
     text = ast.map(unParse).join('');
+    // Write the new text to the same file
     file.write(text);
   } else if ((globalThis as any).Deno) {
     let text = await Deno.readTextFile(meta.fname);
