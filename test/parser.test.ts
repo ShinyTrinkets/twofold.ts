@@ -116,6 +116,10 @@ const TESTS = [
           '0': 'bash -c "ls -la"',
           z: 'zzz',
         },
+        rawParams: {
+          '0': '`bash -c "ls -la"`',
+          z: '`zzz`',
+        },
       },
     ],
   ],
@@ -130,6 +134,9 @@ const TESTS = [
         name: 'cmd',
         params: {
           '0': 'bash -c "ls -la"',
+        },
+        rawParams: {
+          '0': '`bash -c "ls -la"`',
         },
       },
     ],
@@ -147,6 +154,10 @@ const TESTS = [
           '0': 'https://httpbin.org/uuid',
           t: 5,
         },
+        rawParams: {
+          '0': '"https://httpbin.org/uuid"',
+          t: '5',
+        },
       },
     ],
   ],
@@ -162,6 +173,9 @@ const TESTS = [
         params: {
           url: 'https://httpbin.org/uuid',
         },
+        rawParams: {
+          url: '"https://httpbin.org/uuid"',
+        },
       },
     ],
   ],
@@ -176,6 +190,7 @@ const TESTS = [
         secondTagText: '</temp>',
         name: 'temp',
         params: { type: 'f', deep: 'no', nr: 3, null: null, false: false },
+        rawParams: { type: 'f', deep: 'no', nr: '3', null: 'null', false: 'false' },
         children: [{ index: 48, rawText: '0' }],
       },
     ],
@@ -400,6 +415,7 @@ const TESTS = [
             firstTagText: '<increment plus=4>',
             secondTagText: '</increment>',
             params: { plus: 4 },
+            rawParams: { plus: '4' },
             children: [{ index: 21, rawText: '6' }],
           },
           { index: 34, rawText: '<sort x=t>\n<//>' },
@@ -476,6 +492,9 @@ const TESTS = [
                 secondTagText: '</h1>',
                 params: {
                   class: 'large',
+                },
+                rawParams: {
+                  class: '"large"',
                 },
                 children: [
                   {

@@ -78,23 +78,33 @@ test('edit tag', () => {
   syncTag(ast[0]);
   expect(unParse(ast[0])).toBe(`<noop a="b" c="d">1 </noop>`);
 
+  ast = parse(new Lexer().lex(`< noop 'x' />`));
+  ast[0].params = { ...ast[0].params, '0': 'y' };
+  syncTag(ast[0]);
+  expect(unParse(ast[0])).toBe(`< noop 'y' />`);
+
   ast = parse(new Lexer().lex('< noop "y" a=a b=b> 1</noop >'));
   ast[0].params = { ...ast[0].params, a: 1, c: false, d: null };
   syncTag(ast[0]);
-  expect(unParse(ast[0])).toBe(`< noop "y" a=1 b="b" c=false d=null> 1</noop >`);
+  expect(unParse(ast[0])).toBe(`< noop "y" a=1 b=b c=false d=null> 1</noop >`);
+
+  ast = parse(new Lexer().lex('<noop x="x" y=`y` z=\'z\' />'));
+  ast[0].params = { ...ast[0].params, a: 0 };
+  syncTag(ast[0]);
+  expect(unParse(ast[0])).toBe('<noop x="x" y=`y` z=\'z\' a=0 />');
 
   ast = parse(new Lexer().lex('<countDown n=5 x=x/>'));
   ast[0].params = { ...ast[0].params, n: 4 };
   syncTag(ast[0]);
-  expect(unParse(ast[0])).toBe(`<countDown n=4 x="x"/>`);
+  expect(unParse(ast[0])).toBe(`<countDown n=4 x=x/>`);
 
-  ast = parse(new Lexer().lex('< countDown n=5 x=0  />'));
+  ast = parse(new Lexer().lex('< countDown n=5 x=-1  />'));
   ast[0].params = { ...ast[0].params, n: 3 };
   syncTag(ast[0]);
-  expect(unParse(ast[0])).toBe(`< countDown n=3 x=0  />`);
+  expect(unParse(ast[0])).toBe(`< countDown n=3 x=-1  />`);
 
   ast = parse(new Lexer().lex(`<someThing 'x' z=z/>`));
   ast[0].params = { ...ast[0].params, 0: 'new' };
   syncTag(ast[0]);
-  expect(unParse(ast[0])).toBe(`<someThing "new" z="z"/>`);
+  expect(unParse(ast[0])).toBe(`<someThing 'new' z=z/>`);
 });

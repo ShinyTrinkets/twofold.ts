@@ -1,4 +1,4 @@
-import { SingleTag, DoubleTag, LexToken, ParseToken } from './types.ts';
+import { DoubleTag, LexToken, ParseToken, SingleTag } from './types.ts';
 
 export const isDoubleTag = (t: LexToken | ParseToken): boolean => !!(t && t.name && t.double);
 export const isSingleTag = (t: LexToken | ParseToken): boolean => !!(t && t.name && t.single && t.rawText);
@@ -76,36 +76,52 @@ export function syncTag(node: ParseToken): void {
   if (isDoubleTag(node)) {
     const openDelimiter = node.firstTagText?.match(/^.[ \t]*/)?.[0];
     const closeDelimiter = node.firstTagText?.match(/[ \t]*.$/)?.[0];
-    const paramStr = formatParams(node.params);
+    const paramStr = formatParams(node.params || {}, node.rawParams || {});
     // In case of double tags, only the firstTagText is updated
     node.firstTagText = `${openDelimiter}${node.name}${paramStr}${closeDelimiter}`;
   } else if (isSingleTag(node)) {
     const openDelimiter = node.rawText?.match(/^.[ \t]*/)?.[0];
     const closeDelimiter = node.rawText?.match(/[ \t]*..$/)?.[0];
-    const paramStr = formatParams(node.params);
+    const paramStr = formatParams(node.params || {}, node.rawParams || {});
     // In case of single tags, only the rawText is updated
     node.rawText = `${openDelimiter}${node.name}${paramStr}${closeDelimiter}`;
   }
 }
 
 // Helper function to format parameters consistently
-function formatParams(params: undefined | Record<string, any>): string {
-  if (!params || Object.keys(params).length === 0) {
+function formatParams(params: Record<string, any>, rawParams: Record<string, string>): string {
+  if (Object.keys(params).length === 0) {
     return '';
   }
 
+  const wrapValue = (value: any, rawValue: string) => {
+    const c1 = rawValue[0] === '"' || rawValue[0] === "'" || rawValue[0] === '`' ? rawValue[0] : '';
+    const c2 =
+      rawValue[rawValue.length - 1] === '"' ||
+      rawValue[rawValue.length - 1] === "'" ||
+      rawValue[rawValue.length - 1] === '`'
+        ? rawValue[rawValue.length - 1]
+        : '';
+    return `${c1}${value}${c2}`;
+  };
+
   let result = '';
   for (const [key, value] of Object.entries(params)) {
+    // Zero key should always be a string
+    // Zero key is also a positional parameter
     if (key === '0') {
-      // Positional parameter
-      if (typeof value === 'string') {
+      if (rawParams[key]) {
+        result += ` ${wrapValue(value, rawParams[key])}`;
+      } else if (typeof value === 'string') {
         result += ` ${JSON.stringify(value)}`;
       } else {
         result += ` "${value}"`;
       }
       continue;
     }
-    if (typeof value === 'number' || typeof value === 'boolean' || value === null || value === undefined) {
+    if (rawParams[key]) {
+      result += ` ${key}=${wrapValue(value, rawParams[key])}`;
+    } else if (typeof value === 'number' || typeof value === 'boolean' || value === null || value === undefined) {
       result += ` ${key}=${value}`;
     } else {
       result += ` ${key}=${JSON.stringify(value)}`;

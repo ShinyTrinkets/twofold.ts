@@ -5,6 +5,7 @@ export interface LexToken {
   single?: boolean;
   double?: boolean;
   params?: Record<string, any>;
+  rawParams?: Record<string, string>;
   param_key?: string;
   param_value?: string;
 }
@@ -17,6 +18,7 @@ export interface ParseToken {
   single?: boolean;
   double?: boolean;
   params?: Record<string, any>;
+  rawParams?: Record<string, string>;
   firstTagText?: string;
   secondTagText?: string;
   children?: ParseToken[];
@@ -31,6 +33,7 @@ export interface SingleTag {
   name: string;
   rawText: string;
   params?: Record<string, any>;
+  rawParams?: Record<string, string>;
   parent?: ParseToken;
 }
 
@@ -44,6 +47,7 @@ export interface DoubleTag {
   secondTagText: string;
   children?: ParseToken[];
   params?: Record<string, any>;
+  rawParams?: Record<string, string>;
   parent?: ParseToken;
 }
 

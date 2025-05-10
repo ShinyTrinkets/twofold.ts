@@ -89,7 +89,6 @@ The result will look like this:
 
 ```js
 ---
-Text: a
 Args: {
  "0": "a",
  "b": "c",
@@ -106,6 +105,11 @@ Meta: {
    "0": "a",
    "b": "c",
    "d": 1
+  },
+  "rawParams": {
+   "0": "'a'",
+   "b": "c",
+   "d": "1"
   },
   "single": true,
   "path": "1",

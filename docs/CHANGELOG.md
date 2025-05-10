@@ -2,8 +2,10 @@
 
 ## v0.9 WIP
 
-- BREAKING change: JSON props must be wrapped in \`...\`.
+- BREAKING change: JSON props must be wrapped in backticks \`...\`.
   Before v0.9, they could be wrapped in single or double quotes.
+- added rawParams for LexTokens, useful to know the type of quotes
+  for each param value; Backticks will be used for string interpolation
 - experimental: functions can be passes as tag values
 - ai/llm tag is now streaming live inside the file, thanks to the new
   editSave function, that edits the AST and saves the changes on disk

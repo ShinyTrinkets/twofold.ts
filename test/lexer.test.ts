@@ -141,14 +141,17 @@ const TESTS = [
   [
     // test ZERO tags
     '<a "1" />',
-    [{ name: 'a', params: { 0: '1' }, rawText: '<a "1" />', single: true, index: 0 }],
+    [{ name: 'a', params: { 0: '1' }, rawParams: { 0: '"1"' }, rawText: '<a "1" />', single: true, index: 0 }],
   ],
-  ['<a ` ` />', [{ name: 'a', params: { 0: ' ' }, rawText: '<a ` ` />', single: true, index: 0 }]],
+  [
+    '<a ` ` />',
+    [{ name: 'a', params: { 0: ' ' }, rawParams: { 0: '` `' }, rawText: '<a ` ` />', single: true, index: 0 }],
+  ],
   [
     '<a "`" /><a `"` />',
     [
-      { index: 0, name: 'a', params: { 0: '`' }, rawText: '<a "`" />', single: true },
-      { index: 9, name: 'a', params: { 0: `"` }, rawText: '<a `"` />', single: true },
+      { index: 0, name: 'a', params: { 0: '`' }, rawParams: { 0: '"`"' }, rawText: '<a "`" />', single: true },
+      { index: 9, name: 'a', params: { 0: `"` }, rawParams: { 0: '`"`' }, rawText: '<a `"` />', single: true },
     ],
   ],
   [
@@ -170,14 +173,14 @@ const TESTS = [
   [
     '<a "1"></a>',
     [
-      { index: 0, rawText: '<a "1">', name: 'a', params: { 0: '1' }, double: true },
+      { index: 0, rawText: '<a "1">', name: 'a', params: { 0: '1' }, rawParams: { 0: '"1"' }, double: true },
       { index: 7, rawText: '</a>', name: 'a', double: true },
     ],
   ],
   [
     '<a z="1"></a>',
     [
-      { index: 0, rawText: '<a z="1">', name: 'a', params: { z: '1' }, double: true },
+      { index: 0, rawText: '<a z="1">', name: 'a', params: { z: '1' }, rawParams: { z: '"1"' }, double: true },
       { index: 9, rawText: '</a>', name: 'a', double: true },
     ],
   ],
@@ -188,6 +191,7 @@ const TESTS = [
         index: 0,
         name: 'ls',
         params: { 0: '-la', extra: 'h x' },
+        rawParams: { 0: '"-la"', extra: '"h x"' },
         rawText: '< ls "-la" extra="h x" />',
         single: true,
       },
@@ -200,6 +204,7 @@ const TESTS = [
         index: 0,
         name: 'sort',
         params: { dir: '>' },
+        rawParams: { dir: '>' },
         rawText: '<sort dir=>/>',
         single: true,
       },
@@ -216,6 +221,7 @@ const TESTS = [
         index: 0,
         name: 'sort',
         params: { dir: '>' },
+        rawParams: { dir: '>' },
         rawText: '<sort dir=>>',
         double: true,
       },
@@ -236,11 +242,18 @@ const TESTS = [
     ],
   ],
   [
-    'blah <αγγελος_αω /><naïveÉcole />',
+    'blah <αγγελος_αω α=ω /><naïveÉcole />',
     [
       { index: 0, rawText: 'blah ' },
-      { index: 5, rawText: '<αγγελος_αω />', name: 'αγγελοςΑω', single: true },
-      { index: 19, rawText: '<naïveÉcole />', name: 'naïveÉcole', single: true },
+      {
+        index: 5,
+        rawText: '<αγγελος_αω α=ω />',
+        name: 'αγγελοςΑω',
+        params: { α: 'ω' },
+        rawParams: { α: 'ω' },
+        single: true,
+      },
+      { index: 23, rawText: '<naïveÉcole />', name: 'naïveÉcole', single: true },
     ],
   ],
   ['<αλφάβητο />', [{ index: 0, single: true, rawText: '<αλφάβητο />', name: 'αλφάβητο' }]],
@@ -281,6 +294,9 @@ const TESTS = [
         params: {
           url: 'https://httpbin.org/uuid',
         },
+        rawParams: {
+          url: '"https://httpbin.org/uuid"',
+        },
       },
     ],
   ],
@@ -297,6 +313,11 @@ const TESTS = [
           text2: "'",
           text3: '',
         },
+        rawParams: {
+          text1: `'"'`,
+          text2: `"'"`,
+          text3: '``',
+        },
       },
     ],
   ],
@@ -311,6 +332,10 @@ const TESTS = [
         params: {
           j1: [1, 2],
           j2: [2, 3],
+        },
+        rawParams: {
+          j1: '`[1, 2]`',
+          j2: '`[2, 3]`',
         },
       },
     ],
@@ -328,6 +353,10 @@ const TESTS = [
           //text2: ' <>// <>',
           text2: '<> //<>',
         },
+        rawParams: {
+          text1: '" <>//<> "',
+          text2: '`<> //<>`',
+        },
       },
     ],
   ],
@@ -339,6 +368,7 @@ const TESTS = [
         index: 1,
         name: 'increment',
         params: { nr1: 99, nr2: 0 },
+        rawParams: { nr1: '99', nr2: '0' },
         rawText: '<increment  nr1=99  nr2=0/>',
         single: true,
       },
@@ -354,8 +384,29 @@ const TESTS = [
         index: 0,
         name: 'dayOrNight',
         params: { date: '2019-07', void: null, f: false, t: true, u: 'undefined' },
+        rawParams: { date: '"2019-07"', void: 'null', f: 'false', t: 'true', u: 'undefined' },
         rawText: '<\tdayOrNight date="2019-07" void=null f=false t=true u=undefined\t/>',
         single: true,
+      },
+    ],
+  ],
+  [
+    '<increment nr=-1>></ increment  >', // negative numbers
+    [
+      {
+        index: 0,
+        name: 'increment',
+        params: { nr: -1 },
+        rawParams: { nr: '-1' },
+        rawText: '<increment nr=-1>',
+        double: true,
+      },
+      { index: 17, rawText: '>' },
+      {
+        index: 18,
+        name: 'increment',
+        rawText: '</ increment  >',
+        double: true,
       },
     ],
   ],
@@ -397,9 +448,8 @@ const TESTS = [
         index: 0,
         double: true,
         name: 'sort',
-        params: {
-          x: 't',
-        },
+        params: { x: 't' },
+        rawParams: { x: 't' },
         rawText: '<sort x=t>',
       },
       { index: 10, rawText: '\n<//>' },
@@ -466,6 +516,7 @@ const TESTS = [
         index: 0,
         name: 'dayOrNight',
         params: { date: '2019-07', emoji: false },
+        rawParams: { date: '"2019-07"', emoji: 'false' },
         rawText: '<dayOrNight date="2019-07" emoji=false>',
         double: true,
       },
@@ -486,30 +537,12 @@ const TESTS = [
         index: 0,
         name: 'increment',
         params: { nr: '5\\\\n' },
+        rawParams: { nr: '"5\\\\n"' },
         rawText: '< increment  nr="5\\\\n"\t>',
         double: true,
       },
       {
         index: 24,
-        name: 'increment',
-        rawText: '</ increment  >',
-        double: true,
-      },
-    ],
-  ],
-  [
-    '<increment nr=-1>></ increment  >', // negative numbers
-    [
-      {
-        index: 0,
-        name: 'increment',
-        params: { nr: -1 },
-        rawText: '<increment nr=-1>',
-        double: true,
-      },
-      { index: 17, rawText: '>' },
-      {
-        index: 18,
         name: 'increment',
         rawText: '</ increment  >',
         double: true,

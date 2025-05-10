@@ -229,6 +229,7 @@ export default async function evaluateTag(
         if (tag.single) c.parent.single = true;
         else if (tag.double) c.parent.double = true;
         c.parent.params = { ...tag.params };
+        if (tag.rawParams) c.parent.rawParams = tag.rawParams;
         // Inject the parsed tag into the function meta
         meta.node = structuredClone(c);
       }

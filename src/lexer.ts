@@ -153,8 +153,10 @@ export default class Lexer {
        */
       // log.info('Commit TAG:', quote, this.state, pending)
       const key = pending.param_key!;
-      let value = pending.param_value!;
+      const origValue = pending.param_value!;
+      let value = origValue;
       if (key) {
+        pending.rawParams![key] = origValue;
         if (value) {
           // If the value is a number, or boolean, or null,
           // convert it to an actual JS value
@@ -295,6 +297,7 @@ export default class Lexer {
         else if (!pending.params && isQuote(char)) {
           pending.rawText += char;
           pending.params = {};
+          pending.rawParams = {};
           pending.param_key = '0';
           pending.param_value = char;
           transition(STATE_VALUE);
@@ -307,6 +310,7 @@ export default class Lexer {
           pending.rawText += char;
           if (!pending.params) {
             pending.params = {};
+            pending.rawParams = {};
           }
           pending.param_key = char;
           transition(STATE_PARAM);
@@ -331,6 +335,7 @@ export default class Lexer {
           // Abandon current state, back to raw text
           delete pending.name;
           delete pending.params;
+          delete pending.rawParams;
           delete pending.param_key;
           pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
@@ -346,6 +351,7 @@ export default class Lexer {
           // Abandon current state, back to raw text
           delete pending.name;
           delete pending.params;
+          delete pending.rawParams;
           delete pending.param_key;
           pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
@@ -355,6 +361,7 @@ export default class Lexer {
         // Newline not allowed inside prop values (really?)
         if (char === '\n') {
           delete pending.params;
+          delete pending.rawParams;
           delete pending.param_key;
           delete pending.param_value;
           pending.rawText += char;
@@ -363,6 +370,7 @@ export default class Lexer {
         // Eg: {cmd ""}, {exec ""}, or {ping ""} don't make sense
         else if (char === getParamValueQuote() && pending.param_key === '0' && pending.param_value!.length === 1) {
           delete pending.params;
+          delete pending.rawParams;
           delete pending.param_key;
           delete pending.param_value;
           pending.rawText += char;
