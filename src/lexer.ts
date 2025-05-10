@@ -376,7 +376,7 @@ export default class Lexer {
           pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         } // Is this a valid closing quote?
-        else if (char === getParamValueQuote() && isQuote(char)) {
+        else if (char === getParamValueQuote() && isQuote(char) && pending.param_value!.at(-1) !== '\\') {
           pending.rawText += char;
           pending.param_value += char;
           commitTag();

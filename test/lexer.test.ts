@@ -322,6 +322,28 @@ const TESTS = [
     ],
   ],
   [
+    // test escaped quotes
+    `<echo text1='\\'' text2="\\"" text3=\`\\\`\` />`,
+    [
+      {
+        index: 0,
+        rawText: `<echo text1='\\'' text2="\\"" text3=\`\\\`\` />`,
+        name: 'echo',
+        single: true,
+        params: {
+          text1: "\\'",
+          text2: '\\"',
+          text3: '\\`',
+        },
+        rawParams: {
+          text1: "'\\''",
+          text2: '"\\""',
+          text3: '`\\``',
+        },
+      },
+    ],
+  ],
+  [
     '<echo j1=`[1, 2]` j2=`[2, 3]` />', // JSON values
     [
       {
