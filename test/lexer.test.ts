@@ -432,19 +432,6 @@ const TESTS = [
       },
     ],
   ],
-  // [
-  //   // convert to JS function
-  //   '<test fn=`(x)=> x.trim()` />',
-  //   [
-  //     {
-  //       index: 0,
-  //       name: 'test',
-  //       params: { fn: x => x.trim() },
-  //       rawText: '<test fn=`(x)=> x.trim()` />',
-  //       single: true,
-  //     },
-  //   ],
-  // ],
   [
     '<temp_f>0</temp_f>',
     [

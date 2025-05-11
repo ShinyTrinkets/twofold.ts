@@ -40,17 +40,6 @@ const isAllowedAlpha = (code: number) => {
 };
 const MAX_NAME_LEN = 42;
 const MAYBE_JSON_VAL = /^`[{[].*[}\]]`$/;
-const MAYBE_JS_FUNC = /^`\((.*?)\)\s*=>\s*(.*)`$/;
-
-function stringToFunction(params: string, body: string): Function {
-  body = body.trim();
-  // If body is a block (starts with {), assume it has a return statement
-  // If not, wrap it in a return statement
-  if (!body.startsWith('{')) {
-    body = `return ${body};`;
-  }
-  return new Function(...params.split(',').map(p => p.trim()), body);
-}
 
 /**
  * A lexer is a state machine.
@@ -166,14 +155,6 @@ export default class Lexer {
               value = JSON.parse(value);
             } catch {
               // log.error('Cannot parse param value:', key, value)
-            }
-          } else if (value.length > 5 && MAYBE_JS_FUNC.test(value)) {
-            // If the value looks like a JS function,
-            // convert it to an actual JS function
-            const match = value.match(MAYBE_JS_FUNC);
-            if (match && match[1] && match[2]) {
-              // @ts-ignore JSON value
-              value = stringToFunction(match[1], match[2]);
             }
           } else if (value.length > 2 && MAYBE_JSON_VAL.test(value)) {
             // If the value looks like a JSON array or object,

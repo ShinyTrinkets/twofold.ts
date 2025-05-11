@@ -7,7 +7,6 @@
 - added rawParams for LexTokens, useful to know the type of quotes
   for each param value; Backticks are used for string interpolation
 - can now expand/ interpolate variables inside prop values
-- experimental: functions can be passes as tag values
 - ai/llm tag is now streaming live inside the file, thanks to the new
   editSave function, that edits the AST and saves the changes on disk
 - the app is now logging the output, instead of just console.log

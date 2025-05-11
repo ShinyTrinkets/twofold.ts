@@ -281,6 +281,13 @@ test('variable interpolation', async () => {
   });
   expect(tmp).toBe(txt);
 
+  // Functions in interpolation; Doesn't work yet
+  // vars = {};
+  // txt = "<set trim=`(x)=>x.trim()`/><set name=' John ' nameTrim=`${trim(name)}`/>";
+  // tmp = await twofold.renderText(txt, vars,);
+  // expect(vars).toEqual({ trim: "(x)=>x.trim()", name: ' John ', nameTrim: 'John' });
+  // expect(tmp).toBe(txt);
+
   // Rewriting same variable with interpolation
   vars = {};
   txt = '<set a="a"/><set a=`${a}+${a}`/><set a=`${a}-${a}`/><chk/>';
