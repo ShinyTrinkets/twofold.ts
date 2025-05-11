@@ -228,6 +228,15 @@ Evaluate LLM answers, step by step.
 
 ---
 
+## ignore ()
+
+When it's a double tag, all tags inside it are protected (frozen). This is similar to the
+freeze=true prop.
+
+The logic for this tag is in the evaluate tags functions.
+
+---
+
 ## set ()
 
 Set (define) one or more variables.
@@ -236,10 +245,9 @@ The logic for this tag is in the evaluate tags functions.
 
 ---
 
-## ignore ()
+## json ()
 
-When it's a double tag, all tags inside it are protected (frozen). This is similar to the
-freeze=true prop.
+Set (define) variables from a JSON object.
 
 The logic for this tag is in the evaluate tags functions.
 

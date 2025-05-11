@@ -10,6 +10,16 @@ import { templite } from '../util.ts';
 import { extractFunctions } from '../docs.ts';
 import * as logger from '../logger.ts';
 
+export function ignore() {
+  /**
+   * When it's a double tag, all tags inside it are protected (frozen).
+   * This is similar to the freeze=true prop.
+   *
+   * The logic for this tag is in the evaluate tags functions.
+   */
+  return;
+}
+
 export function set() {
   /**
    * Set (define) one or more variables.
@@ -19,10 +29,9 @@ export function set() {
   return;
 }
 
-export function ignore() {
+export function json() {
   /**
-   * When it's a double tag, all tags inside it are protected (frozen).
-   * This is similar to the freeze=true prop.
+   * Set (define) variables from a JSON object.
    *
    * The logic for this tag is in the evaluate tags functions.
    */
