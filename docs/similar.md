@@ -25,10 +25,10 @@ I was blown away when I discovered Cog! Such a simple idea: write the template c
 result, all in the same file! However, I wasn't too excited about the syntax used for the tags; to
 me, it looks complicated and I don't like the visible Python code inside, so I never got to use it.
 
-TwoFold uses XML-like tags to execute code, and inserts the output back into the original file, but
-only in the case of double-tags. The single-tags are consumed after render, making them perfect for
-interactive use. The tags are short and intuitive, but the source code for the tag is not visible
-(but it should be open source!) which makes the original text much cleaner.
+TwoFold uses XML/LISP-like tags to execute code, and inserts the output back into the original file,
+but only in the case of double-tags. The single-tags are consumed after render, making them perfect
+for interactive use. The tags are short and intuitive, but the source code for the tag is not
+visible (but it should be open source!) which makes the original text much cleaner.
 
 ---
 
@@ -58,15 +58,15 @@ Also similar: https://github.com/albinotonnina/mmarkdown
 > a string) from the code in a block will be interpreted and replaced to the block in the output
 > file.
 
-> Mmarkdown seems to be unmaintained for the last 5 years, but maybe it's finished and it doesn't
+> Mmarkdown seems to be unmaintained for the last 7 years, but maybe it's finished and it doesn't
 > need updates.
 
 Mmarkdown is a very simple app, very focused on running JS code snippets inside Markdown files. It
 uses REGEX to find the mmd fenced blocks.
 
-TwoFold is a more general templating application, the tags look like XML tags, so you don't actually
-see the JS code, which makes the original text much cleaner. TwoFold also has consumable single-tags
-and deeply nested tags.
+TwoFold is a more general templating application, the tags look like XML/LISP tags, so you don't
+actually see the JS code, which makes the original text much cleaner. TwoFold also has consumable
+single-tags and deeply nested tags.
 
 ---
 
@@ -86,6 +86,9 @@ that need to be configured with a YAML config.
 TwoFold is a more general templating application, with support for external tags (implemented as
 JavaScript functions) since day 1; all tags have the same power as the core tags. Also TwoFold can
 be used to execute arbitrary commands or code, which makes it more powerful, but also less secure.
+
+Note that Gomplate templates are compatible with TwoFold, so you could render a file with Gomplate
+and send the output in TwoFold for another render, or vice versa.
 
 # Text expanders
 
@@ -147,6 +150,7 @@ Examples:
 - Liquid
 - Mustache
 - Pug
+- React
 - etc, etc
 
 They are based on the same idea that you have template files with raw text and XML-like tags. The
@@ -157,14 +161,15 @@ The template files are used to generate the final text, and are usually larger.
 Because there are 2 types of files, the templates are like a source code, and the generated files
 are like a final product, and the consumer only gets to see the final product.
 
-Template engines are tools made for developers, usually to generate web pages. Their goal is to
-generate the final text.
+Template engines are tools/ libraries made for developers, usually to generate web pages. There is
+not app to use, they are programming libraries that you need to import and integrate inside a larger
+app. Their goal is to generate the final text.
 
 **TwoFold** is a general app and can launch other applications and run arbitrary commands or code,
 depending on the available tags.
 
-TwoFold uses 1 file, both as source and final product; the same user can be the creator and the
-consumer.
+TwoFold is a single binary app and uses one single file, both as source and final product; the same
+user can be the creator and the consumer.
 
 But the biggest difference is that TwoFold parser is designed to never crash. If it crashes, it's a
 bug and must be fixed! TwoFold will just ignore the badly formed/ invalid XML tags, they will not be
