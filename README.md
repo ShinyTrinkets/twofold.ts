@@ -1,6 +1,6 @@
 # TwoFold (2✂︎f)
 
-[![Project name][project-img]][project-url] [![CLI app][cli-img]](#)
+[![Project name][project-img]][project-url] [![CLI app][cli-img]](#) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ShinyTrinkets/twofold.ts)
 
 <!-- deno-fmt-ignore-start -->
 
