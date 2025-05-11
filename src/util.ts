@@ -3,7 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { homedir } from 'node:os';
 import { types } from 'node:util';
-import { log } from './logger.js';
+import { log } from './logger.ts';
 
 // lower latin + greek alphabet letters
 export const LOWER_LETTERS = /^[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]/;

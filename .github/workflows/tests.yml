@@ -1,11 +1,23 @@
 name: Tests
 on: [push]
 jobs:
-  tests:
-    name: Run-tests
+  bun-tests:
+    name: Run Bun tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: ls test/*.test.ts | xargs -I {} sh -c "bun test {} || exit 1"
+
+  deno-tests:
+    name: Run Deno tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+      - run: deno install
+      - run: |
+          deno test -R -S --no-check test/lexer.test.ts && \
+          deno test -R -S --no-check test/parser.test.ts && \
+          deno test -R -S --no-check test/vars.test.ts || exit 1

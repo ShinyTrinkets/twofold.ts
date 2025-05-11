@@ -1,6 +1,10 @@
 # TwoFold (2✂︎f) changelog
 
-## v0.9 WIP
+## v0.10 WIP
+
+- ...
+
+## v0.9
 
 - BREAKING change: JSON props must be wrapped in backticks \`...\`.
   Before v0.9, they could be wrapped in single or double quotes.

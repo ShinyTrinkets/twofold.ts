@@ -1,5 +1,5 @@
 import { lilconfig } from 'lilconfig';
-import { log } from './logger.js';
+import { log } from './logger.ts';
 
 export interface Config {
   openTag?: string;
