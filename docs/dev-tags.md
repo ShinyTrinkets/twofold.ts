@@ -71,6 +71,9 @@ and it will **not replace** the inner text of a double tag.
 For example, the tag `<line />` cannot return anything and is not consumed, because it needs the
 length parameter.
 
+If you try to render any random HTML, or XML file, there will be lots of pseudo-valid tags in there,
+but TwoFold won't execute them, and the HTML, or XML file will not be changed.
+
 When a tag function crashes, the stack trace is written in the TwoFold CLI. I am thinking about
 methods to make the errors more visible to the user. See discussion:
 https://github.com/ShinyTrinkets/twofold.ts/issues/2

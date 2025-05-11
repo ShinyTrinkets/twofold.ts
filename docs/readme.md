@@ -22,15 +22,15 @@ as: text="6" and plus="4".
 All tags can be called in camelCase (eg: `<emojiClock />`), or separated by underline (eg:
 `<emoji_clock />`).
 
-You can customize the tag markers, so you can make them look like jinja2, nunjucks (eg:
-`{emojiClock %}`), or like LISP (eg: `(emojiClock .)`), or with square brackets (eg:
-`[emojiClock !]`), etc.
-
 The built-in tags are located in `/src/functions/` and are available automatically. To create extra
 tags, make a folder eg: "mkdir myFuncs" and create your TypeScript/ JavaScript files and expose the
 functions that you want.<br/> Then run `tfold --funcs myFuncs ...` to point it to your folder. All
 JavaScript files will be scanned and all exposed functions will be available as tags.<br/> You can
 check the `/src/functions/` for examples to get you started.
+
+You can **customize the tag markers**, so you can make them look like jinja2, nunjucks (eg:
+`{emojiClock %}`), or like LISP (eg: `(emojiClock .)`), or with square brackets (eg:
+`[emojiClock !]`), etc.
 
 There are **two types of tags**, and multiple options that make them behave differently. See below.
 
@@ -61,6 +61,8 @@ Example:
 * c
 * b
 </sortLines>
+
+<json "cfg">{ "host": "127.1", "port": 8080, "timeout": 60, "seed": -1 }</json>
 
 <jsEval>
 const x = 1;
@@ -94,8 +96,8 @@ Usually all options are... optional, but they don't always have a default; for e
 or executing an expression **absolutely requires** an expression. When a tag doesn't have all the
 required values, it will not run, and will not be consumed.
 
-If the values contain space, they can be surrounded by a matching single quotes, double quotes, or
-ticks.
+If the values contain space, they can be surrounded by a matching _single quotes_, _double quotes_,
+or backticks.
 
 Examples:
 
@@ -109,8 +111,8 @@ The value can be a text, a number, true/ false, null, or a JavaScript object.
 Examples:
 
 - decimals=2 ---> `2` is a JS number
-- sortLines caseSensitive=true ---> `true` becomes a JS True value
-- sortLines caseSensitive=null ---> `null` becomes a JS Null value
+- sortLines caseSensitive=true ---> `true` becomes a _JS True_ value
+- sortLines caseSensitive=null ---> `null` becomes a _JS Null_ value
 - req "ipinfo.io" headers=`{"User-Agent":"curl/8.0.1"}` ---> the headers become a JS Object
 
 ## Special options
@@ -139,7 +141,7 @@ option, the tag and all its children will never be executed.
 
 To make TwoFold render the tag again, you just need to delete the `freeze=true` prop inside the tag.
 
-You can also use the `<ignore>...</ignore>` tag, to ignore/ lock everything inside.
+You can also wrap tags in `<ignore>...</ignore>`, to ignore/ lock everything inside.
 
 This is useful in case you want to keep the previous text and make sure that TwoFold won't
 accidentally replace it.
@@ -150,6 +152,7 @@ Upper-case.
 Invalid tag examples:
 
 - `<randomCard><//randomCard>` -- notice the double slash
+- `<random Card></randomCard>` -- notice the space inside the tag name
 - `<RandomCard></RandomCard>` -- notice the Upper-case from the name of the tag; TwoFold tags must
   begin with lower-case
 
