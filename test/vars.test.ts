@@ -83,10 +83,10 @@ test('set variable group', async () => {
 
   vars = {};
   // set inner variables
-  txt = `<set 'a'> <set a="a"/><set 'g' b="b"/><chk/> </set>`;
+  txt = `<set 'a'> <set a="a"/><set 'g' b="b"/><set x=0/> <chk/> </set>`;
   tmp = await twofold.renderText(txt, vars, {
     chk: (_t, args) => {
-      expect(args).toEqual({ a: 'a', g: { b: 'b' } });
+      expect(args).toEqual({ a: 'a', x: 0, g: { b: 'b' } });
     },
   });
   expect(tmp).toBe(txt);
@@ -227,4 +227,114 @@ test('set variable group', async () => {
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
+});
+
+test('variable interpolation', async () => {
+  let vars = {};
+  let txt = '<set name=`John`/><set hello=`Hello ${name}!`/>';
+  let tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ name: 'John', hello: 'Hello John!' });
+  expect(tmp).toBe(txt);
+
+  // set variable, chaining interpolation
+  vars = {};
+  txt = '<set a="a" a2=`${a}${a}` a4=`${a2}+${a2}`/><chk val=`!${a4}!`/>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({ a: 'a', a2: 'aa', a4: 'aa+aa', val: '!aa+aa!' });
+    },
+  });
+  expect(tmp).toBe(txt);
+
+  // Set variable group with interpolation
+  vars = {};
+  txt = "<set 'g' x1=2> <set x2=3 /><set 'g' y=`1${g.x1**2}${x2}`/><chk/> </set>";
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({ g: { x1: 2, y: '143' }, x2: 3 });
+    },
+  });
+  expect(vars).toEqual({ g: { x1: 2 } });
+  expect(tmp).toBe(txt);
+
+  // Mixing json and set with interpolation
+  vars = {};
+  txt = `<json "cfg">{
+    "host": "127.1",
+    "port": 8080,
+    "timeout": 60,
+    "seed": -1
+  }</json>
+  <set url=\`http://\${cfg.host}:\${cfg.port}/api\`/> <chk/>`;
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({
+        cfg: {
+          host: '127.1',
+          port: 8080,
+          timeout: 60,
+          seed: -1,
+        },
+        url: 'http://127.1:8080/api',
+      });
+    },
+  });
+  expect(tmp).toBe(txt);
+
+  // Rewriting same variable with interpolation
+  vars = {};
+  txt = '<set a="a"/><set a=`${a}+${a}`/><set a=`${a}-${a}`/><chk/>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({ a: 'a+a-a+a' });
+    },
+  });
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ a: 'a+a-a+a' });
+
+  // Should not crash with broken interpolation
+  vars = {};
+  txt = '<set a="a"/><set a2=`${}` a3=`${/>` a4=`${x}`/><chk/>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({ a: 'a', a2: '${}', a3: '${/>', a4: '${x}' });
+    },
+  });
+  expect(tmp).toBe(txt);
+
+  // Should not crash with broken interpolation, in group
+  vars = {};
+  txt = '<set "g" a="a"/><set "g" a2=`${}` a3=`${/>` a4=`${x}`/><chk/>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({ g: { a: 'a', a2: '${}', a3: '${/>', a4: '${x}' } });
+    },
+  });
+  expect(tmp).toBe(txt);
+
+  // Rewriting same variable with broken interpolation
+  vars = {};
+  txt = '<set a="a"/><set a=`${}`/><chk1/><set a=`${.`/><set a=`${x}`/><chk2/>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk1: (_t, args) => {
+      expect(args).toEqual({ a: '${}' });
+    },
+    chk2: (_t, args) => {
+      expect(args).toEqual({ a: '${x}' });
+    },
+  });
+  expect(tmp).toBe(txt);
+
+  // Rewriting same variable with broken interpolation, in group
+  vars = {};
+  txt = '<set "g" a="a"/><set "g" a=`${}`/><chk1/><set "g" a=`${?`/><set "g" a=`${x}`/><chk2/>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk1: (_t, args) => {
+      expect(args).toEqual({ g: { a: '${}' } });
+    },
+    chk2: (_t, args) => {
+      expect(args).toEqual({ g: { a: '${x}' } });
+    },
+  });
+  expect(tmp).toBe(txt);
 });

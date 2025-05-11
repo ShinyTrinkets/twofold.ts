@@ -139,6 +139,15 @@ async function evaluateDoubleTag(
   }
 }
 
+const shouldInterpolate = function (v: string) {
+  return v.length > 4 && v[0] === '`' && v[v.length - 1] === '`' && v.includes('${') && v.includes('}');
+};
+
+const interpolate = function (args: Record<string, any>, body: string) {
+  const fn = new Function(...Object.keys(args), `{ return ${body} }`);
+  return fn(...Object.values(args));
+};
+
 /**
  * Deep evaluate a tag, by preparing the params and calling
  * the specialized evaluate function.
@@ -157,31 +166,52 @@ export default async function evaluateTag(
     return;
   }
 
+  // The group name for variables
+  const group = tag.params && (tag.params?.['0'] || tag.params?.z);
+
   if (tag.name === 'set' && tag.params) {
-    if (tag.params['0'] || tag.params.z) {
-      // Set (define) one or more variables inside the group
-      const group = tag.params['0'] || tag.params.z;
+    // Set (define) one or more variablßes inside the group
+    if (group) {
       delete tag.params['0'];
       delete tag.params.z;
       if (!customData[group]) {
         customData[group] = {};
       }
-      // the new variables are added to the group
+      // The new variables are added to the group
       for (const k of Object.keys(tag.params)) {
-        customData[group][k] = tag.params[k];
+        let v = tag.params[k];
+        const rawValue = tag.rawParams?.[k];
+        if (rawValue && shouldInterpolate(rawValue)) {
+          try {
+            v = interpolate(customData, rawValue);
+          } catch (err: any) {
+            log.warn(`Cannot interpolate string for ${k}=${rawValue}!`, err.message);
+          }
+        }
+        customData[group][k] = v;
       }
     } else {
-      // Set (define) one or more variables globally
-      for (const [k, v] of Object.entries(tag.params)) {
+      // No group, set (define) one or more variables globally
+      for (const k of Object.keys(tag.params)) {
+        let v = tag.params[k];
+        const rawValue = tag.rawParams?.[k];
+        if (rawValue && shouldInterpolate(rawValue)) {
+          try {
+            v = interpolate(customData, rawValue);
+          } catch (err: any) {
+            log.warn(`Cannot interpolate string for ${k}=${rawValue}!`, err.message);
+          }
+        }
         customData[k] = v;
       }
     }
   } else if (tag.name === 'json') {
-    if (tag.params && (tag.params['0'] || tag.params.z)) {
-      // Set (define) JSON data inside the group
-      const group = tag.params['0'] || tag.params.z;
-      delete tag.params['0'];
-      delete tag.params.z;
+    // Set (define) JSON data inside the group
+    if (group) {
+      if (tag.params) {
+        delete tag.params['0'];
+        delete tag.params.z;
+      }
       try {
         const data = JSON.parse(getText(tag as DoubleTag));
         if (typeof data !== 'object' || Array.isArray(data)) {
@@ -191,7 +221,7 @@ export default async function evaluateTag(
           if (!customData[group]) {
             customData[group] = {};
           }
-          // Object, new variables are added to the group
+          // Object, new variables are merged with the group
           customData[group] = Object.assign(customData[group], data);
         }
       } catch (err: any) {
@@ -199,7 +229,7 @@ export default async function evaluateTag(
       }
     } else {
       // Set (define) JSON object globally
-      const text = tag.params?.['0'] || tag.params?.z || getText(tag as DoubleTag);
+      const text = getText(tag as DoubleTag);
       if (text) {
         try {
           const data = JSON.parse(text);
@@ -216,13 +246,28 @@ export default async function evaluateTag(
         }
       }
     }
+  } else {
+    // Run string interpolation using the rawParams
+    for (const [k, v] of Object.entries(tag.rawParams || {})) {
+      if (shouldInterpolate(v)) {
+        try {
+          if (group) {
+            customData[group][k] = interpolate(customData, v);
+          } else {
+            customData[k] = interpolate(customData, v);
+          }
+        } catch (err: any) {
+          log.warn(`Cannot interpolate string for ${k}=${v}!`, err.message);
+        }
+      }
+    }
   }
 
   // Deep evaluate all children, including invalid TwoFold tags
   if (tag.children) {
     // Make a deep copy of the params, to create
     // a separate variable scope for the children
-    let params = structuredClone({ ...customData, ...tag.params });
+    let params = structuredClone(customData);
     for (const c of tag.children) {
       if (c.name && (c.single || c.double)) {
         c.parent = { name: tag.name, index: tag.index, params: tag.params };
@@ -256,7 +301,7 @@ export default async function evaluateTag(
   }
 
   // Params for the tag come from parsed params and config
-  let params = { ...customData, ...tag.params };
+  let params = { ...tag.params, ...customData };
 
   // Call the specialized evaluate function
   if (isDoubleTag(tag)) {
