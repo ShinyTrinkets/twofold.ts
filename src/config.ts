@@ -4,6 +4,8 @@ import { log } from './logger.ts';
 export interface Config {
   openTag?: string;
   closeTag?: string;
+  openExpr?: string;
+  closeExpr?: string;
   lastStopper?: string;
 }
 
@@ -14,7 +16,7 @@ export interface CliConfig extends Config {
 
 export const defaultCfg: Config = {
   // openTag, closeTag and lastStopper must be
-  // strings of length 1.
+  // strings of length 1. At least for now.
 
   // In <random-int />
   // If you change open-tag to "{" and close-tag to "}"
@@ -30,12 +32,16 @@ export const defaultCfg: Config = {
   // If you change it to "?", it will become: <random-int><?random-int>
   // In double tags, the stopper only affects the start of the last tag
   lastStopper: '/',
+
+  // In single tag: <debug x={a**2} />
+  // If you change last openExpr to "[" and closeExpr to "]",
+  // it will become: <debug x=[a**2] />
+  openExpr: '{',
+  closeExpr: '}',
 };
 
 export const defaultCliCfg: CliConfig = {
-  openTag: '<',
-  closeTag: '>',
-  lastStopper: '/',
+  ...defaultCfg,
 
   // walk-dir scan depth
   depth: 3,
@@ -76,6 +82,9 @@ export function validateCfg(cfg: CliConfig) {
   }
   if (cfg.closeTag && cfg.openTag && cfg.closeTag === cfg.openTag) {
     throw new ConfigError('Close tag must be different from the open tag');
+  }
+  if (cfg.closeExpr && cfg.openExpr && cfg.closeExpr === cfg.openExpr) {
+    throw new ConfigError('Close expr must be different from the open expr');
   }
   if (cfg.lastStopper && cfg.closeTag === cfg.lastStopper) {
     throw new ConfigError('Close tag must be different from the stopper');

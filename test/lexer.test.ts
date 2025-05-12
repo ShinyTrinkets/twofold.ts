@@ -26,6 +26,15 @@ const TESTS = [
   ['<tag t="` />', [{ index: 0, rawText: '<tag t="` />' }]],
   ['<tag t=\'" />', [{ index: 0, rawText: '<tag t=\'" />' }]],
   ['<tag t=`"" />', [{ index: 0, rawText: '<tag t=`"" />' }]],
+  ['<tag t={{{', [{ index: 0, rawText: '<tag t={{{' }]],
+  ['<tag t={{/>', [{ index: 0, rawText: '<tag t={{/>' }]],
+  ['<tag t={ />', [{ index: 0, rawText: '<tag t={ />' }]],
+  ['<tag t={\n/>', [{ index: 0, rawText: '<tag t={\n/>' }]],
+  ['<tag t={}}/>', [{ index: 0, rawText: '<tag t={}}/>' }]],
+  ['<tag t={{}/>', [{ index: 0, rawText: '<tag t={{}/>' }]],
+  ['<tag t={]}/>', [{ index: 0, rawText: '<tag t={]}/>' }]],
+  ['<tag t={[}/>', [{ index: 0, rawText: '<tag t={[}/>' }]],
+
   [
     '<tag123456789012345678901234567890A123456789 />',
     [
@@ -156,7 +165,23 @@ const TESTS = [
     ],
   ],
   [
-    // test ZERO tags
+    '<tag a="" b=[] c={}/>',
+    [
+      {
+        index: 0,
+        rawText: '<tag a="" b=[] c={}/>',
+        params: { a: '', b: [], c: {} },
+        rawParams: { a: '""', b: '[]', c: '{}' },
+        name: 'tag',
+        single: true,
+      },
+    ],
+  ],
+
+  // test ZERO tags
+  ['<tag []/>', [{ index: 0, rawText: '<tag []/>' }]],
+  ['<tag {}/>', [{ index: 0, rawText: '<tag {}/>' }]],
+  [
     '<a "1" />',
     [{ name: 'a', params: { 0: '1' }, rawParams: { 0: '"1"' }, rawText: '<a "1" />', single: true, index: 0 }],
   ],
@@ -361,20 +386,20 @@ const TESTS = [
     ],
   ],
   [
-    '<echo j1=`[1, 2]` j2=`[2, 3]` />', // JSON values
+    '<echo j1=`[1, 2]` j2={[2, 3]} />', // JSON values
     [
       {
         index: 0,
-        rawText: '<echo j1=`[1, 2]` j2=`[2, 3]` />',
+        rawText: '<echo j1=`[1, 2]` j2={[2, 3]} />',
         name: 'echo',
         single: true,
         params: {
-          j1: [1, 2],
-          j2: [2, 3],
+          j1: '[1, 2]',
+          j2: '{[2, 3]}',
         },
         rawParams: {
           j1: '`[1, 2]`',
-          j2: '`[2, 3]`',
+          j2: '{[2, 3]}',
         },
       },
     ],

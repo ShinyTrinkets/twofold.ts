@@ -40,7 +40,6 @@ const isAllowedAlpha = (code: number) => {
   );
 };
 const MAX_NAME_LEN = 42;
-const MAYBE_JSON_VAL = /^`[{[].*[}\]]`$/;
 
 /**
  * A lexer is a state machine.
@@ -53,16 +52,16 @@ const MAYBE_JSON_VAL = /^`[{[].*[}\]]`$/;
 export default class Lexer {
   index: number;
   state: string;
+  config: config.Config;
   priorState: string;
-  lexerConfig: config.Config;
   _pendingState: LexToken;
   _processed: LexToken[];
 
   constructor(cfg: config.Config = {}) {
     this.index = 0;
     this.state = STATE_RAW_TEXT;
+    this.config = { ...config.defaultCfg, ...cfg };
     this.priorState = STATE_RAW_TEXT;
-    this.lexerConfig = { ...config.defaultCfg, ...cfg };
 
     // Already processed tags
     this._processed = [];
@@ -93,13 +92,15 @@ export default class Lexer {
     }
 
     // Cache properties outside the loop
-    const openTagChar = this.lexerConfig.openTag?.[0];
-    const closeTagChar = this.lexerConfig.closeTag?.[0];
-    const lastStopperChar = this.lexerConfig.lastStopper?.[0];
+    const openTagChar = this.config.openTag?.[0];
+    const closeTagChar = this.config.closeTag?.[0];
+    const openExprChar = this.config.openExpr?.[0];
+    const closeExprChar = this.config.closeExpr?.[0];
+    const lastStopperChar = this.config.lastStopper?.[0];
     let pending: LexToken = this._pendingState;
 
     const transition = (newState: string) => {
-      // log.info(`Transition FROM (${this.state}) TO (${newState})`)
+      // log.info(`Transition FROM (${this.state}) TO (${newState})`);
       this.priorState = this.state;
       this.state = newState;
     };
@@ -157,15 +158,6 @@ export default class Lexer {
             } catch {
               // log.error('Cannot parse param value:', key, value)
             }
-          } else if (value.length > 2 && MAYBE_JSON_VAL.test(value)) {
-            // If the value looks like a JSON array or object,
-            // convert it to an actual JS value
-            try {
-              // @ts-ignore JSON value
-              value = JSON.parse(value.slice(1, -1));
-            } catch {
-              // log.error('Cannot parse param value:', key, value)
-            }
           } else {
             value = value.slice(1, -1);
           }
@@ -177,17 +169,33 @@ export default class Lexer {
     };
 
     const hasParamValueQuote = () => {
-      return isQuote(pending.param_value![0]);
+      const firstChar = pending.param_value![0];
+      return isQuote(firstChar) || firstChar === openExprChar;
     };
 
     const getParamValueQuote = () => {
       return pending.param_value![0];
     };
 
+    const isBalancedExpr = (val: string) => {
+      const stack: string[] = [];
+      const pairs: Record<string, string> = { '[': ']', '{': '}' };
+      // @ts-ignore Not a problem
+      pairs[openExprChar] = closeExprChar;
+      for (let char of val) {
+        if (pairs[char]) {
+          stack.push(char);
+        } else if (char === ']' || char === '}') {
+          if (pairs[stack.pop()] !== char) return false;
+        }
+      }
+      return stack.length === 0;
+    };
+
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
       const code: number = text.charCodeAt(i);
-      // log.info(`STATE :: ${this.state} ;; new CHAR :: ${char}`)
+      // log.info(`STATE :: ${this.state} ;; new CHAR :: ${char}`);
 
       if (this.state === STATE_RAW_TEXT) {
         // Could this be the beginning of a new tag?
@@ -338,11 +346,12 @@ export default class Lexer {
           pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
         }
-      } // Most characters are valid as a VALUE
+      } // --
+      // Most characters are valid as a VALUE
       else if (this.state === STATE_VALUE && pending.param_key) {
         // Newline not allowed inside prop string values
         // but allowed inside backtick values
-        if (isNewline(char) && pending.param_value![0] !== '`') {
+        if (isNewline(char) && pending.param_value![0] !== '`' && pending.param_value![0] !== openExprChar) {
           delete pending.params;
           delete pending.rawParams;
           delete pending.param_key;
@@ -360,6 +369,17 @@ export default class Lexer {
           commitAndTransition(STATE_RAW_TEXT, true);
         } // Is this a valid closing quote?
         else if (char === getParamValueQuote() && isQuote(char) && pending.param_value!.at(-1) !== '\\') {
+          pending.rawText += char;
+          pending.param_value += char;
+          commitTag();
+          transition(STATE_INSIDE_TAG);
+        }
+        // Is this a valid closing {} expr?
+        else if (
+          char === closeExprChar &&
+          getParamValueQuote() === openExprChar &&
+          isBalancedExpr(pending.param_value + char)
+        ) {
           pending.rawText += char;
           pending.param_value += char;
           commitTag();
@@ -383,7 +403,7 @@ export default class Lexer {
           pending.rawText += char;
           commitTag();
           transition(STATE_INSIDE_TAG);
-        } // Is this the middle of a value after equal?
+        } // Is this a regular value, after equal?
         else {
           pending.rawText += char;
           pending.param_value += char;

@@ -139,8 +139,14 @@ async function evaluateDoubleTag(
   }
 }
 
-const shouldInterpolate = function (v: string) {
-  return v.length > 4 && v[0] === '`' && v[v.length - 1] === '`' && v.includes('${') && v.includes('}');
+const shouldInterpolate = function (v: string, openExprChar: string, closeExprChar: string) {
+  if (v.length > 4 && v[0] === '`' && v[v.length - 1] === '`' && v.includes('${') && v.includes('}')) {
+    return true;
+  }
+  if (v.length > 2 && v[0] === openExprChar && v[v.length - 1] === closeExprChar) {
+    return true;
+  }
+  return false;
 };
 
 const interpolate = function (args: Record<string, any>, body: string) {
@@ -151,7 +157,9 @@ const interpolate = function (args: Record<string, any>, body: string) {
 /*
  * Run special tags logic.
  */
-function __specialTags(tag: ParseToken, customData: Record<string, any>) {
+function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Config = {}) {
+  const openExprChar = cfg.openExpr?.[0] || '{';
+  const closeExprChar = cfg.closeExpr?.[0] || '}';
   // The group name for variables
   const group = (tag.name === 'set' || tag.name === 'json' || tag.name === 'yaml') && tag.params?.['0'];
 
@@ -166,7 +174,7 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>) {
       for (const k of Object.keys(tag.params)) {
         let v = tag.params[k];
         const rawValue = tag.rawParams?.[k];
-        if (rawValue && shouldInterpolate(rawValue)) {
+        if (rawValue && shouldInterpolate(rawValue, openExprChar, closeExprChar)) {
           try {
             v = interpolate(customData, rawValue);
           } catch (err: any) {
@@ -180,7 +188,7 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>) {
       for (const k of Object.keys(tag.params)) {
         let v = tag.params[k];
         const rawValue = tag.rawParams?.[k];
-        if (rawValue && shouldInterpolate(rawValue)) {
+        if (rawValue && shouldInterpolate(rawValue, openExprChar, closeExprChar)) {
           try {
             v = interpolate(customData, rawValue);
           } catch (err: any) {
@@ -233,7 +241,7 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>) {
   } else {
     // Run string interpolation using the rawParams
     for (const [k, v] of Object.entries(tag.rawParams || {})) {
-      if (shouldInterpolate(v)) {
+      if (shouldInterpolate(v, openExprChar, closeExprChar)) {
         try {
           if (group) {
             customData[group][k] = interpolate(customData, v);

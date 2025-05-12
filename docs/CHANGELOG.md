@@ -2,6 +2,8 @@
 
 ## v0.10 WIP
 
+- BREAKING change: JSON props in backticks are gone!
+  they are replaced by the new expr {...} props
 - newlines allowed inside backtick string props
 
 ## v0.9

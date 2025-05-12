@@ -6,11 +6,12 @@ import twofold from '../src/index.ts';
 //
 test('set global variables', async () => {
   let vars = {};
-  let txt = '<set x=1 a="a" />';
+  let txt = '<set x=1 a="a" b={x} />';
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars.x).toBe(1);
   expect(vars.a).toBe('a');
+  expect(vars.b).toEqual({ x: 1 });
 
   vars = {};
   txt = '<set x=1 a="a" /> <set x=0 b="b" />';
@@ -249,7 +250,7 @@ test('variable interpolation', async () => {
   vars = {};
   txt = '<set name=Cro hello="still alive" /> <log "warn" msg=`${name}::${hello}` />';
   tmp = await twofold.renderText(txt, vars);
-  expect(vars).toEqual({ name: 'Cro', hello: 'still alive', msg: "Cro::still alive" });
+  expect(vars).toEqual({ name: 'Cro', hello: 'still alive', msg: 'Cro::still alive' });
   expect(tmp).toBe(txt);
 
   // Set variable group with interpolation
