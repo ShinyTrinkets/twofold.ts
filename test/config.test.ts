@@ -13,6 +13,8 @@ test('config validation', async () => {
     validateCfg({
       openTag: '(',
       closeTag: ')',
+      openExpr: '{',
+      closeExpr: '}',
       lastStopper: '.',
     })
   ).toBeUndefined();
@@ -29,6 +31,13 @@ test('config errors', async () => {
 
   try {
     validateCfg({ openTag: 'x', closeTag: 'x' });
+  } catch (error) {
+    // console.log('Error:', error.message);
+    expect(error).toBeInstanceOf(ConfigError);
+  }
+
+  try {
+    validateCfg({ openExpr: 'x', closeExpr: 'x' });
   } catch (error) {
     // console.log('Error:', error.message);
     expect(error).toBeInstanceOf(ConfigError);
@@ -59,6 +68,8 @@ test('config loading', async () => {
   expect(cfg).toEqual({
     openTag: '[',
     closeTag: ']',
+    openExpr: '{',
+    closeExpr: '}',
     lastStopper: '.',
   });
 
@@ -67,6 +78,8 @@ test('config loading', async () => {
     JSON.stringify({
       openTag: '{',
       closeTag: '}',
+      openExpr: '[',
+      closeExpr: ']',
       lastStopper: '?',
     })
   );
@@ -75,6 +88,8 @@ test('config loading', async () => {
   expect(cfg).toEqual({
     openTag: '{',
     closeTag: '}',
+    openExpr: '[',
+    closeExpr: ']',
     lastStopper: '?',
   });
 

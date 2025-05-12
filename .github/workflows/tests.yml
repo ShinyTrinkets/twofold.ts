@@ -21,4 +21,5 @@ jobs:
           deno test -R -S --no-check test/lexer.test.ts && \
           deno test -R -S --no-check test/parser.test.ts && \
           deno test -R -S --no-check test/tags.test.ts && \
-          deno test -R -S --no-check test/vars.test.ts || exit 1
+          deno test -R -S --no-check test/vars.test.ts && \
+          deno test -RWS --no-check test/config.test.ts || exit 1
