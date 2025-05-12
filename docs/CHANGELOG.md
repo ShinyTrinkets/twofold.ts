@@ -2,7 +2,7 @@
 
 ## v0.10 WIP
 
-- ...
+- newlines allowed inside backtick string props
 
 ## v0.9
 

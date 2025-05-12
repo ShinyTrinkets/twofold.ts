@@ -21,6 +21,8 @@ const TESTS = [
   ['<tag X=0 />', [{ index: 0, rawText: '<tag X=0 />' }]], // prop cannot start with Upper
   ['<tag 1=2 />', [{ index: 0, rawText: '<tag 1=2 />' }]], // prop cannot start with Number
   ['<tag t="   ', [{ index: 0, rawText: '<tag t="   ' }]],
+  ['<tag t=\n""/>', [{ index: 0, rawText: '<tag t=\n""/>' }]],
+  ['<tag t\n=""/>', [{ index: 0, rawText: '<tag t\n=""/>' }]],
   ['<tag t="` />', [{ index: 0, rawText: '<tag t="` />' }]],
   ['<tag t=\'" />', [{ index: 0, rawText: '<tag t=\'" />' }]],
   ['<tag t=`"" />', [{ index: 0, rawText: '<tag t=`"" />' }]],
@@ -44,7 +46,9 @@ const TESTS = [
   ],
   ['<  xY >', [{ index: 0, rawText: '<  xY >' }]], // max 1 space allowed before tag name
   ['<h1></  h1>', [{ index: 0, rawText: '<h1></  h1>' }]],
+  ['<h1></h  1>', [{ index: 0, rawText: '<h1></h  1>' }]],
   ['<   xY  >', [{ index: 0, rawText: '<   xY  >' }]],
+  ['<x\n/>', [{ index: 0, rawText: '<x\n/>' }]], // no newlines allowed
 
   ['<x1>', [{ index: 0, rawText: '<x1>', name: 'x1', double: true }]], // unfinished double tag
   ['< x>', [{ index: 0, rawText: '< x>', name: 'x', double: true }]],
@@ -135,8 +139,21 @@ const TESTS = [
     [{ index: 0, rawText: '<tag t=""" />' }], // this is raw-text (escaped quotes not supported)
   ],
   [
-    '<echo text="\n" />',
-    [{ index: 0, rawText: '<echo text="\n" />' }], // raw-text (newline not allowed in param values)
+    `<echo text="\n" /><echo text='\n' />`, // raw-text (newline not allowed in param strings)
+    [{ index: 0, rawText: '<echo text="\n" /><echo text=\'\n\' />' }],
+  ],
+  [
+    '<echo t=`a\nb\nc\n` />', // raw-text (newline allowed inside backtick strings)
+    [
+      {
+        index: 0,
+        rawText: '<echo t=`a\nb\nc\n` />',
+        params: { t: 'a\nb\nc\n' },
+        rawParams: { t: '`a\nb\nc\n`' },
+        name: 'echo',
+        single: true,
+      },
+    ],
   ],
   [
     // test ZERO tags

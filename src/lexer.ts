@@ -15,6 +15,7 @@ const STATE_VALUE = 's__value';
 const STATE_FINAL = 's__final';
 
 const isSpace = (char: string) => char === ' ' || char === '\t';
+const isNewline = (char: string) => char === '\n' || char === '\r';
 const isQuote = (char: string) => char === "'" || char === '"' || char === '`';
 
 // lower latin + greek alphabet letters
@@ -324,7 +325,7 @@ export default class Lexer {
       } // --
       else if (this.state === STATE_EQUAL && pending.param_key) {
         // Is this the start of a value after equal?
-        if (char !== lastStopperChar && !isSpace(char)) {
+        if (char !== lastStopperChar && !isSpace(char) && !isNewline(char)) {
           pending.rawText += char;
           pending.param_value = char;
           transition(STATE_VALUE);
@@ -339,8 +340,9 @@ export default class Lexer {
         }
       } // Most characters are valid as a VALUE
       else if (this.state === STATE_VALUE && pending.param_key) {
-        // Newline not allowed inside prop values (really?)
-        if (char === '\n') {
+        // Newline not allowed inside prop string values
+        // but allowed inside backtick values
+        if (isNewline(char) && pending.param_value![0] !== '`') {
           delete pending.params;
           delete pending.rawParams;
           delete pending.param_key;
