@@ -16,7 +16,7 @@ async function evaluateSingleTag(
   // Zero param text from the single tag &
   // A prop: built-in option that allows single tags to receive text, just like double tags
   // For single tags, zero params have higher priority
-  const firstParam = params['0'] || params.z || '';
+  const firstParam = params['0'] || '';
   let result = tag.rawText;
   try {
     //
@@ -64,7 +64,7 @@ async function evaluateDoubleTag(
       }
     }
   }
-  const firstParam = params['0'] || params.z || '';
+  const firstParam = params['0'] || '';
   //
   // Execute the tag function with params
   //
@@ -148,32 +148,17 @@ const interpolate = function (args: Record<string, any>, body: string) {
   return fn(...Object.values(args));
 };
 
-/**
- * Deep evaluate a tag, by preparing the params and calling
- * the specialized evaluate function.
+/*
+ * Run special tags logic.
  */
-export default async function evaluateTag(
-  tag: ParseToken,
-  customData: Record<string, any>,
-  allFunctions: Record<string, Function>,
-  cfg: Config = {},
-  meta: Record<string, any> = {}
-) {
-  if (!tag || !tag.name) {
-    return;
-  }
-  if (isProtectedTag(tag)) {
-    return;
-  }
-
+function __specialTags(tag: ParseToken, customData: Record<string, any>) {
   // The group name for variables
-  const group = tag.params && (tag.params?.['0'] || tag.params?.z);
+  const group = (tag.name === 'set' || tag.name === 'json' || tag.name === 'yaml') && tag.params?.['0'];
 
   if (tag.name === 'set' && tag.params) {
-    // Set (define) one or more variablßes inside the group
+    // Set (define) one or more variaßles inside the group
     if (group) {
       delete tag.params['0'];
-      delete tag.params.z;
       if (!customData[group]) {
         customData[group] = {};
       }
@@ -210,7 +195,6 @@ export default async function evaluateTag(
     if (group) {
       if (tag.params) {
         delete tag.params['0'];
-        delete tag.params.z;
       }
       try {
         const data = JSON.parse(getText(tag as DoubleTag));
@@ -262,6 +246,28 @@ export default async function evaluateTag(
       }
     }
   }
+}
+
+/**
+ * Deep evaluate a tag, by preparing the params and calling
+ * the specialized evaluate function.
+ */
+export default async function evaluateTag(
+  tag: ParseToken,
+  customData: Record<string, any>,
+  allFunctions: Record<string, Function>,
+  cfg: Config = {},
+  meta: Record<string, any> = {}
+) {
+  if (!tag || !tag.name) {
+    return;
+  }
+  if (isProtectedTag(tag)) {
+    return;
+  }
+
+  // Run special tags logic
+  __specialTags(tag, customData);
 
   // Deep evaluate all children, including invalid TwoFold tags
   if (tag.children) {

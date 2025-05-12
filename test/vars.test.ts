@@ -246,6 +246,12 @@ test('variable interpolation', async () => {
   });
   expect(tmp).toBe(txt);
 
+  vars = {};
+  txt = '<set name=Cro hello="still alive" /> <log "warn" msg=`${name}::${hello}` />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ name: 'Cro', hello: 'still alive', msg: "Cro::still alive" });
+  expect(tmp).toBe(txt);
+
   // Set variable group with interpolation
   vars = {};
   txt = "<set 'g' x1=2> <set x2=3 /><set 'g' y=`1${g.x1**2}${x2}`/><chk/> </set>";
@@ -279,6 +285,12 @@ test('variable interpolation', async () => {
       });
     },
   });
+  expect(tmp).toBe(txt);
+
+  // Running JSON.stringify inside interpolation
+  txt = '<set dump=`${"json:"+JSON.stringify(cfg)}`/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars.dump).toBe('json:{"host":"127.1","port":8080,"timeout":60,"seed":-1}');
   expect(tmp).toBe(txt);
 
   // Functions in interpolation; Doesn't work yet

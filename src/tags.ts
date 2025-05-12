@@ -6,7 +6,7 @@ export const isRawText = (t: LexToken | ParseToken): boolean =>
   t && t.name === undefined && t.single === undefined && t.double === undefined;
 
 export const isProtectedTag = (t: LexToken | ParseToken) =>
-  t && (t.name === 'ignore' || (t.params && t.params.freeze === true));
+  t && (t.name === 'ignore' || (t.params && !!t.params.freeze));
 
 export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagText && t.secondTagText;
 

@@ -18,6 +18,7 @@ export function jsEval(expr: string, args: Record<string, string> = {}) {
     stdout.push(args.join(' '));
   };
   const customContext = {
+    __args: { ...args },
     console: {
       log: redirectStdout,
       warn: redirectStdout,

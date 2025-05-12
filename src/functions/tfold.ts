@@ -49,14 +49,17 @@ export function text(s: string, args: any) {
   return templite(s, args);
 }
 
-export function log(_: string, args: any) {
+export function log(_: string, args: any, meta: any) {
   /**
    * A tag used for DEV, that logs the args to the logger.
    */
   const level = args.level || args.l || args['0'] || 'info';
-  if (args['0']) delete args['0'];
-  if (args.l) delete args.l;
-  logger.log._log(level, [args]);
+  const params: Record<string, any> = {};
+  for (const key in meta.node.params) {
+    if (key === 'level' || key === 'l' || key === '0') continue;
+    params[key] = args[key];
+  }
+  logger.log._log(level, [params]);
 }
 
 export function increment(s: string, { plus = 1 } = {}): number {

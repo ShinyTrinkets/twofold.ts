@@ -122,8 +122,7 @@ Examples:
 Example: `<pyEval "1.2 * (2 + 4.5)" />`
 
 "Zero" prop is like an option, but without a name. TwoFold tags are inspired from XML and HTML, but
-XML doesn't have options without a name. If you want to maintain compatibility with XML, you can
-name the prop **z**, like this: `z="1.2 * (2 + 4.5)"`.
+XML doesn't have options without a name.
 
 "Zero" props are useful to specify the default text inside a tag, and they are the first argument
 for the actual JavaScript function behind the tag.
