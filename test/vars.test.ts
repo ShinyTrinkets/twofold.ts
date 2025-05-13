@@ -31,7 +31,7 @@ test('set global variables', async () => {
   txt = '<set rnd={(() => Math.random())()} />';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
-  expect(typeof vars.rnd === 'number').toBeTruthy();
+  expect(typeof vars.rnd).toBe('number');
   expect(vars.rnd).toEqual(vars.rnd);
   expect(vars.rnd).toBeLessThan(1);
 
@@ -154,7 +154,7 @@ test('set variable group', async () => {
   vars = {};
   // set inner variables
   txt = `<set 'g'>
-    <set 'g' x=0 y=0>
+    <set 'g' x=0 y=0 r={/x/} t={()=>0}>
       <set 'g' x=1/>
       <set 'g' a="a"/>
       <chk1/>
@@ -163,10 +163,14 @@ test('set variable group', async () => {
   </set>`;
   tmp = await twofold.renderText(txt, vars, {
     chk1: (_t, args) => {
-      expect(args.g).toEqual({ x: 1, y: 0, a: 'a' });
+      expect(typeof args.g.t).toBe('function');
+      delete args.g.t;
+      expect(args.g).toEqual({ x: 1, y: 0, a: 'a', r: /x/ });
     },
     chk2: (_t, args) => {
-      expect(args.g).toEqual({ x: 0, y: 0 });
+      expect(typeof args.g.t).toBe('function');
+      delete args.g.t;
+      expect(args.g).toEqual({ x: 0, y: 0, r: /x/ });
     },
   });
   expect(tmp).toBe(txt);

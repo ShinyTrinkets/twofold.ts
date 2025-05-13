@@ -1,7 +1,7 @@
 import { Config, defaultCfg } from './config.ts';
 import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
 import { DoubleTag, ParseToken, SingleTag } from './types.ts';
-import { isFunction } from './util.ts';
+import { deepClone, isFunction } from './util.ts';
 import { log } from './logger.ts';
 
 /**
@@ -28,9 +28,16 @@ async function evaluateSingleTag(
     if (info.length > 120) info = info.slice(0, 120) + '...';
     log.warn(`Cannot evaluate single tag "${tag.name}" with "${info}"! ERROR:`, err.message);
   }
+
   // If the single tag doesn't have a result, DON'T change the tag
   if (result === undefined || result === null) return;
+  // Broken, hacked tag, ignore it
+  // @ts-ignore It's fine, this is a valid single tag
+  if (typeof result === 'object' && (!result.single || result.name !== tag.name || result.index !== tag.index)) {
+    return;
+  }
   // If the result is a tag object, apply on top of the current tag
+  // @ts-ignore It's fine, this is a valid single tag
   if (typeof result === 'object' && result.single && result.name === tag.name && result.index === tag.index) {
     tag.rawText = result.rawText;
     tag.params = result.params;
@@ -117,8 +124,14 @@ async function evaluateDoubleTag(
       // If the function call crashed, DON'T change the tag
       log.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
     }
+
     // If the single tag doesn't have a result, DON'T change the tag
     if (result === undefined || result === null) return;
+    // Broken, hacked tag, ignore it
+    // @ts-ignore It's fine, this is a valid double tag
+    if (typeof result === 'object' && (!result.double || result.name !== tag.name || result.index !== tag.index)) {
+      return;
+    }
     // If the result is a tag object, apply on top of the current tag
     // @ts-ignore It's fine, this is a valid double tag
     if (typeof result === 'object' && result.double && result.name === tag.name && result.index === tag.index) {
@@ -286,7 +299,7 @@ export default async function evaluateTag(
   if (tag.children) {
     // Make a deep copy of the params, to create
     // a separate variable scope for the children
-    let params = structuredClone(customData) // { ...customData };
+    let params = deepClone(customData);
     for (const c of tag.children) {
       if (c.name && (c.single || c.double)) {
         c.parent = { name: tag.name, index: tag.index, params: tag.params };
@@ -295,7 +308,7 @@ export default async function evaluateTag(
         c.parent.params = { ...tag.params };
         if (tag.rawParams) c.parent.rawParams = tag.rawParams;
         // Inject the parsed tag into the function meta
-        meta.node = structuredClone(c);
+        meta.node = c;
       }
       await evaluateTag(c, params, allFunctions, cfg, meta);
     }
@@ -312,7 +325,7 @@ export default async function evaluateTag(
   if (!tag.params) meta.node.params = {};
   // Inject the parsed parent into meta
   if (tag.parent) {
-    meta.node.parent = structuredClone(tag.parent);
+    meta.node.parent = tag.parent;
     delete meta.node.parent.children;
     delete meta.node.parent.parent;
   } else {

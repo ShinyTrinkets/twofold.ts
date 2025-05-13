@@ -14,6 +14,45 @@ export const NON_ALPHANUM = /[^0-9a-zàáâãäæçèéêëìíîïñòóôõö�
 
 export const isFunction = (f: any) => typeof f === 'function' || types.isAsyncFunction(f);
 
+export function deepClone<T>(source: T): T {
+  // Handle null, undefined, and primitive types
+  if (source === null || source === undefined || typeof source !== 'object') {
+    return source;
+  }
+
+  // Handle Date objects
+  if (source instanceof Date) {
+    return new Date(source.getTime()) as unknown as T;
+  }
+
+  // Handle RegExp objects
+  if (source instanceof RegExp) {
+    return new RegExp(source.source, source.flags) as unknown as T;
+  }
+
+  // Handle Array objects
+  if (Array.isArray(source)) {
+    return source.map(item => deepClone(item)) as unknown as T;
+  }
+
+  // Handle plain objects
+  const clonedObj = {} as Record<string, any>;
+
+  for (const key in source) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      const value = (source as Record<string, any>)[key];
+      // Preserve function references directly - functions can't be deep cloned
+      if (typeof value === 'function') {
+        clonedObj[key] = value;
+      } else {
+        clonedObj[key] = deepClone(value);
+      }
+    }
+  }
+
+  return clonedObj as T;
+}
+
 /**
  * Split text at the ✂----- marker.
  */

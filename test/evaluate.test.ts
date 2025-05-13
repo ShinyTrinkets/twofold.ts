@@ -132,7 +132,7 @@ test('evaluate consumable custom tags', async () => {
   </t1>`);
 });
 
-test('evaluate consumable custom tags', async () => {
+test('evaluate frozen custom tags', async () => {
   // CUT doesn't work for functions that return the node
   // ALL functions here return the node
   let txt = `<t1>
@@ -175,5 +175,45 @@ test('evaluate consumable custom tags', async () => {
       <t3 />
       <t4> </t4>
     </t2>
+  </t1>`);
+});
+
+test('destroy ☠️ custom tags', async () => {
+  let txt = `<t1><t2>
+      <t3 />
+    </t2>
+    <t4 />
+  </t1>`;
+  let ast = parse(new Lexer().lex(txt));
+  expect(ast.length).toBe(1);
+  await evaluate(
+    ast[0],
+    {},
+    {
+      t1: (_s, _a, meta) => {
+        meta.node.firstTagText = '<hack1>';
+        meta.node.secondTagText = '</hack1>';
+        return meta.node;
+      },
+      t2: (_s, _a, meta) => {
+        meta.node.name = 'hack2';
+        // hacking children really removes them
+        // meta.node.children = [];
+        return meta.node;
+      },
+      t3: (_s, _a, meta) => {
+        meta.node.parent.name = 'hack2';
+        return meta.node;
+      },
+      t4: (_s, _a, meta) => {
+        delete meta.node.single;
+        return meta.node;
+      },
+    }
+  );
+  expect(unParse(ast[0])).toBe(`<t1><t2>
+      <t3 />
+    </t2>
+    <t4 />
   </t1>`);
 });
