@@ -28,7 +28,7 @@ export async function renderText(
   text: string,
   customData: Record<string, any> = {},
   customTags: Record<string, Function> = {},
-  cfg: config.Config = {},
+  cfg: config.Config = config.defaultCfg,
   meta: Record<string, any> = {}
 ): Promise<string> {
   const allFunctions: Record<string, Function> = {
@@ -55,7 +55,7 @@ export async function renderText(
 export async function renderFile(
   fname: string,
   customTags = {},
-  cfg: config.Config = {},
+  cfg: config.Config = config.defaultCfg,
   meta: Record<string, any> = {}
 ): Promise<{ changed: boolean; text?: string }> {
   if (!fname) {

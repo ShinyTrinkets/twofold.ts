@@ -185,6 +185,35 @@ const TESTS = [
       },
     ],
   ],
+
+  [
+    // IIFE expression
+    '<set rnd={(() => Math.random())()} onClick={() => { setOpened(false); }}/>',
+    [
+      {
+        index: 0,
+        rawText: '<set rnd={(() => Math.random())()} onClick={() => { setOpened(false); }}/>',
+        params: { rnd: '(() => Math.random())()', onClick: '() => { setOpened(false); }' },
+        rawParams: { rnd: '{(() => Math.random())()}', onClick: '{() => { setOpened(false); }}' },
+        name: 'set',
+        single: true,
+      },
+    ],
+  ],
+  [
+    // expressions with arrays, functions calls, and newline
+    '<set width={180} style={{ color: "black", fontFamily: "mono" }}/>',
+    [
+      {
+        index: 0,
+        rawText: '<set width={180} style={{ color: "black", fontFamily: "mono" }}/>',
+        params: { width: '180', style: '{ color: "black", fontFamily: "mono" }' },
+        rawParams: { width: '{180}', style: '{{ color: "black", fontFamily: "mono" }}' },
+        name: 'set',
+        single: true,
+      },
+    ],
+  ],
   [
     // expressions with arrays, functions calls, and newline
     '<set colors={["red", `green`, "blue",\n]} href={"PieChart-" + JSON.stringify(colors)}/>',
@@ -192,7 +221,7 @@ const TESTS = [
       {
         index: 0,
         rawText: '<set colors={["red", `green`, "blue",\n]} href={"PieChart-" + JSON.stringify(colors)}/>',
-        params: { colors: '{["red", `green`, "blue",\n]}', href: '{"PieChart-" + JSON.stringify(colors)}' },
+        params: { colors: '["red", `green`, "blue",\n]', href: '"PieChart-" + JSON.stringify(colors)' },
         rawParams: { colors: '{["red", `green`, "blue",\n]}', href: '{"PieChart-" + JSON.stringify(colors)}' },
         name: 'set',
         single: true,
@@ -201,13 +230,19 @@ const TESTS = [
   ],
   [
     // expressions with objects and functions
-    '<set cfg={{cfg: {timeout: -1, log: [1,5,3]}}} onClick={() => { setOpened(false); }}/>',
+    '<set cfg={{cfg: {timeout: -1, log: [1,5,3]}}} comment={/* comment! */}/>',
     [
       {
         index: 0,
-        rawText: '<set cfg={{cfg: {timeout: -1, log: [1,5,3]}}} onClick={() => { setOpened(false); }}/>',
-        params: { cfg: '{{cfg: {timeout: -1, log: [1,5,3]}}}', onClick: '{() => { setOpened(false); }}' },
-        rawParams: { cfg: '{{cfg: {timeout: -1, log: [1,5,3]}}}', onClick: '{() => { setOpened(false); }}' },
+        rawText: '<set cfg={{cfg: {timeout: -1, log: [1,5,3]}}} comment={/* comment! */}/>',
+        params: {
+          cfg: '{cfg: {timeout: -1, log: [1,5,3]}}',
+          comment: '/* comment! */',
+        },
+        rawParams: {
+          cfg: '{{cfg: {timeout: -1, log: [1,5,3]}}}',
+          comment: '{/* comment! */}',
+        },
         name: 'set',
         single: true,
       },
@@ -294,7 +329,7 @@ const TESTS = [
       {
         index: 0,
         name: 'todo',
-        params: { prio: '?', due: '2025-12-12', text: '{`\n- task 1\n- task 2\n`}' },
+        params: { prio: '?', due: '2025-12-12', text: '`\n- task 1\n- task 2\n`' },
         rawParams: { prio: '?', due: '2025-12-12', text: '{`\n- task 1\n- task 2\n`}' },
         rawText: '<todo prio=? due=2025-12-12 text={`\n- task 1\n- task 2\n`}/>',
         single: true,
@@ -457,7 +492,7 @@ const TESTS = [
         single: true,
         params: {
           j1: [1, 2],
-          j2: '{[2, 3]}',
+          j2: '[2, 3]',
         },
         rawParams: {
           j1: '[1,2]',

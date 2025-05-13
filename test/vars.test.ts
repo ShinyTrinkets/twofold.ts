@@ -11,7 +11,7 @@ test('set global variables', async () => {
   expect(tmp).toBe(txt);
   expect(vars.x).toBe(1);
   expect(vars.a).toBe('a');
-  expect(vars.b).toEqual({ x: 1 });
+  expect(vars.b).toEqual(1);
 
   vars = {};
   txt = '<set x=1 a="a" /> <set x=0 b="b" />';
@@ -22,10 +22,25 @@ test('set global variables', async () => {
   expect(vars.b).toBe('b');
 
   vars = {};
-  txt = '<set a=1 b="b" c=null /> <set x={ a,b:"c", d:[c] } />';
+  txt = '<set a=1 b="b" c=null /> <set x={{ a,b:"c", d:[c] }} />';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({ a: 1, b: 'b', c: null, x: { a: 1, b: 'c', d: [null] } });
+
+  vars = {};
+  txt = '<set rnd={(() => Math.random())()} />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(typeof vars.rnd === 'number').toBeTruthy();
+  expect(vars.rnd).toEqual(vars.rnd);
+  expect(vars.rnd).toBeLessThan(1);
+
+  vars = {};
+  txt = "<set trim={(x)=>x.trim()}/> <set name=' John ' nameTrim={trim(name)} />";
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars.name).toBe(' John ');
+  expect(vars.nameTrim).toBe('John');
 
   vars = {};
   // set inner variables
@@ -89,6 +104,13 @@ test('set variable group', async () => {
   expect(vars.g).toEqual({ x: 0, a: 'a', b: 'b', c: 'c' });
 
   vars = {};
+  txt = "<set 'g' trim={(x)=>x.trim()}/> <set 'g' name=' John ' nameTrim={g.trim(g.name)} />";
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars.g.name).toBe(' John ');
+  expect(vars.g.nameTrim).toBe('John');
+
+  vars = {};
   // set inner variables
   txt = `<set 'a'> <set a="a"/><set 'g' b="b"/><set x=0/> <chk/> </set>`;
   tmp = await twofold.renderText(txt, vars, {
@@ -104,7 +126,7 @@ test('set variable group', async () => {
     '<set "creative" temp=1 min_p=0.1 frequency_penalty=0.1 repeat_penalty=1.1/>' +
     '<set "feather" keyName=FEATHERLESS_KEY url="https://api.featherless.ai/v1/chat/completions" model="Qwen/Qwen3-32B"/>' +
     '<set "priv" name=Chris char=Audrey/>' +
-    '<set ai={ ...feather, ...creative, ...priv } />';
+    '<set ai={{ ...feather, ...creative, ...priv }} />';
   tmp = await twofold.renderText(txt, vars);
   expect(vars.ai).toEqual({
     name: 'Chris',

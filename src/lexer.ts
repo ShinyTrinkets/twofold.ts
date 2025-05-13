@@ -149,9 +149,13 @@ export default class Lexer {
       if (key) {
         pending.rawParams![key] = origValue;
         if (value) {
-          // If the value is a number, or boolean, or null,
-          // convert it to an actual JS value
-          if (!isQuote(value[0]) && !isQuote(value.at(-1)!)) {
+          if (value === '[]' || value === '{}') {
+            value = JSON.parse(value);
+          } else if (value === 'NaN' || value === 'Infinity' || value === '-Infinity') {
+            value = eval(value);
+          } else if (!isQuote(value[0]) && !isQuote(value.at(-1)!) && value[0] !== openExprChar) {
+            // If the value is a number, or boolean, or null,
+            // convert it to an actual JS value
             try {
               // @ts-ignore JSON value
               value = JSON.parse(value);
@@ -367,8 +371,7 @@ export default class Lexer {
           pending.param_value += char;
           commitTag();
           transition(STATE_INSIDE_TAG);
-        }
-        // Is this a valid closing {} expr?
+        } // Is this a valid closing {} expr?
         else if (
           char === closeExprChar &&
           getParamValueQuote() === openExprChar &&

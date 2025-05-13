@@ -26,9 +26,49 @@ result, all in the same file! However, I wasn't too excited about the syntax use
 me, it looks complicated and I don't like the visible Python code inside, so I never got to use it.
 
 TwoFold uses XML/LISP-like tags to execute code, and inserts the output back into the original file,
-but only in the case of double-tags. The single-tags are consumed after render, making them perfect
-for interactive use. The tags are short and intuitive, but the source code for the tag is not
-visible (but it should be open source!) which makes the original text much cleaner.
+but only in the case of double-tags. The single-tags are usually consumed after render, making them
+perfect for interactive use. The tags are short and intuitive, but the source code for the tag is
+not visible (but it should be open source!) which makes the original text much cleaner.
+
+---
+
+Very similar: https://mdxjs.com
+
+> MDX lets you use JSX in your markdown content. You can import components, such as interactive
+> charts or alerts, and embed them within your content. This makes writing long-form content with
+> components a blast.
+
+> What does MDX do? You write markdown with embedded components through JSX. It gets compiled to
+> JavaScript that you can use in any framework that supports JSX.
+
+This is a big templating library written for JavaScript developers. Also check the "#Template
+engines" section below.
+
+The syntax of TwoFold looks like a simplified MDX, but the goals of these 2 tools are very
+different. The goal of MDX libraries is to generate JSX that gets compiled into JavaScript code, to
+be used inside an interactive HTML page, for a website.
+
+TwoFold is a single binary app and its goal is to make a plain text interactive, locally.
+
+---
+
+Very similar: https://idyll-lang.org
+
+> Idyll can be used to create explorable explanations, write data-driven stories, and add
+> interactivity to blog engines and content management systems. The tool can generate standalone
+> webpages or be embedded in existing pages.
+
+> Idyll starts with the same principles as markdown, and uses a lot of the same syntax. If you want
+> text to appear in your output, just start writing. The real power of Idyll comes when you want to
+> use JavaScript to enrich your writing. Special syntax allows you to embed JavaScript inline with
+> your text. Idyll comes with a variety of components that can be used out-of-the-box to create rich
+> documents.
+
+> Idyll is currently not maintained.
+
+The implementation of _Idyll_ is very different from MDX, but the goal of this app is exactly the
+same. Idyll does have a CLI app like TwoFold, so you can use that to compile `.idyll` files into
+HTML.
 
 ---
 
@@ -150,20 +190,21 @@ Examples:
 - Liquid
 - Mustache
 - Pug
-- React
+- React.js
+- Mithril.js
 - etc, etc
 
 They are based on the same idea that you have template files with raw text and XML-like tags. The
 tags can be nested and can call different shortcodes/ helpers/ filters.
 
-The template files are used to generate the final text, and are usually larger.
+The template files are used by a developer to generate the final text, and are usually larger.
 
 Because there are 2 types of files, the templates are like a source code, and the generated files
 are like a final product, and the consumer only gets to see the final product.
 
 Template engines are tools/ libraries made for developers, usually to generate web pages. There is
-not app to use, they are programming libraries that you need to import and integrate inside a larger
-app. Their goal is to generate the final text.
+**no app to use**, they are programming libraries that you need to import and integrate inside a
+larger app. Their goal is to generate the final text.
 
 **TwoFold** is a general app and can launch other applications and run arbitrary commands or code,
 depending on the available tags.

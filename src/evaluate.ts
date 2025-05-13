@@ -1,4 +1,4 @@
-import { Config } from './config.ts';
+import { Config, defaultCfg } from './config.ts';
 import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
 import { DoubleTag, ParseToken, SingleTag } from './types.ts';
 import { isFunction } from './util.ts';
@@ -139,27 +139,32 @@ async function evaluateDoubleTag(
   }
 }
 
-const shouldInterpolate = function (v: string, openExprChar: string, closeExprChar: string) {
+function shouldInterpolate(v: string, openExprChar: string, closeExprChar: string) {
+  // Check if the string could be a backtick expression
   if (v.length > 4 && v[0] === '`' && v[v.length - 1] === '`' && v.includes('${') && v.includes('}')) {
     return true;
   }
+  // Check if the string could be a {..} expression
   if (v.length > 2 && v[0] === openExprChar && v[v.length - 1] === closeExprChar) {
     return true;
   }
   return false;
-};
+}
 
-const interpolate = function (args: Record<string, any>, body: string) {
+function interpolate(args: Record<string, any>, body: string, openExprChar: string, closeExprChar: string) {
+  if (body[0] === openExprChar && body[body.length - 1] === closeExprChar) {
+    body = body.slice(1, -1);
+  }
   const fn = new Function(...Object.keys(args), `{ return ${body} }`);
   return fn(...Object.values(args));
-};
+}
 
 /*
  * Run special tags logic.
  */
-function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Config = {}) {
-  const openExprChar = cfg.openExpr?.[0] || '{';
-  const closeExprChar = cfg.closeExpr?.[0] || '}';
+function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Config) {
+  const openExprChar = cfg.openExpr?.[0]!;
+  const closeExprChar = cfg.closeExpr?.[0]!;
   // The group name for variables
   const group = (tag.name === 'set' || tag.name === 'json' || tag.name === 'yaml') && tag.params?.['0'];
 
@@ -176,7 +181,7 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
         const rawValue = tag.rawParams?.[k];
         if (rawValue && shouldInterpolate(rawValue, openExprChar, closeExprChar)) {
           try {
-            v = interpolate(customData, rawValue);
+            v = interpolate(customData, rawValue, openExprChar, closeExprChar);
           } catch (err: any) {
             log.warn(`Cannot interpolate string for ${k}=${rawValue}!`, err.message);
           }
@@ -190,7 +195,7 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
         const rawValue = tag.rawParams?.[k];
         if (rawValue && shouldInterpolate(rawValue, openExprChar, closeExprChar)) {
           try {
-            v = interpolate(customData, rawValue);
+            v = interpolate(customData, rawValue, openExprChar, closeExprChar);
           } catch (err: any) {
             log.warn(`Cannot interpolate string for ${k}=${rawValue}!`, err.message);
           }
@@ -244,9 +249,9 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
       if (shouldInterpolate(v, openExprChar, closeExprChar)) {
         try {
           if (group) {
-            customData[group][k] = interpolate(customData, v);
+            customData[group][k] = interpolate(customData, v, openExprChar, closeExprChar);
           } else {
-            customData[k] = interpolate(customData, v);
+            customData[k] = interpolate(customData, v, openExprChar, closeExprChar);
           }
         } catch (err: any) {
           log.warn(`Cannot interpolate string for ${k}=${v}!`, err.message);
@@ -264,7 +269,7 @@ export default async function evaluateTag(
   tag: ParseToken,
   customData: Record<string, any>,
   allFunctions: Record<string, Function>,
-  cfg: Config = {},
+  cfg: Config = defaultCfg,
   meta: Record<string, any> = {}
 ) {
   if (!tag || !tag.name) {
@@ -275,13 +280,13 @@ export default async function evaluateTag(
   }
 
   // Run special tags logic
-  __specialTags(tag, customData);
+  __specialTags(tag, customData, cfg);
 
   // Deep evaluate all children, including invalid TwoFold tags
   if (tag.children) {
     // Make a deep copy of the params, to create
     // a separate variable scope for the children
-    let params = structuredClone(customData);
+    let params = structuredClone(customData) // { ...customData };
     for (const c of tag.children) {
       if (c.name && (c.single || c.double)) {
         c.parent = { name: tag.name, index: tag.index, params: tag.params };
