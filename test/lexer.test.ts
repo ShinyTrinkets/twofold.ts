@@ -26,6 +26,8 @@ const TESTS = [
   ['<tag t="` />', [{ index: 0, rawText: '<tag t="` />' }]],
   ['<tag t=\'" />', [{ index: 0, rawText: '<tag t=\'" />' }]],
   ['<tag t=`"" />', [{ index: 0, rawText: '<tag t=`"" />' }]],
+
+  // bad {..} expressions
   ['<tag t={{{', [{ index: 0, rawText: '<tag t={{{' }]],
   ['<tag t={{/>', [{ index: 0, rawText: '<tag t={{/>' }]],
   ['<tag t={ />', [{ index: 0, rawText: '<tag t={ />' }]],
@@ -34,8 +36,10 @@ const TESTS = [
   ['<tag t={{}/>', [{ index: 0, rawText: '<tag t={{}/>' }]],
   ['<tag t={]}/>', [{ index: 0, rawText: '<tag t={]}/>' }]],
   ['<tag t={[}/>', [{ index: 0, rawText: '<tag t={[}/>' }]],
+  ['<set colors={["red"}/>', [{ index: 0, rawText: '<set colors={["red"}/>' }]],
+  ['<set colors={["red"]/>', [{ index: 0, rawText: '<set colors={["red"]/>' }]],
 
-  [
+  [ // too long names
     '<tag123456789012345678901234567890A123456789 />',
     [
       {
@@ -145,7 +149,7 @@ const TESTS = [
   ],
   [
     '<tag t=""" />',
-    [{ index: 0, rawText: '<tag t=""" />' }], // this is raw-text (escaped quotes not supported)
+    [{ index: 0, rawText: '<tag t=""" />' }], // this is raw-text
   ],
   [
     `<echo text="\n" /><echo text='\n' />`, // raw-text (newline not allowed in param strings)
@@ -173,6 +177,34 @@ const TESTS = [
         params: { a: '', b: [], c: {} },
         rawParams: { a: '""', b: '[]', c: '{}' },
         name: 'tag',
+        single: true,
+      },
+    ],
+  ],
+  [
+    // expressions with arrays, functions calls, and newline
+    '<set colors={["red", `green`, "blue",\n]} href={"PieChart-" + JSON.stringify(colors)}/>',
+    [
+      {
+        index: 0,
+        rawText: '<set colors={["red", `green`, "blue",\n]} href={"PieChart-" + JSON.stringify(colors)}/>',
+        params: { colors: '{["red", `green`, "blue",\n]}', href: '{"PieChart-" + JSON.stringify(colors)}' },
+        rawParams: { colors: '{["red", `green`, "blue",\n]}', href: '{"PieChart-" + JSON.stringify(colors)}' },
+        name: 'set',
+        single: true,
+      },
+    ],
+  ],
+  [
+    // expressions with objects and functions
+    '<set cfg={{cfg: {timeout: -1, log: [1,5,3]}}} onClick={() => { setOpened(false); }}/>',
+    [
+      {
+        index: 0,
+        rawText: '<set cfg={{cfg: {timeout: -1, log: [1,5,3]}}} onClick={() => { setOpened(false); }}/>',
+        params: { cfg: '{{cfg: {timeout: -1, log: [1,5,3]}}}', onClick: '{() => { setOpened(false); }}' },
+        rawParams: { cfg: '{{cfg: {timeout: -1, log: [1,5,3]}}}', onClick: '{() => { setOpened(false); }}' },
+        name: 'set',
         single: true,
       },
     ],
@@ -386,19 +418,19 @@ const TESTS = [
     ],
   ],
   [
-    '<echo j1=`[1, 2]` j2={[2, 3]} />', // JSON values
+    '<echo j1=[1,2] j2={[2, 3]} />', // JSON values
     [
       {
         index: 0,
-        rawText: '<echo j1=`[1, 2]` j2={[2, 3]} />',
+        rawText: '<echo j1=[1,2] j2={[2, 3]} />',
         name: 'echo',
         single: true,
         params: {
-          j1: '[1, 2]',
+          j1: [1, 2],
           j2: '{[2, 3]}',
         },
         rawParams: {
-          j1: '`[1, 2]`',
+          j1: '[1,2]',
           j2: '{[2, 3]}',
         },
       },

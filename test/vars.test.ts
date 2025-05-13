@@ -22,6 +22,12 @@ test('set global variables', async () => {
   expect(vars.b).toBe('b');
 
   vars = {};
+  txt = '<set a=1 b="b" c=null /> <set x={ a,b:"c", d:[c] } />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ a: 1, b: 'b', c: null, x: { a: 1, b: 'c', d: [null] } });
+
+  vars = {};
   // set inner variables
   txt = '<set> <set a="a"/><set b="b"/><chk/> </set>';
   tmp = await twofold.renderText(txt, vars, {
