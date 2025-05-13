@@ -36,10 +36,14 @@ const TESTS = [
   ['<tag t={{}/>', [{ index: 0, rawText: '<tag t={{}/>' }]],
   ['<tag t={]}/>', [{ index: 0, rawText: '<tag t={]}/>' }]],
   ['<tag t={[}/>', [{ index: 0, rawText: '<tag t={[}/>' }]],
+  // unclosed / unbalanced brackets
   ['<set colors={["red"}/>', [{ index: 0, rawText: '<set colors={["red"}/>' }]],
   ['<set colors={["red"]/>', [{ index: 0, rawText: '<set colors={["red"]/>' }]],
+  ['<set c={{cfg:{adv:{timeout:-1}}}/>', [{ index: 0, rawText: '<set c={{cfg:{adv:{timeout:-1}}}/>' }]],
+  ['<set c={{cfg: {adv: {timeout: -1 }}} />', [{ index: 0, rawText: '<set c={{cfg: {adv: {timeout: -1 }}} />' }]],
 
-  [ // too long names
+  [
+    // too long names
     '<tag123456789012345678901234567890A123456789 />',
     [
       {
@@ -267,6 +271,32 @@ const TESTS = [
         params: { 0: '-la', extra: 'h x' },
         rawParams: { 0: '"-la"', extra: '"h x"' },
         rawText: '< ls "-la" extra="h x" />',
+        single: true,
+      },
+    ],
+  ],
+  [
+    '<todo prio=! due=2025-12-12 text=`\n- task 1\n- task 2\n`/>',
+    [
+      {
+        index: 0,
+        name: 'todo',
+        params: { prio: '!', due: '2025-12-12', text: '\n- task 1\n- task 2\n' },
+        rawParams: { prio: '!', due: '2025-12-12', text: '`\n- task 1\n- task 2\n`' },
+        rawText: '<todo prio=! due=2025-12-12 text=`\n- task 1\n- task 2\n`/>',
+        single: true,
+      },
+    ],
+  ],
+  [
+    '<todo prio=? due=2025-12-12 text={`\n- task 1\n- task 2\n`}/>',
+    [
+      {
+        index: 0,
+        name: 'todo',
+        params: { prio: '?', due: '2025-12-12', text: '{`\n- task 1\n- task 2\n`}' },
+        rawParams: { prio: '?', due: '2025-12-12', text: '{`\n- task 1\n- task 2\n`}' },
+        rawText: '<todo prio=? due=2025-12-12 text={`\n- task 1\n- task 2\n`}/>',
         single: true,
       },
     ],

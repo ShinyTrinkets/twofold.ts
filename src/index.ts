@@ -75,13 +75,13 @@ export async function renderFile(
   const streamHash = crypto.createHash('sha224');
   let ast: ParseToken[] = [];
 
-  if ((globalThis as any).Bun) {
+  if (typeof Bun !== 'undefined') {
     const file = Bun.file(fname);
     for await (const chunk of file.stream()) {
       streamHash.update(chunk);
       lexer.push(decoder.decode(chunk));
     }
-  } else if ((globalThis as any).Deno) {
+  } else if (typeof Deno !== 'undefined') {
     // Read file in chunks, and parse
     using file = await Deno.open(fname, { read: true });
     for await (const chunk of file.readable) {
@@ -118,9 +118,9 @@ export async function renderFile(
 
   const changed = streamHash.digest('hex') !== resultHash.digest('hex');
   if (shouldWrite && changed) {
-    if ((globalThis as any).Bun) {
+    if (typeof Bun !== 'undefined') {
       await Bun.write(fname, text);
-    } else if ((globalThis as any).Deno) {
+    } else if (typeof Deno !== 'undefined') {
       await Deno.writeTextFile(fname, text);
     }
     return { changed: true };
@@ -178,7 +178,7 @@ export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
   let oldNode = node;
   const lexer = new Lexer();
 
-  if ((globalThis as any).Bun) {
+  if (typeof Bun !== 'undefined') {
     // Tag meta contains the file name
     // and the path to the node in the AST
     const file = Bun.file(meta.fname);
@@ -192,7 +192,7 @@ export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
     text = ast.map(unParse).join('');
     // Write the new text to the same file
     file.write(text);
-  } else if ((globalThis as any).Deno) {
+  } else if (typeof Deno !== 'undefined') {
     let text = await Deno.readTextFile(meta.fname);
     const ast = parse(lexer.lex(text));
     lexer.reset();

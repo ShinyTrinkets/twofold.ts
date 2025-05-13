@@ -1,4 +1,3 @@
-import { createReadStream } from 'node:fs';
 // @ts-ignore missing types
 import picomatch from 'picomatch';
 
@@ -13,7 +12,7 @@ import parse from '../src/parser.ts';
 /**
  * Scan files and return info about them.
  */
-export function scanFile(
+export async function scanFile(
   fname: string,
   customFunctions = {},
   customConfig: CliConfig = {}
@@ -46,44 +45,51 @@ export function scanFile(
     }
   };
 
-  return new Promise(resolve => {
-    const label = 'scan:' + fname;
-    console.time(label);
+  let len = 0;
+  const decoder = new TextDecoder();
+  const lexer = new Lexer(customConfig);
 
-    let len = 0;
-    const lex = new Lexer(customConfig);
-    const stream = createReadStream(fname, { encoding: 'utf8' });
+  const label = 'scan:' + fname;
+  console.time(label);
 
-    stream.on('data', data => {
-      len += data.length;
-      lex.push(data);
-    });
+  if (typeof Bun !== 'undefined') {
+    const file = Bun.file(fname);
+    for await (const chunk of file.stream()) {
+      len += chunk.length;
+      lexer.push(decoder.decode(chunk));
+    }
+  } else if (typeof Deno !== 'undefined') {
+    // Read file in chunks, and parse
+    using file = await Deno.open(fname, { read: true });
+    for await (const chunk of file.readable) {
+      len += chunk.length;
+      lexer.push(decoder.decode(chunk));
+    }
+  }
 
-    stream.on('close', () => {
-      const ast = parse(lex.finish(), customConfig);
-      lex.reset();
-      console.log('Txt length ::', len.toLocaleString('en-GB'));
-      for (const tag of ast) {
-        walk(tag);
-      }
-      console.timeEnd(label);
+  console.log('Txt length ::', len.toLocaleString('en-GB'));
+  const ast = parse(lexer.finish(), customConfig);
+  lexer.reset();
 
-      let validTags = 0;
-      for (const tag of nodes) {
-        if (allFunctions[tag.name]) {
-          console.debug('✓', tag.name);
-          validTags += 1;
-        } else console.debug('✗', tag.name);
-      }
-      const invalidTags = nodes.length - validTags;
-      console.log('Valid tags ::', validTags);
-      if (invalidTags) {
-        console.error(`Invalid tags :: ${invalidTags}`);
-      }
-      resolve({ validTags, invalidTags });
-      console.log('-------');
-    });
-  });
+  for (const tag of ast) {
+    walk(tag);
+  }
+  console.timeEnd(label);
+
+  let validTags = 0;
+  for (const tag of nodes) {
+    if (allFunctions[tag.name]) {
+      console.debug('✓', tag.name);
+      validTags += 1;
+    } else console.debug('✗', tag.name);
+  }
+  const invalidTags = nodes.length - validTags;
+  console.log('Valid tags ::', validTags);
+  if (invalidTags) {
+    console.error(`Invalid tags :: ${invalidTags}`);
+  }
+  console.log('-------');
+  return { validTags, invalidTags };
 }
 
 export async function scanFolder(dir: string, customFunctions = {}, cfg: CliConfig = {}) {

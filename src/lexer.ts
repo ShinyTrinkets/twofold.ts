@@ -177,19 +177,13 @@ export default class Lexer {
       return pending.param_value![0];
     };
 
-    const isBalancedExpr = (val: string) => {
-      const stack: string[] = [];
-      const pairs: Record<string, string> = { '[': ']', '{': '}' };
-      // @ts-ignore Not a problem
-      pairs[openExprChar] = closeExprChar;
-      for (let char of val) {
-        if (pairs[char]) {
-          stack.push(char);
-        } else if (char === ']' || char === '}') {
-          if (pairs[stack.pop()] !== char) return false;
-        }
+    const isValidJS = (code: string) => {
+      try {
+        new Function(`return ${code}`);
+        return true;
+      } catch {
+        return false;
       }
-      return stack.length === 0;
     };
 
     for (let i = 0; i < text.length; i++) {
@@ -378,7 +372,7 @@ export default class Lexer {
         else if (
           char === closeExprChar &&
           getParamValueQuote() === openExprChar &&
-          isBalancedExpr(pending.param_value + char)
+          isValidJS(pending.param_value!.slice(1))
         ) {
           pending.rawText += char;
           pending.param_value += char;

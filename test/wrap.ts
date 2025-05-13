@@ -5,8 +5,8 @@
 type TestFn = () => void | Promise<void>;
 type ExpectFn = (actual: any) => { toBe: (expected: any) => void };
 
-const isBun = typeof (globalThis as any).Bun !== 'undefined';
-const isDeno = typeof (globalThis as any).Deno !== 'undefined';
+const isBun = typeof Bun !== 'undefined';
+const isDeno = typeof Deno !== 'undefined';
 
 // Promise to resolve test and expect functions
 let testFn: (name: string, fn: TestFn) => void = () => {};
