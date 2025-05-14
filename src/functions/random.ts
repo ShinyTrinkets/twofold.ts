@@ -1,28 +1,33 @@
 /**
  * Functions for generating randomness, available as tags.
+ * <ignore> The following text:
  */
 
 import { randomChoice } from './common.ts';
 
-export function randomFloat(txtMax: string, { min = 1, max = 100, decimals = 2 }): string {
+export function randomFloat(_: string, args: Record<string, any>): string {
   /**
    * Generate a random float number.
    * Returns a pseudo-random float in the range min–max (inclusive of min, but not max).
+   * Example: <randomFloat '10'></randomFloat> will return a number between 1.0 and 9.99.
    */
-  const precision = parseInt(decimals);
-  min = Math.ceil(parseInt(min));
-  max = Math.floor(parseInt(txtMax || max));
+  const precision = parseInt(args.decimals || 2);
+  const min = Math.ceil(parseInt(args.min || 1));
+  const max = Math.floor(parseInt(args.max || args['0'] || 100));
   const nr = max - Math.random() * (max - min);
   return nr.toFixed(precision);
 }
 
-export function randomInt(txtMax: string, { min = 1, max = 100 }): number {
+export function randomInt(_: string, args: Record<string, any>): number {
   /**
    * Generate a random integer number.
    * Returns a pseudo-random integer in the range min–max (inclusive of min, but not max).
+   * To simulate a dice roll, you can use <randomInt '7'></randomInt>,
+   * which will return a number between 1 and 6.
+   * You can also use <randomDice/>.
    */
-  min = Math.ceil(parseInt(min));
-  max = Math.floor(parseInt(txtMax || max));
+  const min = Math.ceil(parseInt(args.min || 1));
+  const max = Math.floor(parseInt(args.max || args['0'] || 100));
   return Math.floor(max - Math.random() * (max - min));
 }
 
@@ -33,9 +38,12 @@ export function yesOrNo(): string {
   return randomChoice(['Yes', 'No']);
 }
 
-export function leftOrRight(_, { emoji = true } = {}): string {
+export function leftOrRight(_: string, { emoji = true } = {}): string {
   /**
    * Random left or right (arrow, or text).
+   * Example: <leftOrRight></leftOrRight> will return either '←' or '→'.
+   * Example: <leftOrRight emoji=false></leftOrRight> will return either 'left' or 'right'.
+   *
    */
   if (emoji) {
     return randomChoice(['←', '→']);
@@ -44,7 +52,7 @@ export function leftOrRight(_, { emoji = true } = {}): string {
   }
 }
 
-export function upOrDown(_, { emoji = true } = {}): string {
+export function upOrDown(_: string, { emoji = true } = {}): string {
   /**
    * Random up or down arrow (arrow, or text).
    */
@@ -69,12 +77,14 @@ export function randomDice(): string {
   return randomChoice(['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']);
 }
 
-export function randomCard(_, { nr = 0 } = {}): string {
+export function randomCard(_: string, { nr = 0 } = {}): string {
   /**
    * Fetch one, or more random game cards.
    * Aces, Twos, Threes, Fours, Fives, Sixes, Sevens, Eights, Nines, Tens,
    * Jacks, Queens, Kings
    * Spades (♠) Hearts (♥) Diamonds (♦) Clubs (♣)
+   * Example: <randomCard></randomCard> will generate a random card, eg: J♤
+   * Example: <randomCard nr=4></randomCard> will generate 4 random cards, eg: A♤ 10♢ 9♧ Q♡
    */
   const suits = ['♤', '♡', '♢', '♧'];
   const cards = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'];
@@ -97,7 +107,7 @@ export function randomCard(_, { nr = 0 } = {}): string {
 
 function _shuff(array: any[]): any[] {
   for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
+    const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]]; // swap elements
   }
   return array;
@@ -105,10 +115,21 @@ function _shuff(array: any[]): any[] {
 
 export function shuffle(text: string, { lines = false, words = false } = {}): string {
   /**
-   * Experimental: will animate forever!
+   * Experimental: will animate forever in watch mode!
    * Shuffle the text.
-   * If lines is true, shuffle the lines.
-   * If words is true, shuffle the words.
+   * If lines=true, will shuffle the lines.
+   * If words=true, will shuffle the words.
+   * Example: <shuffle lines=1>
+   * line 1
+   * line 2
+   * line 3
+   * line 4
+   * </shuffle> will become:
+   * line 2
+   * line 3
+   * line 4
+   * line 1
+   * Or something random like that.
    */
   if (!text) return '';
   if (lines) {
@@ -122,3 +143,7 @@ export function shuffle(text: string, { lines = false, words = false } = {}): st
   const chars = text.trim().split('');
   return `\n${_shuff(chars).join('')}\n`;
 }
+
+/**
+ * End of </ignore>
+ */

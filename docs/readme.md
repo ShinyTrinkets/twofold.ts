@@ -69,6 +69,9 @@ const x = 1;
 const y = 7;
 console.log(`x: ${x}, y: ${y}`);
 (x + y) * 9
+✂----------
+x: 1, y: 7
+72
 </jsEval>
 ```
 
@@ -261,7 +264,7 @@ No documentation.
 
 ---
 
-## log (_: string, args: any)
+## log (_: string, args: any, meta: any)
 
 A tag used for DEV, that logs the args to the logger.
 
@@ -359,17 +362,19 @@ Eval Perl expression and return the result. Useful for Math.
 
 ---
 
-## randomFloat (txtMax: string, { min = 1, max = 100, decimals = 2 })
+## randomFloat (_: string, args: Record<string, any>)
 
 Generate a random float number. Returns a pseudo-random float in the range min–max (inclusive of
-min, but not max).
+min, but not max). Example: <randomFloat '10'></randomFloat> will return a number between 1.0 and
+9.99.
 
 ---
 
-## randomInt (txtMax: string, { min = 1, max = 100 })
+## randomInt (_: string, args: Record<string, any>)
 
 Generate a random integer number. Returns a pseudo-random integer in the range min–max (inclusive of
-min, but not max).
+min, but not max). To simulate a dice roll, you can use <randomInt '7'></randomInt>, which will
+return a number between 1 and 6. You can also use <randomDice/>.
 
 ---
 
@@ -379,13 +384,14 @@ Random Yes or No.
 
 ---
 
-## leftOrRight (_, { emoji = true } = {})
+## leftOrRight (_: string, { emoji = true } = {})
 
-Random left or right (arrow, or text).
+Random left or right (arrow, or text). Example: <leftOrRight></leftOrRight> will return either '←'
+or '→'. Example: <leftOrRight emoji=false></leftOrRight> will return either 'left' or 'right'.
 
 ---
 
-## upOrDown (_, { emoji = true } = {})
+## upOrDown (_: string, { emoji = true } = {})
 
 Random up or down arrow (arrow, or text).
 
@@ -403,17 +409,21 @@ Random die from 1 to 6.
 
 ---
 
-## randomCard (_, { nr = 0 } = {})
+## randomCard (_: string, { nr = 0 } = {})
 
 Fetch one, or more random game cards. Aces, Twos, Threes, Fours, Fives, Sixes, Sevens, Eights,
-Nines, Tens, Jacks, Queens, Kings Spades (♠) Hearts (♥) Diamonds (♦) Clubs (♣)
+Nines, Tens, Jacks, Queens, Kings Spades (♠) Hearts (♥) Diamonds (♦) Clubs (♣) Example:
+<randomCard></randomCard> will generate a random card, eg: J♤ Example:
+<randomCard nr=4></randomCard> will generate 4 random cards, eg: A♤ 10♢ 9♧ Q♡
 
 ---
 
 ## shuffle (text: string, { lines = false, words = false } = {})
 
-Experimental: will animate forever! Shuffle the text. If lines is true, shuffle the lines. If words
-is true, shuffle the words.
+Experimental: will animate forever in watch mode! Shuffle the text. If lines is true, will shuffle
+the lines. If words is true, will shuffle the words. Example: <shuffle lines=1> line 1 line 2 line 3
+line 4
+</shuffle> will become: line 2 line 3 line 4 line 1 Or something random like that.
 
 ---
 
