@@ -53,7 +53,7 @@ export async function ai(
 
   const body: Record<string, any> = {
     messages: histAndLines.history,
-    stream: !!args.stream,
+    stream: !!args.stream || args.stream === undefined,
   };
 
   const onSave = async (response: string) => {

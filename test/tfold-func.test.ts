@@ -13,10 +13,6 @@ test('simple text inside text', async () => {
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe('<text>1234567</text>');
 
-  txt = '<upper><text>aBc</text></upper>';
-  tmp = await twofold.renderText(txt);
-  expect(tmp).toBe('<upper>ABC</upper>');
-
   txt = '<text cut=1>1<text>2</text>3</text>';
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe('123');
@@ -82,10 +78,6 @@ test('ignore tag', async () => {
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe(txt);
 
-  txt = '<ignore><upper>a</upper> Ab <lower>X</lower></ignore>';
-  tmp = await twofold.renderText(txt);
-  expect(tmp).toBe(txt);
-
   txt = '<ignore><increment plus=4>6</increment>';
   txt += '<sort x=t>\n<//></ignore>';
   tmp = await twofold.renderText(txt);
@@ -104,7 +96,14 @@ test('ignore tag', async () => {
   txt = `<upper id=1><upper id=2>aB<lower id=3>cD
   <ignore><title>aBc</title></ignore>
   eF</lower>gH</upper></upper>`;
-  tmp = await twofold.renderText(txt);
+  tmp = await twofold.renderText(
+    txt,
+    {},
+    {
+      upper: (s: any) => s.toUpperCase(),
+      lower: (s: any) => s.toLowerCase(),
+    }
+  );
   expect(tmp).toBe(`<upper id=1><upper id=2>AB<lower id=3>cd
   <ignore><title>aBc</title></ignore>
   ef</lower>GH</upper></upper>`);

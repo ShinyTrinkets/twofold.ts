@@ -61,6 +61,15 @@ export function splitToMarker(txt: string) {
   return m && m[1] ? m[1].trimEnd() : txt;
 }
 
+/**
+ * Join text with the ✂----- marker.
+ */
+export function joinWithMarker(input: string, output: string) {
+  output = output.trim();
+  if (!output) return `\n${input}\n✂----------\n`;
+  return `\n${input}\n✂----------\n${output}\n`;
+}
+
 // Credits:
 // - https://stackoverflow.com/a/32604073
 // - https://stackoverflow.com/a/35976812

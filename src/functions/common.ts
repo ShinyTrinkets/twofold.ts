@@ -17,20 +17,6 @@ export function parseNumber(text: string): number {
   return n;
 }
 
-export function getDate(text: string | Date): Date {
-  if (text && typeof text === 'string') {
-    return new Date(text);
-  } else if (!text || typeof text !== 'object') {
-    return new Date();
-  }
-  return text;
-}
-
-export function randomChoice(choices: any[]): any {
-  const index = Math.floor(Math.random() * choices.length);
-  return choices[index];
-}
-
 export async function resolveFileName(fname: string) {
   if (fname) {
     try {

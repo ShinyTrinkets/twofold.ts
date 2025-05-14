@@ -3,7 +3,10 @@
  * <ignore> The following text:
  */
 
-import { randomChoice } from './common.ts';
+function randomChoice(choices: any[]): any {
+  const index = Math.floor(Math.random() * choices.length);
+  return choices[index];
+}
 
 export function randomFloat(_: string, args: Record<string, any>): string {
   /**

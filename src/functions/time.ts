@@ -2,7 +2,14 @@
  * Basic time and date functions, available as tags.
  */
 
-import { getDate } from './common.ts';
+function getDate(text: string | Date): Date {
+  if (text && typeof text === 'string') {
+    return new Date(text);
+  } else if (!text || typeof text !== 'object') {
+    return new Date();
+  }
+  return text;
+}
 
 export function now(txtDate: string, { date = null } = {}): string {
   /**

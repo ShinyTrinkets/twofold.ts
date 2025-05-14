@@ -1,5 +1,6 @@
 /**
  * TwoFold useful tags.
+ * <ignore> The following text:
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -44,7 +45,7 @@ export function text(s: string, args: any) {
    * only variable interpolation is done.
    * If this wraps some tags, they will be flattened/ destroyed.
    * Example: Helo {{name}}! will be returned as "Helo John!",
-   * if you set name="John".
+   * if you <set name="John"/> beforehand.
    */
   return templite(s, args);
 }
@@ -73,6 +74,7 @@ export function increment(s: string, { plus = 1 } = {}): number {
 export function countDown(s: string, args: any, meta: any) {
   /**
    * Experimental: Tick tick tick!
+   * It will count down from N down to 0, and then stop.
    */
   let n = s || args.n;
   if (n === undefined || n === null) return;
@@ -87,7 +89,8 @@ export function countDown(s: string, args: any, meta: any) {
 
 export function spinner(_: string, args: any, meta: any) {
   /**
-   * Experimental: Spinner.
+   * Experimental: animation spinner.
+   * It will animate forever, until tfold is closed.
    */
   let n = args.n;
   if (n === undefined || n === null) return;
@@ -105,6 +108,8 @@ export async function slowSave(s: string, args: any, meta: any) {
   /**
    * IT'S HACKY: demonstrates how to save intermediate results,
    * while the tag function is still running.
+   * For a better impementation, look at the streaming implementation
+   * from the LLM/AI tag.
    */
   let n = s || args.n;
   if (n === undefined || n === null) return;
@@ -138,9 +143,10 @@ export async function slowSave(s: string, args: any, meta: any) {
   }
 }
 
-export function jsDocs(_: string, args: any, meta: any): string | undefined {
+export function jsDocs(_: string, args: any): string | undefined {
   /**
    * Scan a file or directory for TypeScript function declarations.
+   * It is used to generate documentation for the TwoFold functions.
    */
   const fpath = args['0'] || args.z || args.f;
   let fstat;
@@ -176,7 +182,7 @@ export function jsDocs(_: string, args: any, meta: any): string | undefined {
 
 export function debug(_: string, args: any, meta: any): string {
   /**
-   * A tag used for DEV, to echo the parsed tag metadata.
+   * A tag used for DEV, to echo the parsed tag args and metadata.
    */
   if (meta.node.rawText) {
     // trim the < and > to disable the live tag
@@ -203,3 +209,7 @@ export function debug(_: string, args: any, meta: any): string {
   if (isDouble) text = '\n' + text + '\n';
   return text;
 }
+
+/**
+ * End of </ignore>
+ */

@@ -1,17 +1,3 @@
-export function lower(text: string): string {
-  /**
-   * Lower-case all the text.
-   */
-  return text.toLowerCase();
-}
-
-export function upper(text: string): string {
-  /**
-   * Upper-case all the text.
-   */
-  return text.toUpperCase();
-}
-
 export function titleAll(text: string): string {
   /**
    * Title case for all the words.
@@ -19,17 +5,10 @@ export function titleAll(text: string): string {
    * there is an HTML tag called "title" already.
    */
   // text.toLowerCase().replace(/(?=\b)(\w)/g, (m, $1) => $1.toUpperCase());
-  return text.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  return text.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
 }
 
-export function trim(text: string): string {
-  /**
-   * Trim whitespaces from both ends of the text.
-   */
-  return text.trim();
-}
-
-export function line(len: string, { c = '-' } = {}): string {
+export function line(len: string, { c = '-' } = {}): string | undefined {
   /**
    * Draw a long line, of specified length.
    */

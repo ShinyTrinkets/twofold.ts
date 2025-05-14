@@ -1,3 +1,5 @@
+import { joinWithMarker, splitToMarker } from '../util.ts';
+
 // @ts-ignore missing types
 import { parse } from 'shell-quote';
 
@@ -7,12 +9,8 @@ export async function cmd(
   _meta: Record<string, any> = {}
 ): Promise<string | undefined> {
   /**
-   * Execute a system command and return the output, without spawning a shell;
-   * you probably want to use Bash, or Zsh instead of this.
-   *
-   * In Node.js, this could be done with execa, zx, child_process, etc.
-   * In Bun, you just need to call Bun.spawn(...)
-   * https://bun.sh/docs/api/spawn
+   * Execute a system command and return the output, *without spawning a shell*;
+   * you probably want to use SH, or Bash instead of this.
    */
 
   cmd = txtCmd.trim() || cmd.trim();
@@ -56,7 +54,7 @@ export async function sh(txtCmd: string, { cmd, args = [], t = 5 }): Promise<str
    * Is this SH ? <sh "echo $0" //>
    */
   cmd = (txtCmd || cmd || '').trim();
-  if (!(cmd || args.length)) return;
+  if (!cmd) return;
   return await spawnShell('sh', cmd, args, t);
 }
 
@@ -67,7 +65,7 @@ export async function bash(txtCmd: string, { cmd, args = [], t = 5 }): Promise<s
    * Is this Bash ? <bash "echo $0" //>
    */
   cmd = (txtCmd || cmd || '').trim();
-  if (!(cmd || args.length)) return;
+  if (!cmd) return;
   return await spawnShell('bash', cmd, args, t);
 }
 
@@ -78,13 +76,14 @@ export async function zsh(txtCmd: string, { cmd, args = [], t = 5 }): Promise<st
    * The version of ZSH : <zsh args="--version" //>
    */
   cmd = (txtCmd || cmd || '').trim();
-  if (!(cmd || args.length)) return;
+  if (!cmd) return;
   return await spawnShell('zsh', cmd, args, t);
 }
 
 async function spawnShell(name: string, cmd: string, args: string[], timeout = 5): Promise<string> {
   const xs = [name];
   if (cmd) {
+    cmd = splitToMarker(cmd);
     xs.push('-c');
     xs.push(cmd);
   }
@@ -98,9 +97,9 @@ async function spawnShell(name: string, cmd: string, args: string[], timeout = 5
       console.log(`Shell timeout [${timeout}s], killing...`);
       proc.kill();
     }
-  }, timeout * 1000);
+  }, timeout * 1000); // 5 seconds
 
-  const text = await new Response(proc.stdout).text();
+  const stdout = await new Response(proc.stdout).text();
   clearTimeout(timeoutID);
-  return '\n' + text.trim() + '\n';
+  return joinWithMarker(cmd, stdout);
 }

@@ -3,7 +3,7 @@
  */
 import vm from 'node:vm';
 
-import { splitToMarker } from '../util.ts';
+import { joinWithMarker, splitToMarker } from '../util.ts';
 
 export function jsEval(expr: string, args: Record<string, string> = {}) {
   /**
@@ -27,11 +27,7 @@ export function jsEval(expr: string, args: Record<string, string> = {}) {
   };
   const context = vm.createContext(customContext);
   const result = vm.runInContext(expr, context);
-  return `
-${expr}
-✂----------
-${stdout.length ? stdout.join('\n') : ''}${result === undefined ? '' : '\n' + result}
-`;
+  return joinWithMarker(expr, (stdout.length ? stdout.join('\n') : '') + (result === undefined ? '' : '\n' + result));
 }
 
 export async function pyEval(expr: string, args: Record<string, any> = {}) {
@@ -42,7 +38,11 @@ export async function pyEval(expr: string, args: Record<string, any> = {}) {
   expr = (expr || args.expr).trim();
   if (!expr) return;
   expr = splitToMarker(expr);
-  const proc = Bun.spawn(['python3'], { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' });
+  const proc = Bun.spawn(['python3'], {
+    stdin: 'pipe',
+    stdout: 'pipe',
+    stderr: 'pipe',
+  });
   if (args.print === undefined || args.print === true) {
     const lines = expr.split('\n');
     const last = lines.pop();
@@ -56,11 +56,7 @@ export async function pyEval(expr: string, args: Record<string, any> = {}) {
   const stdout = await new Response(proc.stdout).text();
   const stderr = await new Response(proc.stderr).text();
   proc.unref();
-  return `
-${expr}
-✂----------
-${stdout.trim()}${stderr.trim()}
-`;
+  joinWithMarker(expr, stdout.trim() + stderr.trim());
 }
 
 export async function rbEval(expr: string, args: Record<string, any> = {}) {
