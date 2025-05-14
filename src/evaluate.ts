@@ -4,6 +4,17 @@ import { DoubleTag, ParseToken, SingleTag } from './types.ts';
 import { deepClone, isFunction } from './util.ts';
 import { log } from './logger.ts';
 
+let parseToml = false;
+
+(async () => {
+  if (typeof Bun !== 'undefined') {
+    parseToml = Bun.TOML.parse;
+  } else if (typeof Deno !== 'undefined') {
+    const { parse } = await import('jsr:@std/toml');
+    parseToml = parse;
+  }
+})();
+
 /**
  * Evaluate a single tag, by calling the tag function.
  */
@@ -179,7 +190,7 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
   const openExprChar = cfg.openExpr?.[0]!;
   const closeExprChar = cfg.closeExpr?.[0]!;
   // The group name for variables
-  const group = (tag.name === 'set' || tag.name === 'json' || tag.name === 'yaml') && tag.params?.['0'];
+  const group = (tag.name === 'set' || tag.name === 'json' || tag.name === 'toml') && tag.params?.['0'];
 
   if (tag.name === 'set' && tag.params) {
     // Set (define) one or more variaßles inside the group
@@ -253,6 +264,37 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
           }
         } catch (err: any) {
           log.warn(`Cannot parse JSON glob tag!`, err.message);
+        }
+      }
+    }
+  } else if (tag.name === 'toml') {
+    // Set (define) TOML data inside the group
+    if (group) {
+      if (tag.params) {
+        delete tag.params['0'];
+      }
+      try {
+        const data = parseToml(getText(tag as DoubleTag));
+        if (!customData[group]) {
+          customData[group] = {};
+        }
+        // Object, new variables are merged with the group
+        customData[group] = Object.assign(customData[group], data);
+      } catch (err: any) {
+        log.warn(`Cannot parse TOML group tag!`, err.message);
+      }
+    } else {
+      // Set (define) TOML object globally
+      const text = getText(tag as DoubleTag);
+      if (text) {
+        try {
+          const data = parseToml(text);
+          // must be an object
+          for (const [k, v] of Object.entries(data)) {
+            customData[k] = v;
+          }
+        } catch (err: any) {
+          log.warn(`Cannot parse TOML glob tag!`, err.message);
         }
       }
     }

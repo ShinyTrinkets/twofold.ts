@@ -184,7 +184,7 @@ test('set variable group', async () => {
   expect(vars).toEqual({});
 });
 
-test('set global JSON data', async () => {
+test('set global JSON/ TOML data', async () => {
   let vars = {};
   let txt = '<json>{ "x":1, "a":"a" }</json>';
   let tmp = await twofold.renderText(txt, vars);
@@ -207,9 +207,29 @@ test('set global JSON data', async () => {
   expect(vars.a).toBe('a');
   expect(vars.c).toBe('c');
 
+  vars = {};
+  txt = `<set x=1 a="a" /> <toml>
+x = 2
+c = "c"
+</toml>`;
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars.x).toBe(2);
+  expect(vars.a).toBe('a');
+  expect(vars.c).toBe('c');
+
   // bad JSON
   vars = {};
   txt = '<json>{ "x":1 </json>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+
+  // bad TOML
+  vars = {};
+  txt = `<toml>
+x:1
+</toml>`;
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
@@ -235,6 +255,16 @@ test('set variable group', async () => {
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars.a).toEqual({ x: 1, a: 'a' });
+
+  vars = {};
+  txt = `<toml 'a'>
+int1 = 42
+hex2 = 0xDEADBEEF
+oct3 = 0o755
+</toml>`;
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars.a).toEqual({ int1: 42, hex2: 0xdeadbeef, oct3: 0o755 });
 
   vars = {};
   // set inner variables
@@ -345,12 +375,32 @@ test('variable interpolation', async () => {
   expect(vars.dump).toBe('json:{"host":"127.1","port":8080,"timeout":60,"seed":-1}');
   expect(tmp).toBe(txt);
 
-  // Functions in interpolation; Doesn't work yet
-  // vars = {};
-  // txt = "<set trim=`(x)=>x.trim()`/><set name=' John ' nameTrim=`${trim(name)}`/>";
-  // tmp = await twofold.renderText(txt, vars,);
-  // expect(vars).toEqual({ trim: "(x)=>x.trim()", name: ' John ', nameTrim: 'John' });
-  // expect(tmp).toBe(txt);
+  // Mixing json and set with interpolation
+  vars = {};
+  txt = `<toml "cfg">
+[database]
+enabled = true
+ports = [ 8000, 8001, 8002 ]
+data = [ ["delta", "phi"], [3.14] ]
+temp_targets = { cpu = 79.5, case = 72.0 }
+</toml>
+<set db=\`\${cfg.database.data[0][0]}-\${cfg.database.ports[0]}\`/> <chk/>`;
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({
+        cfg: {
+          database: {
+            enabled: true,
+            ports: [8000, 8001, 8002],
+            data: [['delta', 'phi'], [3.14]],
+            temp_targets: { cpu: 79.5, case: 72.0 },
+          },
+        },
+        db: 'delta-8000',
+      });
+    },
+  });
+  expect(tmp).toBe(txt);
 
   // Rewriting same variable with interpolation
   vars = {};

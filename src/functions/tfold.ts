@@ -39,6 +39,15 @@ export function json() {
   return;
 }
 
+export function toml() {
+  /**
+   * Set (define) variables from a TOML object.
+   *
+   * The logic for this tag is in the evaluate tags functions.
+   */
+  return;
+}
+
 export function text(s: string, args: any) {
   /**
    * A tag used for DEV, that returns the text as is,
