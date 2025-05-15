@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
-
 import { resolveDirName, resolveFileName } from './common.ts';
 
 async function _resolvFname(f1: string, f2: string) {
@@ -11,18 +10,27 @@ async function _resolvFname(f1: string, f2: string) {
   return fname;
 }
 
-export async function cat(txtFile: string, { f = null, start = 0, limit = 250 } = {}, meta = {}) {
+export async function cat(txtFile: string, { f = null, start = 0, limit = 250 } = {}, meta: any) {
   /**
    * Read a file with limit. Similar to "cat" commant from Linux.
+   * Example: <cat 'file.txt' start=0 limit=100 />
    */
   const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
-  const buffer = Buffer.alloc(limit);
-  const fn = await fsPromises.open(fname, 'r');
-  // read(fn, buffer, offset, length, position)
-  await fsPromises.read(fn.fd, buffer, 0, limit, start);
-  await fn.close();
-  const text = buffer.toString().trim();
+  let text = '';
+
+  if (typeof Bun !== 'undefined') {
+    let file = Bun.file(fname);
+    file = file.slice(start, limit);
+    text = await file.text();
+  } else if (typeof Deno !== 'undefined') {
+    using file = await Deno.open(fname, { read: true });
+    await file.seek(start, Deno.SeekMode.Start);
+    const buffer = new Uint8Array(limit);
+    await file.read(buffer);
+    text = new TextDecoder().decode(buffer);
+  }
+
   if (meta.node.double) return `\n${text}\n`;
   return text;
 }

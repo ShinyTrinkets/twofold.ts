@@ -7,9 +7,11 @@ import { log } from './logger.ts';
 let parseToml = false;
 
 (async () => {
-  if (typeof Bun !== 'undefined') {
+  // typeof Bun !== "undefined"
+  if (process.versions.bun) {
     parseToml = Bun.TOML.parse;
-  } else if (typeof Deno !== 'undefined') {
+  } else if (process.versions.deno) {
+    // typeof Deno !== "undefined"
     const { parse } = await import('jsr:@std/toml');
     parseToml = parse;
   }

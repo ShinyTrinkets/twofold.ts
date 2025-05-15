@@ -26,6 +26,9 @@ export function set() {
    * Set (define) one or more variables.
    *
    * The logic for this tag is in the evaluate tags functions.
+   *
+   * Example:
+   * <set name="John" age="30" job="engineer"/>
    */
   return;
 }
@@ -35,6 +38,15 @@ export function json() {
    * Set (define) variables from a JSON object.
    *
    * The logic for this tag is in the evaluate tags functions.
+   *
+   * Example:
+   * <json>
+   *   {
+   *     "name": "John",
+   *     "age": 30,
+   *     "job": "engineer"
+   *   }
+   * </json>
    */
   return;
 }
@@ -44,6 +56,13 @@ export function toml() {
    * Set (define) variables from a TOML object.
    *
    * The logic for this tag is in the evaluate tags functions.
+   *
+   * Example:
+   * <toml>
+   *  name = "John"
+   *  age = 30
+   *  job = "engineer"
+   * </toml>
    */
   return;
 }

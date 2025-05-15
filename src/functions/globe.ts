@@ -142,6 +142,9 @@ export function globe(_: string, args: any, meta: any) {
   }
   args.n--;
   meta.node.params.n = args.n;
+  if (!meta.node.children) {
+    meta.node.children = [{}];
+  }
   meta.node.children[0].rawText = `\n${GLOBE[args.n]}\n`;
   return meta.node;
 }
