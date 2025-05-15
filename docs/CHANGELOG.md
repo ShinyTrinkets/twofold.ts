@@ -3,8 +3,12 @@
 ## v0.10 WIP
 
 - BREAKING change: JSON props in backticks are gone!
-  they are replaced by the new expr {...} props
-- newlines allowed inside backtick string props
+  replaced by the new JSX curly braces {..} props
+- there is a new {..} prop type, inspired from JSX curly braces
+  and they allow newlines inside
+- newlines also allowed inside backtick string props
+- created "toml" tag to define variables available within the file;
+  it works just like the "json" tag
 
 ## v0.9
 

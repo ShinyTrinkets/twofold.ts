@@ -190,7 +190,13 @@ const TESTS = [
         secondTagText: '</temp>',
         name: 'temp',
         params: { type: 'f', deep: 'no', nr: 3, null: null, false: false },
-        rawParams: { type: 'f', deep: 'no', nr: '3', null: 'null', false: 'false' },
+        rawParams: {
+          type: 'f',
+          deep: 'no',
+          nr: '3',
+          null: 'null',
+          false: 'false',
+        },
         children: [{ index: 48, rawText: '0' }],
       },
     ],
@@ -391,6 +397,38 @@ const TESTS = [
           {
             index: 16,
             rawText: '<trick3><trick4>',
+          },
+        ],
+      },
+    ],
+  ],
+  [
+    '<ignore><line "1"/></randomCard></ignore>',
+    [
+      {
+        double: true,
+        index: 0,
+        name: 'ignore',
+        path: '0',
+        firstTagText: '<ignore>',
+        secondTagText: '</ignore>',
+        children: [
+          {
+            index: 8,
+            rawText: '<line "1"/>',
+            name: 'line',
+            params: {
+              '0': '1',
+            },
+            rawParams: {
+              '0': '"1"',
+            },
+            single: true,
+            path: '0.children.0',
+          },
+          {
+            index: 19,
+            rawText: '</randomCard>',
           },
         ],
       },

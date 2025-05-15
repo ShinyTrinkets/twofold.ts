@@ -33,7 +33,7 @@ User:
 
 In this example, the `ai` tag will receive as props: "user", "char", "url", "model" and "stream".
 
-## Json
+## JSON data
 
 This tag is useful for defining deeply nested variables inside one single tag. Example:
 
@@ -48,8 +48,39 @@ We are defining a JSON tag called "users":
 
 ( This is just random data, to show how it would work )
 
+<set current={users[1]} id={current.id} />
+```
+
+Here, you set the current user as the second element in the array, and `id=2`. All the tags
+following this `set` will receive the `users` array, and the current user and ID.
+
+```md
+... continued
+
 <set name=`${users[0].first_name}-${users[0].last_name}` />
 ```
 
 In this example, all the tags following this `set` will receive the `users` array, and also
 `name="Harland-Fountian"` as props.
+
+## TOML data
+
+Just like the JSON tag, this is useful for defining nested variables inside one single tag. Example:
+
+```md
+We are defining a TOML tag called "servers":
+
+<toml "servers">
+[alpha]
+ip = "10.0.0.1"
+role = "frontend"
+
+[beta]
+ip = "10.0.0.2"
+role = "backend"
+</toml>
+
+<set current={servers.alpha} ip=`${current.ip}` />
+```
+
+In this example, all the following tags will receive the "servers" and `ip="10.0.0.1"`.

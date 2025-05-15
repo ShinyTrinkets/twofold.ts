@@ -1,6 +1,7 @@
 import { LexToken, ParseToken } from './types.ts';
-import * as config from './config.ts';
 import { isDoubleTag, isFullDoubleTag, isRawText, isSingleTag } from './tags.ts';
+import { log } from './logger.ts';
+import * as config from './config.ts';
 
 function addChild(parent: ParseToken, child: ParseToken): void {
   if (!parent.children) {
@@ -116,7 +117,6 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
         if (topStack && topStack.name === token.name) {
           commitDouble(token);
         } else {
-          dropFakeDouble();
           // Search up the stack if the closing tag matches anything
           let unwindNo = -1;
           for (let i = stack.length - 1; i >= 0; i--) {

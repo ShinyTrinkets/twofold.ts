@@ -83,6 +83,10 @@ test('ignore tag', async () => {
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe(txt);
 
+  txt = '<ignore><line "40" /><random Card></randomCard></ignore>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
+
   // deep ignore
   txt = '<increment "1" /> <ignore><increment "2" /></ignore> <increment "3" />';
   tmp = await twofold.renderText(txt);
