@@ -252,6 +252,22 @@ const TESTS = [
   // test ZERO tags
   ['<tag []/>', [{ index: 0, rawText: '<tag []/>' }]],
   ['<tag {}/>', [{ index: 0, rawText: '<tag {}/>' }]],
+  ['<tag {.x}/>', [{ index: 0, rawText: '<tag {.x}/>' }]],
+  ['<tag {..x}/>', [{ index: 0, rawText: '<tag {..x}/>' }]],
+  ['<tag {...x.}/>', [{ index: 0, rawText: '<tag {...x.}/>' }]],
+  [
+    '<tag {...props}/>',
+    [
+      {
+        index: 0,
+        name: 'tag',
+        params: { '0': '...props' },
+        rawParams: { '0': '{...props}' },
+        rawText: '<tag {...props}/>',
+        single: true,
+      },
+    ],
+  ],
   [
     '<a "1" />',
     [{ name: 'a', params: { 0: '1' }, rawParams: { 0: '"1"' }, rawText: '<a "1" />', single: true, index: 0 }],

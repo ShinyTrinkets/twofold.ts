@@ -286,7 +286,7 @@ export default class Lexer {
           commitAndTransition(STATE_RAW_TEXT);
         } // Is this the start of a ZERO param value?
         // Only one is allowed, and it must be first
-        else if (!pending.params && isQuote(char)) {
+        else if (!pending.params && (isQuote(char) || char === openExprChar)) {
           pending.rawText += char;
           pending.params = {};
           pending.rawParams = {};
@@ -360,9 +360,14 @@ export default class Lexer {
           delete pending.param_value;
           pending.rawText += char;
           commitAndTransition(STATE_RAW_TEXT, true);
-        } // Empty ZERO param values not allowed
-        // Eg: {cmd ""}, {exec ""}, or {ping ""} don't make sense
-        else if (char === getParamValueQuote() && pending.param_key === '0' && pending.param_value!.length === 1) {
+        } //
+        // Empty ZERO param values not allowed
+        // Eg: {cmd ""}, {exec ""}, {ping ""} or {set {}} don't make sense
+        else if (
+          (char === getParamValueQuote() || char === closeExprChar) &&
+          pending.param_key === '0' &&
+          pending.param_value!.length === 1
+        ) {
           delete pending.params;
           delete pending.rawParams;
           delete pending.param_key;

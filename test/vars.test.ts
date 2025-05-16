@@ -126,7 +126,7 @@ test('set variable group', async () => {
     '<set "creative" temp=1 min_p=0.1 frequency_penalty=0.1 repeat_penalty=1.1/>' +
     '<set "feather" keyName=FEATHERLESS_KEY url="https://api.featherless.ai/v1/chat/completions" model="Qwen/Qwen3-32B"/>' +
     '<set "priv" name=Chris char=Audrey/>' +
-    '<set ai={{ ...feather, ...creative, ...priv }} />';
+    '<set ai={ ...feather, ...creative, ...priv } />';
   tmp = await twofold.renderText(txt, vars);
   expect(vars.ai).toEqual({
     name: 'Chris',
