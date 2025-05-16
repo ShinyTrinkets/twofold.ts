@@ -206,7 +206,17 @@ The imported variables will be merged with the local variables, just like a `set
 
 ## Delete tag
 
-WIP... A tag to delete variables.
+The `del` tag can be used to delete variables. You can also `set` a variable to undefined, it's almost the same.
+
+Example:
+
+```md
+<set name=John age=23 />
+
+<del "name"/>
+
+Now, only the "age" variable is set.
+```
 
 ## Vars tag
 

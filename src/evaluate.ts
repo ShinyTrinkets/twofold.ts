@@ -200,9 +200,16 @@ async function __specialTags(
   const openExprChar = cfg.openExpr?.[0]!;
   const closeExprChar = cfg.closeExpr?.[0]!;
   // The group name for variables
-  const group = (tag.name === 'set' || tag.name === 'json' || tag.name === 'toml') && tag.params?.['0'];
+  const group =
+    (tag.name === 'del' || tag.name === 'set' || tag.name === 'json' || tag.name === 'toml') && tag.params?.['0'];
 
-  if (tag.name === 'set' && tag.params) {
+  if (tag.name === 'del' && group) {
+    // Delete the specified variable
+    if (customData[group]) {
+      delete customData[group];
+      log.debug(`Deleted var "${group}"!`);
+    }
+  } else if (tag.name === 'set' && tag.params) {
     // Set (define) one or more variaßles inside the group
     if (group) {
       // Perhaps it makes sense to keep the group name,
@@ -328,10 +335,13 @@ async function __specialTags(
 
     let ast: ParseToken[] = [];
     try {
-      // TODO :: Bun only !!
-      // Deno support is not yet implemented
-      const file = Bun.file(fname);
-      const text = await file.text();
+      let text = '';
+      if (typeof Bun !== 'undefined') {
+        const file = Bun.file(fname);
+        text = await file.text();
+      } else if (typeof Deno !== 'undefined') {
+        text = await Deno.readTextFile(fname);
+      }
       ast = parse(new Lexer(cfg).lex(text), cfg);
     } catch {
       log.warn(`Cannot import from "${fname}"!`);

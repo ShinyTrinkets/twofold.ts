@@ -474,6 +474,21 @@ temp_targets = { cpu = 79.5, case = 72.0 }
   expect(tmp).toBe(txt);
 });
 
+test('del variable', async () => {
+  let vars = {};
+  let txt = '<set name="John"/><del "name"/>';
+  let tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({});
+  expect(tmp).toBe(txt);
+
+  vars = {};
+  // delete inexisting variable
+  txt = '<del "xyz"/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({});
+  expect(tmp).toBe(txt);
+});
+
 test('importing files', async () => {
   let vars = {};
   let txt = '<set name="John" debug=null/> <import "debug" from="test/fixtures/variables1.md"/>';
