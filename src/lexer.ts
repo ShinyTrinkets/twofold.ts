@@ -182,6 +182,10 @@ export default class Lexer {
     };
 
     const isValidJS = (code: string) => {
+      // Special case for spread syntax
+      if (code.trimStart().startsWith('...')) {
+        code = `{ ${code} }`;
+      }
       try {
         new Function(`return ${code}`);
         return true;

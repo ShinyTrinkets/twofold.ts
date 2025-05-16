@@ -180,8 +180,13 @@ function shouldInterpolate(v: string, openExprChar: string, closeExprChar: strin
 }
 
 function interpolate(args: Record<string, any>, body: string, openExprChar: string, closeExprChar: string) {
+  // Raw property value is always trimmed
   if (body[0] === openExprChar && body[body.length - 1] === closeExprChar) {
     body = body.slice(1, -1);
+  }
+  // Special case for spread syntax
+  if (body.trimStart().startsWith('...')) {
+    body = `{ ${body} }`;
   }
   const fn = new Function(...Object.keys(args), `{ return ${body} }`);
   return fn(...Object.values(args));
@@ -201,7 +206,7 @@ async function __specialTags(
   const closeExprChar = cfg.closeExpr?.[0]!;
   // The group name for variables
   const group =
-    (tag.name === 'del' || tag.name === 'set' || tag.name === 'json' || tag.name === 'toml') && tag.params?.['0'];
+    (tag.name === 'set' || tag.name === 'json' || tag.name === 'toml' || tag.name === 'del') && tag.params?.['0'];
 
   if (tag.name === 'del' && group) {
     // Delete the specified variable
@@ -323,7 +328,7 @@ async function __specialTags(
     if (!tag.params?.['0']) return;
     // Import X from Y
     const what = tag.params?.['0']
-      .split(/[,;]/)
+      .split(/[,]/)
       .map((w: string) => w.trim())
       .filter((w: string) => w.length > 0); // The variables to import
     if (what.length === 0) return;

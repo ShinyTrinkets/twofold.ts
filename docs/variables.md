@@ -69,12 +69,12 @@ Now you can merge groups together into a new variable, with the JavaScript sprea
 <set "chat" user=John char=Jenna />
 
 ( variable "strictLlama" will contain all variables from llama4 + strict + chat groups )
-<set strictLlama={{...llama4, ...strict, ...chat}} />
+<set strictLlama={...llama4, ...strict, ...chat} />
 
 Or:
 
 ( if the variables are not overlapping, the merging order is not important )
-<set creativeAnubis={{...chat, ...anubis, ...creative}} />
+<set creativeAnubis={...chat, ...anubis, ...creative} />
 ```
 
 ## JSON data

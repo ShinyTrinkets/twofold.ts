@@ -5,10 +5,13 @@
 - BREAKING change: JSON props in backticks are gone!
   replaced by the new JSX curly braces {..} props
 - there is a new {..} prop type, inspired from JSX curly braces
-  and they allow newlines inside
+  and it allows newlines inside
 - newlines also allowed inside backtick string props
+- created "import" tag to import set, json or toml variables from
+  other files
 - created "toml" tag to define variables available within the file;
   it works just like the "json" tag
+- created "del" tag to delete variables
 
 ## v0.9
 
