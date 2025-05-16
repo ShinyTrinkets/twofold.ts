@@ -82,7 +82,7 @@ test('render The Big List of Naughty Strings', async () => {
 test('render fixtures/', async () => {
   const folder = DIR + '/fixtures/';
   let result = await twofold.renderFolder(folder);
-  expect(result).toEqual({ found: 9, rendered: 0 });
+  expect(result).toEqual({ found: 11, rendered: 0 });
   result = await twofold.renderFolder(folder, {}, { glob: '*.js' });
   expect(result).toEqual({ found: 1, rendered: 0 });
 });

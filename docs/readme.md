@@ -1,6 +1,6 @@
 # TwoFold (2✂︎f) tags
 
-The TwoFold tags are just regular TypeScript/ JavaScript functions.
+TwoFold (2✂︎f) tags are just regular TypeScript/ JavaScript functions.
 
 They receive as input the text inside the tags (in case of double tags), extra tag props and user
 settings (in case they are defined).
@@ -251,9 +251,9 @@ The logic for this tag is in the evaluate tags functions.
 
 Example:
 <toml>
- name = "John"
- age = 30
- job = "engineer"
+name = "John"
+age = 30
+job = "engineer"
 </toml>
 
 ---
@@ -485,7 +485,7 @@ or "dir" command from Windows.
 
 ## cmd (txtCmd: string, { cmd, args = [] }, _meta: Record<string, any> = {})
 
-Execute a system command and return the output, *without spawning a shell*;
+Execute a system command and return the output, _without spawning a shell_;
 you probably want to use SH, or Bash instead of this.
 
 ---

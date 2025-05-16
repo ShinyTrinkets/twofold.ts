@@ -1,10 +1,10 @@
 
-<set debug=true User=? />
+<set debug=false User=? />
 
 For this TOML, the data is grouped inside SomeConfig:
 
 <toml>
-debug = false
+debug = true
 
 [SomeConfig]
 db_name = example_DB

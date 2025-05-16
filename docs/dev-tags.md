@@ -1,6 +1,13 @@
 ## Tags development
 
-TwoFold (2✂︎f) tags are just TypeScript/ JavaScript functions. Async functions are supported.
+TwoFold (2✂︎f) tags are super flexible and powerful. They are just TypeScript/ JavaScript functions.
+Async functions are supported.
+
+It's very important to understand that the "builtin" tags are not special, they don't have access to
+some functionality that you cannot use. The "builtin" tags are "builtin" only because they are baked
+inside the `tfold` executable.<br/> What I'm trying to say is that you can copy any of the builtin
+tags, hack around and import your code and use that as an alternative, if you want custom logic, or
+the builtin tags are missing something.
 
 The simple core tag called `increment` looks like this:
 
@@ -37,7 +44,7 @@ In this case ^, the function will receive the params: s=2, plus=3, innerText='4'
 the inner text.
 ```
 
-Another example from the core tags is `lower`:
+Another simple example tag is `lower`:
 
 ```ts
 export function lower(text: string): string {

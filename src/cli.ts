@@ -53,8 +53,9 @@ you can use pipes:
   $ echo "gimme a game card: <randomCard />" | tfold
   $ cat my-file.md | tfold
 `;
-(async function main() {
-  const args = mri(process.argv.slice(2), options);
+
+export async function main(arvg = process.argv.slice(2)) {
+  const args = mri(arvg, options);
 
   if (args.version) {
     console.log('TwoFold (2✂︎f) v' + pkg.version);
@@ -211,4 +212,8 @@ you can use pipes:
     const result = await twofold.renderText(text, {}, funcs, config);
     console.log(result);
   }
-})();
+}
+
+if (import.meta.main) {
+  await main();
+}
