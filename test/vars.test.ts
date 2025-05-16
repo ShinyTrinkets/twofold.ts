@@ -218,9 +218,23 @@ c = "c"
   expect(vars.a).toBe('a');
   expect(vars.c).toBe('c');
 
+  // no JSON
+  vars = {};
+  txt = '<json></json>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+
   // bad JSON
   vars = {};
   txt = '<json>{ "x":1 </json>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+
+  // no TOML
+  vars = {};
+  txt = '<toml></toml>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
@@ -458,4 +472,63 @@ temp_targets = { cpu = 79.5, case = 72.0 }
     },
   });
   expect(tmp).toBe(txt);
+});
+
+test('importing files', async () => {
+  let vars = {};
+  let txt = '<set name="John" debug=null/> <import "debug" from="test/fixtures/variables1.md"/>';
+  let tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ name: 'John', debug: true });
+
+  vars = {};
+  txt =
+    '<import "SomeConfig.db_name, SshCfg.User" from="test/fixtures/variables1.md"/>' +
+    '<set db={SomeConfig.db_name} name=`${SshCfg.User}`/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({
+    SomeConfig: { db_name: 'example_DB' },
+    SshCfg: { User: 'user' },
+    db: 'example_DB',
+    name: 'user',
+  });
+
+  vars = {};
+  txt = '<import "person" from="test/fixtures/variables2.md"/>' + '<set addr=`${person.address.home.street_address}`/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars.addr).toBe('21 2nd Street');
+
+  vars = {};
+  txt = '<import "fullName, phone" from="test/fixtures/variables2.md" />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ fullName: 'John Smith', phone: '212 555-1234' });
+
+  // errors: importing nothing
+  vars = {};
+  txt = '<import from="test/xyz.txt"/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+
+  txt = '<import "a" from=""/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+
+  // errors: importing from invalid file
+  vars = {};
+  txt = '<import "x" from="test/xyz.txt"/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+
+  // errors: importing invalid var from existing file
+  vars = {};
+  txt = '<import "xyz" from="test/fixtures/variables1.md"/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
 });

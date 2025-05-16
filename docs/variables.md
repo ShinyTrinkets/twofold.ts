@@ -57,9 +57,11 @@ To group variables, you just specify the group name as a zero prop:
 
 To access the data from a group, you can get it with "group dot variable", like in JavaScript:
 
+```
 <text>
 The URL for Llama 4 Maverick is {{llama4.url}}, and the model ID is {{llama4.model}} ;
 </text>
+```
 
 Now you can merge groups together into a new variable, with the JavaScript spread syntax:
 
@@ -95,10 +97,6 @@ We are defining a JSON data group called "users":
 <set current={users[1]} id={current.id} />
 ```
 
-The **json** tag must be a double-tag.
-
-Unlike the `set` and `toml` tags, the JSON tag must have a group name, because they can have a top-level array which cannot be merged with the context object.
-
 Here, you set the current user as the second element in the array, and `id=2`. All the tags following this `set` will receive the `users` array, and the current user and ID.
 
 ```md
@@ -109,7 +107,9 @@ Here, you set the current user as the second element in the array, and `id=2`. A
 
 In this example, all the tags following this `set` will receive the `users` array, and also `name="Harland-Fountian"` as props.
 
-JSON data will be merged with any other `set`, `toml` or `import` data declared later.
+The **json** tag must be a double-tag. Unlike the `set` and `toml` tags, the JSON tag must have a group name, because they can have a top-level array which cannot be merged with the context object.
+
+JSON data will be merged with any other `set`, `toml` or `import` data declared before.
 
 ## TOML data
 
@@ -133,11 +133,9 @@ role = "backend"
 
 In this example, all the following tags will receive the "servers" object and `ip="10.0.0.1"`.
 
-The **toml** tag must be a double-tag.
+The **toml** tag must be a double-tag. You can load the TOML into a group name just like the `set` and `json` tags, by specifying the group name as a zero prop.
 
-You can load the TOML into a group name just like the `set` and `json` tags, by specifying the group name as a zero prop.
-
-TOML data will be merged with any other `set`, `json` or `import` data declared later.
+TOML data will be merged with any other `set`, `json` or `import` data declared before.
 
 ## Import variables
 

@@ -3,6 +3,8 @@ import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag 
 import { DoubleTag, ParseToken, SingleTag } from './types.ts';
 import { deepClone, isFunction } from './util.ts';
 import { log } from './logger.ts';
+import Lexer from './lexer.ts';
+import parse from './parser.ts';
 
 let parseToml = false;
 
@@ -186,9 +188,15 @@ function interpolate(args: Record<string, any>, body: string, openExprChar: stri
 }
 
 /*
- * Run special tags logic.
+ * Run special tags logic (set, json, toml, import)
  */
-function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Config) {
+async function __specialTags(
+  tag: ParseToken,
+  customData: Record<string, any>,
+  allFunctions: Record<string, Function>,
+  cfg: Config,
+  meta: Record<string, any>
+) {
   const openExprChar = cfg.openExpr?.[0]!;
   const closeExprChar = cfg.closeExpr?.[0]!;
   // The group name for variables
@@ -197,6 +205,8 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
   if (tag.name === 'set' && tag.params) {
     // Set (define) one or more variaßles inside the group
     if (group) {
+      // Perhaps it makes sense to keep the group name,
+      // at least for the inner children tags? TODO?
       delete tag.params['0'];
       if (!customData[group]) {
         customData[group] = {};
@@ -230,13 +240,15 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
       }
     }
   } else if (tag.name === 'json') {
+    const text = getText(tag as DoubleTag);
+    if (!text) return;
     // Set (define) JSON data inside the group
     if (group) {
       if (tag.params) {
         delete tag.params['0'];
       }
       try {
-        const data = JSON.parse(getText(tag as DoubleTag));
+        const data = JSON.parse(text);
         if (typeof data !== 'object' || Array.isArray(data)) {
           // Not an object, data is overwritten
           customData[group] = data;
@@ -252,7 +264,6 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
       }
     } else {
       // Set (define) JSON object globally
-      const text = getText(tag as DoubleTag);
       if (text) {
         try {
           const data = JSON.parse(text);
@@ -270,13 +281,15 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
       }
     }
   } else if (tag.name === 'toml') {
+    const text = getText(tag as DoubleTag);
+    if (!text) return;
     // Set (define) TOML data inside the group
     if (group) {
       if (tag.params) {
         delete tag.params['0'];
       }
       try {
-        const data = parseToml(getText(tag as DoubleTag));
+        const data = parseToml(text);
         if (!customData[group]) {
           customData[group] = {};
         }
@@ -287,7 +300,6 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
       }
     } else {
       // Set (define) TOML object globally
-      const text = getText(tag as DoubleTag);
       if (text) {
         try {
           const data = parseToml(text);
@@ -299,6 +311,86 @@ function __specialTags(tag: ParseToken, customData: Record<string, any>, cfg: Co
           log.warn(`Cannot parse TOML glob tag!`, err.message);
         }
       }
+    }
+  } else if (tag.name === 'import') {
+    if (!tag.params?.['0']) return;
+    // Import X from Y
+    const what = tag.params?.['0']
+      .split(/[,;]/)
+      .map((w: string) => w.trim())
+      .filter((w: string) => w.length > 0); // The variables to import
+    if (what.length === 0) return;
+    const fname = tag.params?.from; // The file to import from
+    if (!fname) return;
+
+    // TODO :: import name as alias
+    // TODO :: check circular imports !!
+
+    let ast: ParseToken[] = [];
+    try {
+      // TODO :: Bun only !!
+      // Deno support is not yet implemented
+      const file = Bun.file(fname);
+      const text = await file.text();
+      ast = parse(new Lexer(cfg).lex(text), cfg);
+    } catch {
+      log.warn(`Cannot import from "${fname}"!`);
+      return;
+    }
+
+    let importdData: Record<string, any> = {};
+    for (const t of ast) {
+      if (t.name === 'set' || t.name === 'json' || t.name === 'toml') {
+        await evaluateTag(t, importdData, allFunctions, cfg, meta);
+      }
+    }
+    ast = [];
+
+    if (what.length === 1 && what[0] === '*') {
+      // Import *all* variables
+      for (const key of Object.keys(importdData)) {
+        customData[key] = importdData[key];
+      }
+      return;
+    }
+
+    // Create a new tree only with the selected paths.
+    // This is a bit unusual, compared to Node.js imports,
+    // but it allows to import only the needed variables,
+    // at any depth, not just the top level
+    const selectedData: Record<string, any> = {};
+    for (const path of what) {
+      const keys = path.split('.');
+      let currentObj = importdData;
+      let currentResult = selectedData;
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (currentObj && typeof currentObj === 'object' && key in currentObj) {
+          if (i === keys.length - 1) {
+            // Last key in the path, assign the value
+            if (!currentResult[key]) {
+              currentResult[key] = currentObj[key];
+            }
+          } else {
+            // Not the last key, create nested object if it doesn't exist
+            if (!currentResult[key]) {
+              currentResult[key] = {};
+            }
+            currentResult = currentResult[key];
+            currentObj = currentObj[key];
+          }
+        } else {
+          // Path doesn't exist in the original object
+          log.warn(`Cannot find "${key}" in "${fname}"!`);
+          break;
+        }
+      }
+    }
+    importdData = {};
+
+    // Merge the selected/ imported data with current context
+    for (const key of Object.keys(selectedData)) {
+      customData[key] = selectedData[key];
     }
   } else {
     // Run string interpolation using the rawParams
@@ -337,7 +429,7 @@ export default async function evaluateTag(
   }
 
   // Run special tags logic
-  __specialTags(tag, customData, cfg);
+  await __specialTags(tag, customData, allFunctions, cfg, meta);
 
   // Deep evaluate all children, including invalid TwoFold tags
   if (tag.children) {
