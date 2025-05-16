@@ -1,6 +1,7 @@
 # TwoFold (2✂︎f)
 
-[![Project name][project-img]][project-url] [![CLI app][cli-img]](#) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ShinyTrinkets/twofold.ts)
+[![Project name][project-img]][project-url] [![CLI app][cli-img]](#)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ShinyTrinkets/twofold.ts)
 
 <!-- deno-fmt-ignore-start -->
 
@@ -22,6 +23,11 @@ a hybrid between a text expander and a template engine.<br/> It is also inspired
 Python Jupyter Notebooks and React JS.
 
 Check the **[Similar and comparison](/docs/similar.md) page** for more details.
+
+TwoFold has absolutely nothing to do with LLMs/ AI. TwoFold is **not written by AI**. This project
+is not built with vibe coding. TwoFold has an LLM/ AI tag that you can optionally use, because LLMs
+are text processing machines, and TwoFold deals with text, so it makes sense; but the AI tag is
+entirely optional.
 
 TwoFold operates by processing a text file, identifying all LISP/XML-like tags and transforming them
 into useful outputs. It is compatible with XML and HTML documents, but you can customize the tag
