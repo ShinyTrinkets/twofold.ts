@@ -9,10 +9,12 @@ Just a random JSON file
   "is_alive": true,
   "age": 27,
   "address": {
-    "street_address": "21 2nd Street",
-    "city": "New York",
-    "state": "NY",
-    "postal_code": "10021-3100"
+    "home": {
+      "street_address": "21 2nd Street",
+      "city": "New York",
+      "state": "NY",
+      "postal_code": "10021-3100"
+    }
   },
   "phone_numbers": [
     {
