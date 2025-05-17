@@ -119,7 +119,7 @@ test('set variable group', async () => {
     },
   });
   expect(tmp).toBe(txt);
-  expect(vars).toEqual({ a: {} });
+  expect(vars).toEqual({});
 
   // real example of merging variable groups
   txt =
@@ -149,7 +149,7 @@ test('set variable group', async () => {
     },
   });
   expect(tmp).toBe(txt);
-  expect(vars).toEqual({ g: {} });
+  expect(vars).toEqual({});
 
   vars = {};
   // set inner variables
@@ -174,7 +174,7 @@ test('set variable group', async () => {
     },
   });
   expect(tmp).toBe(txt);
-  expect(vars).toEqual({ g: {} });
+  expect(vars).toEqual({});
 
   vars = {};
   // ignore + set
@@ -248,7 +248,7 @@ x:1
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 
-  // JSON array
+  // JSON arrays without group are invalid
   vars = {};
   txt = '<json>[ 0,1 ]</json>';
   tmp = await twofold.renderText(txt, vars);
@@ -289,7 +289,7 @@ oct3 = 0o755
     },
   });
   expect(tmp).toBe(txt);
-  expect(vars).toEqual({ a: {} });
+  expect(vars).toEqual({});
 
   vars = {};
   // set inner variables
@@ -300,9 +300,9 @@ oct3 = 0o755
     },
   });
   expect(tmp).toBe(txt);
-  expect(vars).toEqual({ g: {} });
+  expect(vars).toEqual({});
 
-  // JSON array is OK in group
+  // JSON arrays are OK in group
   // long strings inside JSON are OK
   vars = {};
   txt = `<json 'a'>[ 0,1 ]</json><json 'b'>"b"</json>`;
@@ -345,7 +345,11 @@ test('variable interpolation', async () => {
   vars = {};
   txt = '<set name=Cro hello="still alive" /> <log "warn" msg=`${name}::${hello}` />';
   tmp = await twofold.renderText(txt, vars);
-  expect(vars).toEqual({ name: 'Cro', hello: 'still alive', msg: 'Cro::still alive' });
+  expect(vars).toEqual({
+    name: 'Cro',
+    hello: 'still alive',
+    msg: 'Cro::still alive',
+  });
   expect(tmp).toBe(txt);
 
   // Set variable group with interpolation
@@ -427,6 +431,28 @@ temp_targets = { cpu = 79.5, case = 72.0 }
   expect(tmp).toBe(txt);
   expect(vars).toEqual({ a: 'a+a-a+a' });
 
+  // Regular tag with dynamic zero-prop
+  vars = {};
+  txt = '<set x=9 /><chk `${x}9` />';
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({ x: 9, '0': '99' });
+    },
+  });
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ x: 9 });
+
+  // Set dynamic group name with interpolation
+  vars = {};
+  txt = '<set x=9 /><set `${x}9` y=1> <chk/> </set>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      expect(args).toEqual({ x: 9, '99': { y: 1 } });
+    },
+  });
+  expect(vars).toEqual({ x: 9, '99': { y: 1 } });
+  expect(tmp).toBe(txt);
+
   // Should not crash with broken interpolation
   vars = {};
   txt = '<set a="a"/><set a2=`${}` a3=`${/>` a4=`${x}`/><chk/>';
@@ -442,7 +468,9 @@ temp_targets = { cpu = 79.5, case = 72.0 }
   txt = '<set "g" a="a"/><set "g" a2=`${}` a3=`${/>` a4=`${x}`/><chk/>';
   tmp = await twofold.renderText(txt, vars, {
     chk: (_t, args) => {
-      expect(args).toEqual({ g: { a: 'a', a2: '${}', a3: '${/>', a4: '${x}' } });
+      expect(args).toEqual({
+        g: { a: 'a', a2: '${}', a3: '${/>', a4: '${x}' },
+      });
     },
   });
   expect(tmp).toBe(txt);
@@ -472,6 +500,130 @@ temp_targets = { cpu = 79.5, case = 72.0 }
     },
   });
   expect(tmp).toBe(txt);
+
+  // Broken group interpolation
+  vars = {};
+  txt = '<set `${xyz}` />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({});
+  expect(tmp).toBe(txt);
+});
+
+test('spread syntax', async () => {
+  let vars = {};
+  let txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...g1, ...g2} />';
+  let tmp = await twofold.renderText(txt, vars, {
+    mumu: (_t, args) => {
+      expect(args).toEqual({
+        x: 2,
+        y: 3,
+        z: 'z2',
+        g1: { x: 1, y: 2, z: 'z1' },
+        g2: { x: 2, y: 3, z: 'z2' },
+      });
+    },
+  });
+  expect(vars).toEqual({
+    g1: { x: 1, y: 2, z: 'z1' },
+    g2: { x: 2, y: 3, z: 'z2' },
+  });
+  expect(tmp).toBe(txt);
+
+  // reverse order or spread
+  vars = {};
+  txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...g2, ...g1} />';
+  tmp = await twofold.renderText(txt, vars, {
+    mumu: (_t, args) => {
+      expect(args).toEqual({
+        x: 1,
+        y: 2,
+        z: 'z1',
+        g1: { x: 1, y: 2, z: 'z1' },
+        g2: { x: 2, y: 3, z: 'z2' },
+      });
+    },
+  });
+  expect(vars).toEqual({
+    g1: { x: 1, y: 2, z: 'z1' },
+    g2: { x: 2, y: 3, z: 'z2' },
+  });
+  expect(tmp).toBe(txt);
+
+  // spread grup variables + global variables
+  vars = {};
+  txt = '<set "g1" x=1 y=2/> <set n=null/> <set {...g1, n} />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ g1: { x: 1, y: 2 }, x: 1, y: 2, n: null });
+  expect(tmp).toBe(txt);
+
+  // BURN IT WITH FIRE
+  vars = {};
+  txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...{...g1, ...g2}} />';
+  tmp = await twofold.renderText(txt, vars, {
+    mumu: (_t, args) => {
+      expect(args).toEqual({
+        x: 2,
+        y: 3,
+        z: 'z2',
+        g1: { x: 1, y: 2, z: 'z1' },
+        g2: { x: 2, y: 3, z: 'z2' },
+      });
+    },
+  });
+  expect(vars).toEqual({
+    g1: { x: 1, y: 2, z: 'z1' },
+    g2: { x: 2, y: 3, z: 'z2' },
+  });
+  expect(tmp).toBe(txt);
+});
+
+test('bad spreads & dynamic groups', async () => {
+  let vars = {};
+  let txt = '';
+  let tmp = '';
+  //
+  // I need to test all of these because
+  // they handle the spread object differently
+  // and I don't want to break anything
+  //
+  const tags = ['set', 'del', 'json', 'toml'];
+
+  for (const tag of tags) {
+    // No zero-prop
+    vars = {};
+    txt = `<${tag} {} />`;
+    tmp = await twofold.renderText(txt, vars);
+    expect(vars).toEqual({});
+    expect(tmp).toBe(txt);
+
+    // expand undefined variable
+    vars = {};
+    txt = `<${tag} {x} />`;
+    tmp = await twofold.renderText(txt, vars);
+    expect(vars).toEqual({});
+    expect(tmp).toBe(txt);
+
+    // spread undefined variables
+    vars = {};
+    txt = `<${tag} {...props} />`;
+    tmp = await twofold.renderText(txt, vars);
+    expect(vars).toEqual({});
+    expect(tmp).toBe(txt);
+
+    // bad spread variables
+    vars = {};
+    txt = `<${tag} {..props} />`;
+    tmp = await twofold.renderText(txt, vars);
+    expect(vars).toEqual({});
+    expect(tmp).toBe(txt);
+
+    // double spread variables (not allowed)
+    vars = {};
+    txt = `<${tag} {...objA} {...objB} />`;
+    tmp = await twofold.renderText(txt, vars);
+    expect(vars).toEqual({});
+    expect(tmp).toBe(txt);
+  }
 });
 
 test('del variable', async () => {
@@ -481,11 +633,18 @@ test('del variable', async () => {
   expect(vars).toEqual({});
   expect(tmp).toBe(txt);
 
-  vars = {};
   // delete inexisting variable
+  vars = {};
   txt = '<del "xyz"/>';
   tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({});
+  expect(tmp).toBe(txt);
+
+  // delete spread variable
+  vars = {};
+  txt = '<set "g1" x=1 y=2/> <del {...g1} />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ g1: { x: 1, y: 2 } });
   expect(tmp).toBe(txt);
 });
 
@@ -495,6 +654,8 @@ test('importing files', async () => {
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({ name: 'John', debug: true });
+
+  // TODO :: import from import from import
 
   vars = {};
   txt =

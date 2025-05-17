@@ -188,12 +188,14 @@ function interpolate(args: Record<string, any>, body: string, openExprChar: stri
   if (body.trimStart().startsWith('...')) {
     body = `{ ${body} }`;
   }
+  // console.log('INTERPOLATE:', args, 'BODY:', body);
   const fn = new Function(...Object.keys(args), `{ return ${body} }`);
   return fn(...Object.values(args));
 }
 
 /*
  * Run special tags logic (set, json, toml, import)
+ * This is a bit of a mess, but it's heavily tested.
  */
 async function __specialTags(
   tag: ParseToken,
@@ -205,22 +207,63 @@ async function __specialTags(
   const openExprChar = cfg.openExpr?.[0]!;
   const closeExprChar = cfg.closeExpr?.[0]!;
   // The group name for variables
-  const group =
+  let group =
     (tag.name === 'set' || tag.name === 'json' || tag.name === 'toml' || tag.name === 'del') && tag.params?.['0'];
+  let groupObj: Record<string, any> | undefined = undefined;
+
+  // The "Group" only makes sense for set, json, toml and del tags
+  // and I'm resolving the group expression (backtick or {...})
+  // For the rest of the tags, this is just a Zero-prop
+  if (group) {
+    const rawValue = tag.rawParams?.['0'];
+    if (rawValue && shouldInterpolate(rawValue, openExprChar, closeExprChar)) {
+      try {
+        const exploded = interpolate(customData, rawValue, openExprChar, closeExprChar);
+        if (typeof exploded === 'string') {
+          group = exploded;
+        } else if (typeof exploded === 'object') {
+          groupObj = exploded;
+        } else {
+          log.warn(`Unexpected interpolation group=${rawValue}=${exploded}!`);
+        }
+        // delete tag.params['0'];
+      } catch (err: any) {
+        log.warn(`Cannot interpolate group=${rawValue}!`, err.message);
+      }
+    }
+  }
 
   if (tag.name === 'del' && group) {
-    // Delete the specified variable
-    if (customData[group]) {
+    // An expression line Del {...props} doesn't make sense
+    // and it's an error
+    if (groupObj) {
+      log.warn(`Cannot delete invalid group { ${group} }=${JSON.stringify(groupObj)}!`);
+      return;
+    } else if (customData[group]) {
+      // Delete the specified variable
       delete customData[group];
       log.debug(`Deleted var "${group}"!`);
     }
   } else if (tag.name === 'set' && tag.params) {
-    // Set (define) one or more variaßles inside the group
+    if (groupObj) {
+      // Explode {...props} as global variables
+      for (const [k, v] of Object.entries(groupObj)) {
+        customData[k] = v;
+      }
+    } else if (group && Object.keys(tag.params).length === 1) {
+      // A group was defined, but no data inside...
+      // Tz tz tz
+      delete tag.params['0'];
+      return;
+    }
+
     if (group) {
+      // Set (define) one or more variaßles inside the group
+      //
       // Perhaps it makes sense to keep the group name,
       // at least for the inner children tags? TODO?
       delete tag.params['0'];
-      if (!customData[group]) {
+      if (!groupObj && !customData[group]) {
         customData[group] = {};
       }
       // The new variables are added to the group
@@ -254,6 +297,10 @@ async function __specialTags(
   } else if (tag.name === 'json') {
     const text = getText(tag as DoubleTag);
     if (!text) return;
+    if (groupObj) {
+      log.warn(`Invalid JSON group { ${group} }=${JSON.stringify(groupObj)}!`);
+      return;
+    }
     // Set (define) JSON data inside the group
     if (group) {
       if (tag.params) {
@@ -295,6 +342,10 @@ async function __specialTags(
   } else if (tag.name === 'toml') {
     const text = getText(tag as DoubleTag);
     if (!text) return;
+    if (groupObj) {
+      log.warn(`Invalid TOML group { ${group} }=${JSON.stringify(groupObj)}!`);
+      return;
+    }
     // Set (define) TOML data inside the group
     if (group) {
       if (tag.params) {
@@ -408,11 +459,28 @@ async function __specialTags(
       customData[key] = selectedData[key];
     }
   } else {
+    // This is just a normal tag
     // Run string interpolation using the rawParams
     for (const [k, v] of Object.entries(tag.rawParams || {})) {
       if (shouldInterpolate(v, openExprChar, closeExprChar)) {
         try {
-          if (group) {
+          if (k === '0' && tag.params) {
+            // Special case for the ZERO props with interpolation
+            const spread = interpolate(customData, v, openExprChar, closeExprChar);
+            if (typeof spread === 'string') {
+              tag.params['0'] = spread;
+            } else {
+              delete tag.params['0'];
+              // This is not the best place to handle this
+              // ( this is the special tags logic )
+              // Adding vars to tag.params is not a good idea
+              for (const [kk, vv] of Object.entries(spread)) {
+                // Try to ignore important props
+                if (kk === '0' || kk === 'cut' || kk === 'freeze') continue;
+                tag.params[kk] = vv;
+              }
+            }
+          } else if (group) {
             customData[group][k] = interpolate(customData, v, openExprChar, closeExprChar);
           } else {
             customData[k] = interpolate(customData, v, openExprChar, closeExprChar);

@@ -255,6 +255,7 @@ const TESTS = [
   ['<tag {.x}/>', [{ index: 0, rawText: '<tag {.x}/>' }]],
   ['<tag {..x}/>', [{ index: 0, rawText: '<tag {..x}/>' }]],
   ['<tag {...x.}/>', [{ index: 0, rawText: '<tag {...x.}/>' }]],
+  ['<tag {...x} {...y}/>', [{ index: 0, rawText: '<tag {...x} {...y}/>' }]],
   [
     '<tag {...props}/>',
     [
