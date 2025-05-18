@@ -7,12 +7,14 @@
 - there is a new {..} prop type, inspired from JSX curly braces
   and it allows newlines inside
 - newlines also allowed inside backtick string props
-- new `{...}` JSX spread syntax to merge groups of variables
+- new `{...}` JSX spread syntax to merge groups of variables,
+  and to export groups as global variables
 - created "import" tag to import set, json or toml variables from
-  other files
+  other files. This is EXPERIMENTAL for now.
 - created "toml" tag to define variables available within the file;
   it works just like the "json" tag
-- created "del" tag to delete variables
+- created "del" tag to delete variables, but you can also set deep
+  variables to undefined
 
 ## v0.9
 

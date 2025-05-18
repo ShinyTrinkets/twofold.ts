@@ -10,9 +10,10 @@ async function _resolvFname(f1: string, f2: string) {
   return fname;
 }
 
-export async function cat(txtFile: string, { f = null, start = 0, limit = 250 } = {}, meta: any) {
+export async function cat(txtFile: string, { f = null, start = 0, limit = 0 } = {}, meta: any) {
   /**
-   * Read a file with limit. Similar to "cat" commant from Linux.
+   * Read a file with limit. Similar to the "cat" command from Linux.
+   * Specify start=-1 and limit=-1 to read the whole file.
    * Example: <cat 'file.txt' start=0 limit=100 />
    */
   const fname = await _resolvFname(f, txtFile);
@@ -21,16 +22,31 @@ export async function cat(txtFile: string, { f = null, start = 0, limit = 250 } 
 
   if (typeof Bun !== 'undefined') {
     let file = Bun.file(fname);
-    file = file.slice(start, limit);
+    if (start > 0 && limit > 0) {
+      file = file.slice(start, limit);
+    } else if (start > 0) {
+      file = file.slice(start);
+    } else if (limit > 0) {
+      file = file.slice(0, limit);
+    }
     text = await file.text();
   } else if (typeof Deno !== 'undefined') {
     using file = await Deno.open(fname, { read: true });
-    await file.seek(start, Deno.SeekMode.Start);
-    const buffer = new Uint8Array(limit);
-    await file.read(buffer);
-    text = new TextDecoder().decode(buffer);
+    if (start < 0 && limit < 0) {
+      text = await Deno.readTextFile(meta.fname);
+    } else if (start > 0 && limit > 0) {
+      await file.seek(start, Deno.SeekMode.Start);
+      const buffer = new Uint8Array(limit);
+      await file.read(buffer);
+      text = new TextDecoder().decode(buffer);
+    } else if (limit > 0) {
+      const buffer = new Uint8Array(limit);
+      await file.read(buffer);
+      text = new TextDecoder().decode(buffer);
+    }
   }
 
+  text = text.trim();
   if (meta.node.double) return `\n${text}\n`;
   return text;
 }

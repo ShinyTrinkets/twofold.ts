@@ -44,39 +44,63 @@ In this case ^, the function will receive the params: s=2, plus=3, innerText='4'
 the inner text.
 ```
 
-Another simple example tag is `lower`:
+## Implementing a basic read file tag
+
+This is a simplified version of the builtin "cat" command, which reads from a file starting from an
+offset, and reads up to a limit. Of course, you can also read the whole file, in this case by
+specifying "start=-1" and "limit=-1".
+
+Check the comments in the code below to understand how this works.
 
 ```ts
-export function lower(text: string): string {
-  // Lower-case all the text
-  return text.toLowerCase();
+export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: any) {
+  /**
+   * Read a file with limit. Similar to the "cat" command from Linux.
+   * Specify start=-1 and limit=-1 to read the whole file.
+   * Example: <cat 'file.txt' start=0 limit=100 />
+   */
+
+  // If the tag is called without a file name,
+  // just ignore the execution
+  // Example: <cat limit=-1 /> won't execute
+  if (!fname) return;
+
+  let file = Bun.file(fname);
+  if (start > 0 && limit > 0) {
+    // when both start and limit are positive numbers
+    file = file.slice(start, limit);
+  } else if (start > 0) {
+    // or, only the start is positive
+    file = file.slice(start);
+  } else if (limit > 0) {
+    // or, only the limit is positive
+    file = file.slice(0, limit);
+  }
+  let text = await file.text();
+  text = text.trim();
+
+  // We check if this tag was created as a double tag,
+  // to wrap the text in newlines and make it nicer.
+  // The "meta" object contains: root, fname and node.
+  // The "node" object is the parsed representation of
+  // the actual tag. Single and Double tags have different properties.
+  // See https://github.com/ShinyTrinkets/twofold.ts/blob/main/src/types.ts
+  if (meta.node.double) return `\n${text}\n`;
+  return text;
 }
 ```
 
-To call it as a single tag:
-
-- `<lower 'Some TEXT' />` -- the function will receive: text='Some TEXT', so the result will be:
-  'some text'
-
-To call it as a double tag:
-
-```md
-Some text. <lower>And MORE TeXt</lower>.
-
-In this case ^, the function will receive: text='And MORE TeXt'.
-```
-
-You can find more examples in the `/src/functions/` folder. The core tags should be well documented;
-feel free to raise an issue in you think something is not clear.
+You can find more examples of tags in the `/src/functions/` folder. The core tags should be well
+documented; feel free to raise an issue in you think something is not clear.
 
 ## Errors
 
 When a tag doesn't receive the parameters it needs, it should just return. When the TwoFold
 evaluator runs a function that returns `undefined` or `null`, it will **not destroy** the single tag
-and it will **not replace** the inner text of a double tag.
+and it will **not replace** the inner text of a double tag. The execution is basically ignored.
 
 For example, the tag `<line />` cannot return anything and is not consumed, because it needs the
-length parameter.
+length, a valid tag would be `<line len=40 />`.
 
 If you try to render any random HTML, or XML file, there will be lots of pseudo-valid tags in there,
 but TwoFold won't execute them, and the HTML, or XML file will not be changed.

@@ -3,7 +3,7 @@ import picomatch from 'picomatch';
 
 import { DoubleTag, ParseToken, ScanToken, SingleTag } from './types.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
-import { CliConfig } from './config.ts';
+import { CliConfig, defaultCfg } from './config.ts';
 import { listTree } from './util.ts';
 import functions from './functions/index.ts';
 import Lexer from '../src/lexer.ts';
@@ -15,9 +15,12 @@ import parse from '../src/parser.ts';
 export async function scanFile(
   fname: string,
   customFunctions = {},
-  customConfig: CliConfig = {}
+  cfg: Readonly<CliConfig> = {}
 ): Promise<{ validTags: number; invalidTags: number }> {
-  const allFunctions: Record<string, Function> = { ...functions, ...customFunctions };
+  const allFunctions: Record<string, Function> = {
+    ...functions,
+    ...customFunctions,
+  };
   const nodes: ScanToken[] = [];
 
   const walk = (tag: ParseToken) => {
@@ -47,7 +50,7 @@ export async function scanFile(
 
   let len = 0;
   const decoder = new TextDecoder();
-  const lexer = new Lexer(customConfig);
+  const lexer = new Lexer(cfg);
 
   const label = 'scan:' + fname;
   console.time(label);
@@ -68,7 +71,7 @@ export async function scanFile(
   }
 
   console.log('Txt length ::', len.toLocaleString('en-GB'));
-  const ast = parse(lexer.finish(), customConfig);
+  const ast = parse(lexer.finish(), cfg);
   lexer.reset();
 
   for (const tag of ast) {
@@ -92,7 +95,7 @@ export async function scanFile(
   return { validTags, invalidTags };
 }
 
-export async function scanFolder(dir: string, customFunctions = {}, cfg: CliConfig = {}) {
+export async function scanFolder(dir: string, customFunctions = {}, cfg: Readonly<CliConfig> = defaultCfg) {
   const label = 'scan:' + dir;
   console.time(label);
 

@@ -3,10 +3,6 @@
 TwoFold (2✂︎f) is an exceptionally unique application, a hybrid between a text expander, a template
 engine and a mini programming language. Personally, I have never found anything like it.
 
-TwoFold has absolutely nothing to do with LLMs/ AI. TwoFold has an LLM/ AI tag that you can
-optionally use, because LLMs are text processing machines, and TwoFold deals with text, so it makes
-sense; but the AI tag is entirely optional.
-
 The purpose of this document is to provide a brief comparison between TwoFold and other similar
 applications.
 

@@ -22,7 +22,7 @@ export interface ParseToken {
   firstTagText?: string;
   secondTagText?: string;
   children?: ParseToken[];
-  parent?: ParseToken;
+  parent?: Record<string, any>;
 }
 
 // A valid single tag
@@ -34,7 +34,7 @@ export interface SingleTag {
   rawText: string;
   params?: Record<string, any>;
   rawParams?: Record<string, string>;
-  parent?: ParseToken;
+  parent?: Record<string, any>;
 }
 
 // A valid double tag
@@ -48,7 +48,7 @@ export interface DoubleTag {
   children?: ParseToken[];
   params?: Record<string, any>;
   rawParams?: Record<string, string>;
-  parent?: ParseToken;
+  parent?: Record<string, any>;
 }
 
 export interface ScanToken {
@@ -56,4 +56,10 @@ export interface ScanToken {
   tag: string;
   single?: boolean;
   double?: boolean;
+}
+
+export interface EvalMeta {
+  root?: string;
+  fname?: string;
+  node?: ParseToken;
 }

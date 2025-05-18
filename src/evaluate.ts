@@ -1,6 +1,6 @@
 import { Config, defaultCfg } from './config.ts';
 import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
-import { DoubleTag, ParseToken, SingleTag } from './types.ts';
+import { DoubleTag, EvalMeta, ParseToken, SingleTag } from './types.ts';
 import { deepClone, isFunction } from './util.ts';
 import { log } from './logger.ts';
 import Lexer from './lexer.ts';
@@ -26,7 +26,7 @@ async function evaluateSingleTag(
   tag: SingleTag,
   params: Record<string, any>,
   func: Function,
-  meta: Record<string, any> = {}
+  meta: EvalMeta = {}
 ): Promise<void> {
   // Zero param text from the single tag &
   // A prop: built-in option that allows single tags to receive text, just like double tags
@@ -75,7 +75,7 @@ async function evaluateDoubleTag(
   tag: DoubleTag,
   params: Record<string, any>,
   func: Function,
-  meta: Record<string, any> = {}
+  meta: EvalMeta = {}
 ): Promise<void> {
   let hasFrozen = false;
   if (tag.children) {
@@ -201,8 +201,8 @@ async function __specialTags(
   tag: ParseToken,
   customData: Record<string, any>,
   allFunctions: Record<string, Function>,
-  cfg: Config,
-  meta: Record<string, any>
+  cfg: Readonly<Config>,
+  meta: EvalMeta = {}
 ) {
   const openExprChar = cfg.openExpr?.[0]!;
   const closeExprChar = cfg.closeExpr?.[0]!;
@@ -496,8 +496,8 @@ export default async function evaluateTag(
   tag: ParseToken,
   customData: Record<string, any>,
   allFunctions: Record<string, Function>,
-  cfg: Config = defaultCfg,
-  meta: Record<string, any> = {}
+  cfg: Readonly<Config> = defaultCfg,
+  meta: EvalMeta = {}
 ) {
   if (!tag || !tag.name) {
     return;
@@ -548,6 +548,9 @@ export default async function evaluateTag(
 
   // Params for the tag come from parsed params and config
   let params = { ...tag.params, ...customData };
+
+  // Prevent new properties from being added to Meta
+  meta = Object.seal(meta);
 
   // Call the specialized evaluate function
   if (isDoubleTag(tag)) {

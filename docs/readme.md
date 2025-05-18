@@ -3,7 +3,7 @@
 TwoFold (2✂︎f) tags are just regular TypeScript/ JavaScript functions.
 
 They receive as input the text inside the tags (in case of double tags), extra tag props and user
-settings (in case they are defined).
+settings (in case they are defined) and meta about the file and tag node.
 
 For example, the `increment()` function looks like this:
 

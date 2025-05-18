@@ -66,9 +66,9 @@ export async function userCfg(path = undefined): Promise<CliConfig> {
   if (cfg && cfg.config) {
     validateCfg(cfg.config);
     log.debug('User config:', cfg.config);
-    return { ...defaultCfg, ...cfg.config };
+    return Object.freeze({ ...defaultCfg, ...cfg.config });
   }
-  return { ...defaultCfg };
+  return Object.freeze({ ...defaultCfg });
 }
 
 const ALLOWED_LAST_STOPPER = /^[\/\?\!\.#]$/;

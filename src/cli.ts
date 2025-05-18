@@ -92,13 +92,14 @@ export async function main(arvg = process.argv.slice(2)) {
   }
 
   // Load all possible config locations
-  const config = await userCfg();
+  let config = await userCfg();
   if (args.glob) {
     config.glob = args.glob;
   }
   if (args.depth) {
     config.depth = args.depth;
   }
+  config = Object.freeze(config);
 
   if (args.scan) {
     let files = [args.scan];
