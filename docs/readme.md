@@ -36,16 +36,17 @@ There are **two types of tags**, and multiple options that make them behave diff
 
 ## Single tags
 
-Example:
+Examples:
 
 - `<line '80' />`
 - `<randomFloat decimals=2 />`
 - `<jsEval "1 + 7 * 9" />`
 - `<set name="John" />`
 
-Single tags are usually **consumed** after they are rendered, so they are **one use only**.
+Single tags are usually **consumed** after they are rendered, so they are considered **one use only**.
+There are exceptions: a single-tag can decide to persist after render (examples: set, import, del, etc).
 
-Some functions are better suited as single tags, such as `<emojiClock />`, or `<line '40' />`.
+Some functions are better suited as single tags, such as `<emojiClock />`, `<line '40' />`, or `<import "debug" from="common.md" />`.
 
 These tags are particularly useful when running TwoFold in watch mode. By specifying the folder
 where you edit your files, TwoFold promptly executes the tag and generates the result every time you
@@ -53,7 +54,7 @@ save, staying out of your way when there are no tags to execute.
 
 ## Double tags
 
-Example:
+Examples:
 
 ```md
 <sortLines caseSensitive=true>
@@ -75,11 +76,9 @@ x: 1, y: 7
 </jsEval>
 ```
 
-Double tags are **persistent** and are normally rendered every time the file is processed by
-TwoFold.
+Double tags are **persistent** and are normally rendered every time the file is processed by TwoFold.
 
-If necessary, they can be disabled by explicitly invalidating them or by using the `freeze=true`
-option.
+If necessary, they can be disabled by explicitly invalidating them or by using the `freeze=true` option.
 
 Some functions make more sense as double tags, particularly when they involve processing a
 significant amount of text, which is impractical to add inside a single tag.
@@ -95,42 +94,43 @@ Options for tags (also called props, or args) look like this:
 
 In this example, the 3 options are: `'readme.md' start=0 limit=90`.
 
-Usually all options are... optional, but they don't always have a default; for example calculating
-or executing an expression **absolutely requires** an expression. When a tag doesn't have all the
-required values, it will not run, and will not be consumed.
+Usually options are... optional, but they don't always have a default; for example calculating or executing an expression **absolutely requires** an expression. Importing some file absolutely requires that you specify what file to import. When a tag doesn't have all the required values, it will not run, and will not be consumed.
 
-If the values contain space, they can be surrounded by a matching _single quotes_, _double quotes_,
-or backticks.
+If the values contain space, they can be surrounded by a matching _single quotes_, _double quotes_, or backticks.
+
+Newlines are not allowed in _single quotes_ or _double quotes_, but they are allowed in backticks and JSX curly braces.
 
 Examples:
 
-- prop=value
-- prop='value & space'
-- prop="value & space"
-- prop=\`value & space\`
+- prop1=value
+- prop2='value & space' -- surrounded by single quotes
+- prop3="value & space" -- surrounded by double quotes
+- prop4=\`value & space\` -- surrounded by backticks
+- prop5={'value & space'} -- wrapped in JSX curly braces
 
 The value can be a text, a number, true/ false, null, or a JavaScript object.
 
 Examples:
 
-- decimals=2 ---> `2` is a JS number
+- decimals=2 ---> `2` is a JavaScript number
 - sortLines caseSensitive=true ---> `true` becomes a _JS True_ value
 - sortLines caseSensitive=null ---> `null` becomes a _JS Null_ value
-- req "ipinfo.io" headers=`{"User-Agent":"curl/8.0.1"}` ---> the headers become a JS Object
+- req "ipinfo.io" headers={{"User-Agent":"curl/8.0.1"}} ---> the headers become a JS Object
+- colors={['red','green',blue']} ---> the colors become a JS Array/List
 
 ## Special options
 
 #### "zero" prop
 
-Example: `<pyEval "1.2 * (2 + 4.5)" />`
+Examples:
 
-"Zero" prop is like an option, but without a name. TwoFold tags are inspired from XML and HTML, but
-XML doesn't have options without a name.
+- `<pyEval "1.2 * (2 + 4.5)" />`
+- `<set "creative" temp=1 top_p=1 top_k=50 min_p=0.01 />`
+- `<del "someVar" />`
 
-"Zero" props are useful to specify the default text inside a tag, and they are the first argument
-for the actual JavaScript function behind the tag.
+"Zero" prop is like an option, but without a name. Only **one "zero" prop is allowed** per tag and it must be the first. TwoFold tags are inspired from XML and HTML, but XML doesn't have options without a name, so this is quite unique.
 
-Only **one "zero" prop is allowed** per tag and it must be the first.
+"Zero" props are useful to specify the default text inside a tag, and they are the first argument for the actual JavaScript function behind the tag.
 
 This option works with **single tags** and **double tags**.
 
@@ -148,24 +148,32 @@ You can also wrap tags in `<ignore>...</ignore>`, to ignore/ lock everything ins
 This is useful in case you want to keep the previous text and make sure that TwoFold won't
 accidentally replace it.
 
-You can also invalidate it, eg: by adding a double // in the closing tag, or making the tag name
-Upper-case.
+You can also invalidate tags in many ways, eg: by adding a double // in the closing tag, or making the tag name Upper-case.
 
 Invalid tag examples:
 
 - `<randomCard><//randomCard>` -- notice the double slash
+- `<randomCard </randomCard>` -- notice broken first tag
 - `<random Card></randomCard>` -- notice the space inside the tag name
 - `<RandomCard></RandomCard>` -- notice the Upper-case from the name of the tag; TwoFold tags must
   begin with lower-case
 
 #### cut
 
-Example: `<sortLines cut=true>some\ntext\nhere</sortLines>`
+Example:
+
+```
+<sortLines cut=true>
+some
+text
+here
+</sortLines>
+```
 
 "Cut" is a built-in option that tells TwoFold to consume a double tag after it's rendered, basically
 to convert it into a single tag.
 
-The value of cut can be either "true", or "1", eg: `cut=1` is shorter to write.
+The value of cut can be "true", or "1", eg: `cut=1` is shorter to write.
 
 It is useful to wrap a big chunk of text within a double tag, and consume the tag after processing,
 eg in case of jsEval, cmd, or llm.
@@ -458,9 +466,11 @@ and how to use the meta object to modify the tree.
 
 ---
 
-## cat (txtFile: string, { f = null, start = 0, limit = 250 } = {}, meta = {})
+## cat (txtFile: string, { f = null, start = 0, limit = 0 } = {}, meta: any)
 
-Read a file with limit. Similar to "cat" commant from Linux.
+Read a file with limit. Similar to the "cat" command from Linux.
+Specify start=-1 and limit=-1 to read the whole file.
+Example: <cat 'file.txt' start=0 limit=100 />
 
 ---
 
