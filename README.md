@@ -76,7 +76,9 @@ Git clone and run example:
 git clone https://github.com/ShinyTrinkets/twofold.ts.git --depth=1
 cd twofold.ts
 
-bun tfold --help
+bun tfold --version
+# or
+deno run tfold --version
 ```
 
 The advantage of cloning is that you can later pull the latest version.
@@ -89,6 +91,8 @@ unzip main.zip
 cd twofold.ts-main
 
 bun tfold --help
+# or
+deno run tfold --help
 ```
 
 Once you have the source, you can build a standalone executable and use it instead of the code, it
@@ -174,7 +178,7 @@ Read more in the **[Tags](/docs/readme.md) documentation**.
 Check the [Changelog](/docs/CHANGELOG.md) (the past) and the [Roadmap](/docs/ROADMAP.md) (the
 future).
 
-This TwoFold in TypeScript, running in [Bun](https://bun.sh).
+This TwoFold in TypeScript, running in [Bun](https://bun.sh) or [Deno](https://deno.com).
 
 The old version of TwoFold, written for Node.js is at:
 [ShinyTrinkets/twofold.js](https://github.com/ShinyTrinkets/twofold.js).
