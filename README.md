@@ -67,7 +67,7 @@ Running with Bunx (similar to Npx):
 bunx https://github.com/ShinyTrinkets/twofold.ts --help
 ```
 
-You can download pre-built executabled for every platform at:
+You can download a pre-built executable for your platform at:
 https://github.com/ShinyTrinkets/twofold.ts/releases/latest/
 
 Git clone and run example:
@@ -135,13 +135,14 @@ tfold --scan example.md
 The output will look something like this:
 
 ```
-(2✂︎f) Scan: example.md
-Text length :: 152
-[3.77ms] scan-example.md
+2✂f [INFO] :: example.md
+Txt length :: 166
+[8.01ms] scan:example.md
 ✓ emojiSunMoon
 ✓ emojiClock
 ✓ yesOrNo
 ✓ line
+Valid tags :: 4
 ```
 
 Then you call TwoFold to render it like this:
