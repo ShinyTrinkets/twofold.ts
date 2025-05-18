@@ -23,7 +23,7 @@ export async function cat(txtFile: string, { f = null, start = 0, limit = 0 } = 
   if (typeof Bun !== 'undefined') {
     let file = Bun.file(fname);
     if (start > 0 && limit > 0) {
-      file = file.slice(start, limit);
+      file = file.slice(start, start + limit + 1);
     } else if (start > 0) {
       file = file.slice(start);
     } else if (limit > 0) {
@@ -32,18 +32,21 @@ export async function cat(txtFile: string, { f = null, start = 0, limit = 0 } = 
     text = await file.text();
   } else if (typeof Deno !== 'undefined') {
     using file = await Deno.open(fname, { read: true });
+    let buffer = new Uint8Array(0);
     if (start < 0 && limit < 0) {
-      text = await Deno.readTextFile(meta.fname);
+      buffer = await Deno.readFile(fname);
     } else if (start > 0 && limit > 0) {
       await file.seek(start, Deno.SeekMode.Start);
-      const buffer = new Uint8Array(limit);
+      buffer = new Uint8Array(limit + 1);
       await file.read(buffer);
-      text = new TextDecoder().decode(buffer);
+    } else if (start > 0) {
+      buffer = await Deno.readFile(fname);
+      buffer = buffer.slice(start);
     } else if (limit > 0) {
-      const buffer = new Uint8Array(limit);
+      buffer = new Uint8Array(limit + 1);
       await file.read(buffer);
-      text = new TextDecoder().decode(buffer);
     }
+    text = new TextDecoder('utf-8').decode(buffer);
   }
 
   text = text.trim();

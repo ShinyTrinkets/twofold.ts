@@ -68,7 +68,7 @@ export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: an
   let file = Bun.file(fname);
   if (start > 0 && limit > 0) {
     // when both start and limit are positive numbers
-    file = file.slice(start, limit);
+    file = file.slice(start, start + limit + 1);
   } else if (start > 0) {
     // or, only the start is positive
     file = file.slice(start);
