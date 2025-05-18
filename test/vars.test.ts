@@ -576,6 +576,21 @@ test('spread syntax', async () => {
   expect(vars).toEqual({ g1: { x: 1, y: 2 }, x: 1, y: 2, n: null });
   expect(tmp).toBe(txt);
 
+  // import + spread grup variables
+  vars = {};
+  txt = '<import "SshCfg" from="test/fixtures/variables1.md"/><set {...SshCfg}/><del "SshCfg"/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({
+    ForwardAgent: 'no',
+    ForwardX11: 'no',
+    User: 'user',
+    Port: 222,
+    Protocol: 2,
+    ServerAliveCountMax: 30,
+    ServerAliveInterval: 60,
+  });
+  expect(tmp).toBe(txt);
+
   // BURN IT WITH FIRE 😡
   vars = {};
   txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...{...g1, ...g2}} />';

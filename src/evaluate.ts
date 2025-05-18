@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { Config, defaultCfg } from './config.ts';
 import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
 import { DoubleTag, EvalMeta, ParseToken, SingleTag } from './types.ts';
@@ -277,7 +279,14 @@ async function __specialTags(
             log.warn(`Cannot interpolate string for ${k}=${rawValue}!`, err.message);
           }
         }
-        customData[group][k] = v;
+        // If the group is an object, it was an exploded {...props}
+        // so this is a global variable
+        if (groupObj) {
+          customData[k] = v;
+        } else {
+          // Else, it was a regular group
+          customData[group][k] = v;
+        }
       }
     } else {
       // No group, set (define) one or more variables globally
@@ -383,8 +392,12 @@ async function __specialTags(
       .map((w: string) => w.trim())
       .filter((w: string) => w.length > 0); // The variables to import
     if (what.length === 0) return;
-    const fname = tag.params?.from; // The file to import from
+
+    let fname = tag.params?.from; // The file to import from
     if (!fname) return;
+    if (meta.root) {
+      fname = path.resolve(meta.root, fname);
+    }
 
     // TODO :: import name as alias
     // TODO :: check circular imports !!
