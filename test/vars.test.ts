@@ -36,6 +36,7 @@ test('set global variables', async () => {
   expect(vars.rnd).toBeLessThan(1);
 
   vars = {};
+  // Set variable with function + use the function
   txt = "<set trim={(x)=>x.trim()}/> <set name=' John ' nameTrim={trim(name)} />";
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
@@ -54,7 +55,7 @@ test('set global variables', async () => {
   expect(vars).toEqual({});
 
   vars = {};
-  // set inner variables
+  // set deep inner variables
   txt = `<set>
     <set x=1/>
     <set>
@@ -92,10 +93,11 @@ test('set global variables', async () => {
 
 test('set variable group', async () => {
   let vars = {};
-  let txt = `<set 'a' x=1 a="a" />`;
+  // Zero-props for Set tags are called "group"
+  let txt = `<set '⍺' x=1 a="a" />`;
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
-  expect(vars.a).toEqual({ x: 1, a: 'a' });
+  expect(vars['⍺']).toEqual({ x: 1, a: 'a' });
 
   vars = {};
   txt = `<set 'g' x=1 a="a" /><set 'g' x=2 b="b" /><set 'g' x=0 c="c" />`;
@@ -104,14 +106,15 @@ test('set variable group', async () => {
   expect(vars.g).toEqual({ x: 0, a: 'a', b: 'b', c: 'c' });
 
   vars = {};
-  txt = "<set 'g' trim={(x)=>x.trim()}/> <set 'g' name=' John ' nameTrim={g.trim(g.name)} />";
+  // Set variable with function, in group + use the function from group
+  txt = "<set 'g' trim={(x)=>x.trim()}/> <set 'g' name=' Josh ' nameTrim={g.trim(g.name)} />";
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
-  expect(vars.g.name).toBe(' John ');
-  expect(vars.g.nameTrim).toBe('John');
+  expect(vars.g.name).toBe(' Josh ');
+  expect(vars.g.nameTrim).toBe('Josh');
 
   vars = {};
-  // set inner variables
+  // set inner variables inside group
   txt = `<set 'a'> <set a="a"/><set 'g' b="b"/><set x=0/> <chk/> </set>`;
   tmp = await twofold.renderText(txt, vars, {
     chk: (_t, args) => {
@@ -121,6 +124,7 @@ test('set variable group', async () => {
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 
+  // reuse the same global context from above
   // real example of merging variable groups
   txt =
     '<set "creative" temp=1 min_p=0.1 frequency_penalty=0.1 repeat_penalty=1.1/>' +
@@ -192,6 +196,8 @@ test('set global JSON/ TOML data', async () => {
   expect(vars.x).toBe(1);
   expect(vars.a).toBe('a');
 
+  // Reuse the same global context from above
+  // ( also check that extra args are ignored )
   txt = '<json type="application/json">{ "x":0, "b":"b" }</json>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
@@ -257,13 +263,18 @@ x:1
 
   // ignore + json global
   vars = {};
-  txt = '<ignore> <json>{"a":"a"}</json> </ignore>';
-  tmp = await twofold.renderText(txt, vars);
+  txt = '<ignore> <json>{"a":"a"}</json><chk/> </ignore>';
+  tmp = await twofold.renderText(txt, vars, {
+    chk: (_t, args) => {
+      // This should not be called
+      expect(args).toEqual({});
+    },
+  });
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 });
 
-test('set variable group', async () => {
+test('JSON/ TOML data inside group', async () => {
   let vars = {};
   let txt = `<json 'a'>{ "x":1, "a":"a" }</json>`;
   let tmp = await twofold.renderText(txt, vars);
@@ -310,14 +321,14 @@ oct3 = 0o755
   expect(tmp).toBe(txt);
   expect(vars).toEqual({ a: [0, 1], b: 'b' });
 
-  // bad JSON
+  // bad JSON + group
   vars = {};
   txt = '<json "a">{ "x":1 </json>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 
-  // ignore + json group
+  // ignore + JSON group
   vars = {};
   txt = '<ignore> <json "a">{"a":"a"}</json> </ignore>';
   tmp = await twofold.renderText(txt, vars);
@@ -343,6 +354,7 @@ test('variable interpolation', async () => {
   expect(tmp).toBe(txt);
 
   vars = {};
+  // Set variable + interpolation for logging
   txt = '<set name=Cro hello="still alive" /> <log "warn" msg=`${name}::${hello}` />';
   tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({
@@ -387,13 +399,13 @@ test('variable interpolation', async () => {
   });
   expect(tmp).toBe(txt);
 
-  // Running JSON.stringify inside interpolation
+  // Calling JSON.stringify inside interpolation
   txt = '<set dump=`${"json:"+JSON.stringify(cfg)}`/>';
   tmp = await twofold.renderText(txt, vars);
   expect(vars.dump).toBe('json:{"host":"127.1","port":8080,"timeout":60,"seed":-1}');
   expect(tmp).toBe(txt);
 
-  // Mixing json and set with interpolation
+  // Mixing TOML and set with interpolation
   vars = {};
   txt = `<toml "cfg">
 [database]
@@ -442,7 +454,7 @@ temp_targets = { cpu = 79.5, case = 72.0 }
   expect(tmp).toBe(txt);
   expect(vars).toEqual({ x: 9 });
 
-  // Set dynamic group name with interpolation
+  // Set dynamic group name
   vars = {};
   txt = '<set x=9 /><set `${x}9` y=1> <chk/> </set>';
   tmp = await twofold.renderText(txt, vars, {
@@ -501,23 +513,31 @@ temp_targets = { cpu = 79.5, case = 72.0 }
   });
   expect(tmp).toBe(txt);
 
-  // Broken group interpolation
+  // Set broken dynamic group name
   vars = {};
   txt = '<set `${xyz}` />';
   tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({});
   expect(tmp).toBe(txt);
+
+  vars = {};
+  txt = '<set `${xyz}` x=1 />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ '${xyz}': { x: 1 } });
+  expect(tmp).toBe(txt);
 });
 
 test('spread syntax', async () => {
   let vars = {};
-  let txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...g1, ...g2} />';
+  // Regular tag with spread
+  let txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...g1, ...g2} n=null />';
   let tmp = await twofold.renderText(txt, vars, {
     mumu: (_t, args) => {
       expect(args).toEqual({
         x: 2,
         y: 3,
         z: 'z2',
+        n: null,
         g1: { x: 1, y: 2, z: 'z1' },
         g2: { x: 2, y: 3, z: 'z2' },
       });
@@ -529,7 +549,7 @@ test('spread syntax', async () => {
   });
   expect(tmp).toBe(txt);
 
-  // reverse order or spread
+  // reverse order of spread
   vars = {};
   txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...g2, ...g1} />';
   tmp = await twofold.renderText(txt, vars, {
@@ -556,7 +576,7 @@ test('spread syntax', async () => {
   expect(vars).toEqual({ g1: { x: 1, y: 2 }, x: 1, y: 2, n: null });
   expect(tmp).toBe(txt);
 
-  // BURN IT WITH FIRE
+  // BURN IT WITH FIRE 😡
   vars = {};
   txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...{...g1, ...g2}} />';
   tmp = await twofold.renderText(txt, vars, {
@@ -628,7 +648,7 @@ test('bad spreads & dynamic groups', async () => {
 
 test('del variable', async () => {
   let vars = {};
-  let txt = '<set name="John"/><del "name"/>';
+  let txt = '<set name="Tony"/><del "name"/>';
   let tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({});
   expect(tmp).toBe(txt);
@@ -645,6 +665,19 @@ test('del variable', async () => {
   txt = '<set "g1" x=1 y=2/> <del {...g1} />';
   tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({ g1: { x: 1, y: 2 } });
+  expect(tmp).toBe(txt);
+
+  // Del broken dynamic group name
+  vars = {};
+  txt = '<del `${xyz}` />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({});
+  expect(tmp).toBe(txt);
+
+  vars = {};
+  txt = '<del `${xyz}` x=1 />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({});
   expect(tmp).toBe(txt);
 });
 

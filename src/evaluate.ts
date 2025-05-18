@@ -467,21 +467,16 @@ async function __specialTags(
           if (k === '0' && tag.params) {
             // Special case for the ZERO props with interpolation
             const spread = interpolate(customData, v, openExprChar, closeExprChar);
+            // Zero-prop was a backtick like `${...}`
             if (typeof spread === 'string') {
               tag.params['0'] = spread;
             } else {
+              // Zero-prop was a spread like {...props}
               delete tag.params['0'];
-              // This is not the best place to handle this
-              // ( this is the special tags logic )
-              // Adding vars to tag.params is not a good idea
               for (const [kk, vv] of Object.entries(spread)) {
-                // Try to ignore important props
-                if (kk === '0' || kk === 'cut' || kk === 'freeze') continue;
                 tag.params[kk] = vv;
               }
             }
-          } else if (group) {
-            customData[group][k] = interpolate(customData, v, openExprChar, closeExprChar);
           } else {
             customData[k] = interpolate(customData, v, openExprChar, closeExprChar);
           }
