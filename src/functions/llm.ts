@@ -75,6 +75,24 @@ function makeBody(body: Record<string, any>, args: Record<string, any>) {
   //
   // Sync body from user args.
   //
+  // OpenRouter API params for chat completion:
+  // https://openrouter.ai/docs/api-reference/chat-completion
+  //
+  // OpenAI API params for chat completion:
+  // https://platform.openai.com/docs/api-reference/chat
+  //
+  // Featherless API params for chat completion:
+  // https://featherless.ai/docs/completions
+  //
+  // Ollama API params for chat completion:
+  // https://github.com/ollama/ollama/blob/main/docs/api.md
+  //
+  // vLLM API params for chat completion:
+  // https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html#chat-api
+  //
+  // Aphrodite Engine API params:
+  // https://aphrodite.pygmalion.chat/usage/openai
+  //
   // -----
   /*
    * Many of these options are not supported by all servers
@@ -126,30 +144,30 @@ function makeBody(body: Record<string, any>, args: Record<string, any>) {
     // Must be in range (0, 1]. Default is 0.
     body.top_a = args.top_a;
   }
-  if (args.frequency_penalty || args.freq_penalty) {
+  if (args.frequency_penalty || args.freq_pen) {
     // Reduces the likelihood of the model repeating words or tokens based on how often
     // they’ve already appeared in the generated text
     // A higher value (e.g., 0 to 2) discourages repetition by lowering the probability
     // of frequently used tokens, promoting more varied vocabulary across the entire output
     // Values > 0 encourage new tokens; < 0 encourages repetition.
     // A number between -2.0 and 2.0.
-    body.frequency_penalty = args.frequency_penalty || args.freq_penalty;
+    body.frequency_penalty = args.frequency_penalty || args.freq_pen;
   }
-  if (args.presence_penalty || args.pres_penalty) {
+  if (args.presence_penalty || args.pres_pen) {
     // Discourages the model from reusing any token that has already appeared in the text,
     // regardless of how many times it’s been used
     // Unlike frequency penalty, it applies a flat penalty once a token is present,
     // encouraging the introduction of entirely new words or concepts.
     // Values > 0 encourage new tokens; < 0 encourages repetition.
     // A number between -2.0 and 2.0.
-    body.presence_penalty = args.presence_penalty || args.pres_penalty;
+    body.presence_penalty = args.presence_penalty || args.pres_pen;
   }
-  if (args.repetition_penalty || args.repeat_penalty) {
+  if (args.repetition_penalty || args.rep_pen) {
     // Penalizes new tokens based on their appearance in the prompt and generated text.
     // Bandaid fix, to prevent a model from getting stuck in loops (e.g., repeating "the the the")
     // Values > 1 encourage new tokens; < 1 encourages repetition.
     // A good default is 1.1.
-    body.repetition_penalty = args.repetition_penalty || args.repeat_penalty;
+    body.repetition_penalty = args.repetition_penalty || args.rep_pen;
   }
   if (args.max_tokens) {
     // Maximum number of tokens generated per output sequence
@@ -159,8 +177,17 @@ function makeBody(body: Record<string, any>, args: Record<string, any>) {
     // Minimum number of tokens generated per output sequence
     body.min_tokens = args.min_tokens;
   }
-  // KoboldAI / Kobold.cpp specific settings
+  // Llama.cpp / Kobold.cpp specific settings
   //
+  if (args.mirostat) {
+    // Mirostat sampling algorithm
+    // 0 = off, 1 = Mirostat v1, 2 = Mirostat v2
+    body.mirostat = args.mirostat;
+  }
+  if (args.dry_base) {
+    // DRY sampling base value
+    body.dry_base = args.dry_base;
+  }
   if (args.dry_multiplier) {
     // Strength of the DRY penalty
     body.dry_multiplier = args.dry_multiplier;

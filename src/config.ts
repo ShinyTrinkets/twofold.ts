@@ -1,6 +1,19 @@
 import { lilconfig } from 'lilconfig';
 import { log } from './logger.ts';
 
+let loadToml = false;
+
+(async () => {
+  // typeof Bun !== "undefined"
+  if (process.versions.bun) {
+    loadToml = (fpath: string, content: string) => Bun.TOML.parse(content);
+  } else if (process.versions.deno) {
+    // typeof Deno !== "undefined"
+    const { parse } = await import('jsr:@std/toml');
+    loadToml = (fpath: string, content: string) => parse(content);
+  }
+})();
+
 export interface Config {
   openTag?: string;
   closeTag?: string;
@@ -52,13 +65,19 @@ export const defaultCliCfg: CliConfig = {
 
 export async function userCfg(path = undefined): Promise<CliConfig> {
   const explorer = lilconfig('twofold', {
+    loaders: {
+      '.toml': loadToml,
+    },
     searchPlaces: [
-      'twofold.conf.js',
-      'twofold.conf.json',
-      'twofold.config.js',
-      'twofold.config.json',
       '.twofold.js',
       '.twofold.json',
+      '.twofold.toml',
+      'twofold.conf.js',
+      'twofold.conf.json',
+      'twofold.conf.toml',
+      'twofold.config.js',
+      'twofold.config.json',
+      'twofold.config.toml',
     ],
   });
   // Explore all possible config locations
