@@ -1,7 +1,7 @@
 import { LexToken, ParseToken } from './types.ts';
 import { isDoubleTag, isFullDoubleTag, isRawText, isSingleTag } from './tags.ts';
-import { log } from './logger.ts';
 import * as config from './config.ts';
+// import { log } from './logger.ts';
 
 function addChild(parent: ParseToken, child: ParseToken): void {
   if (!parent.children) {

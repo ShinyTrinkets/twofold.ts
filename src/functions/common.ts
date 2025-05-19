@@ -25,7 +25,9 @@ export async function resolveFileName(fname: string) {
       fname = unTildify(fname);
       const fstat = await fsPromises.stat(fname);
       if (fstat.isFile()) return fname;
-    } catch {}
+    } catch {
+      /* ignore error */
+    }
   }
 }
 
@@ -36,6 +38,8 @@ export async function resolveDirName(dname: string) {
       dname = unTildify(dname);
       const fstat = await fsPromises.stat(dname);
       if (fstat.isDirectory()) return dname;
-    } catch {}
+    } catch {
+      /* ignore error */
+    }
   }
 }

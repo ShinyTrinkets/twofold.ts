@@ -526,7 +526,7 @@ export default async function evaluateTag(
   if (tag.children) {
     // Make a deep copy of the params, to create
     // a separate variable scope for the children
-    let params = deepClone(customData);
+    const params = deepClone(customData);
     for (const c of tag.children) {
       if (c.name && (c.single || c.double)) {
         c.parent = { name: tag.name, index: tag.index, params: tag.params };
@@ -560,7 +560,7 @@ export default async function evaluateTag(
   }
 
   // Params for the tag come from parsed params and config
-  let params = { ...tag.params, ...customData };
+  const params = { ...tag.params, ...customData };
 
   // Prevent new properties from being added to Meta
   meta = Object.seal(meta);

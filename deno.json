@@ -6,16 +6,15 @@
         "include": [
             "src/"
         ],
-        "exclude": [
-            "src/functions/"
-        ],
         "rules": {
             "tags": [
                 "recommended"
             ],
             "exclude": [
+                "ban-types",
                 "no-explicit-any",
                 "no-node-globals",
+                "no-process-global",
                 "no-unused-vars"
             ]
         }

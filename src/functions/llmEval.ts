@@ -65,7 +65,7 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
   };
 
   console.log('Asking LLM:', msg.content);
-  let response = await _makeRequest(apiUrl, body, args);
+  const response = await _makeRequest(apiUrl, body, args);
   if (!response) return;
 
   for (const item of history) {
@@ -242,7 +242,7 @@ function levenshteinDistance(s1: string, s2: string): number {
   if (m === 0) return n;
 
   // Initialize the single row vector
-  let currentRow: number[] = new Array(n + 1);
+  const currentRow: number[] = new Array(n + 1);
   for (let j = 0; j <= n; j++) {
     currentRow[j] = j;
   }

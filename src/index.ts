@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
-// @ts-ignore missing types
 import picomatch from 'picomatch';
 
 import * as config from './config.ts';

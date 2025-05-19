@@ -167,8 +167,8 @@ export function deepSet(target: any, path: string | ArrayLike<string>, value: an
    * Deeply set a value in an object or array.
    */
   path = path.split ? path.split('.') : path;
+  const pathLen = path.length;
   let i = 0,
-    pathLen = path.length,
     currentVal;
   while (i < pathLen) {
     const key = '' + path[i++];

@@ -1,4 +1,3 @@
-// @ts-ignore missing types
 import picomatch from 'picomatch';
 
 import { DoubleTag, ParseToken, ScanToken, SingleTag } from './types.ts';

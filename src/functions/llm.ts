@@ -61,7 +61,7 @@ export async function ai(
     await editSave(meta);
   };
 
-  let content = await _makeRequest(apiUrl, body, args, onSave);
+  const content = await _makeRequest(apiUrl, body, args, onSave);
   if (!content) {
     meta.node.children[0].rawText = `\n${text}`;
     await editSave(meta);
@@ -221,8 +221,7 @@ export async function _makeRequest(
       let { done, value } = await reader.read();
       if (done) break;
       value = decoder.decode(value, { stream: true });
-      for (let line of value.split(/[\n\r]/)) {
-        // console.log('!!LINE!! ', line);
+      for (const line of value.split(/[\n\r]/)) {
         if (line.trim() === '' || line.startsWith('data: [DONE]') || !line.startsWith('data: ')) {
           continue;
         }

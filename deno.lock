@@ -9,6 +9,8 @@
     "npm:@types/bun@1": "1.2.11",
     "npm:@types/deno@2": "2.2.0",
     "npm:@types/node@22": "22.15.3",
+    "npm:@types/picomatch@4": "4.0.0",
+    "npm:@types/shell-quote@1": "1.7.5",
     "npm:chokidar@4": "4.0.3",
     "npm:lilconfig@3": "3.1.3",
     "npm:mri@1": "1.2.0",
@@ -61,6 +63,12 @@
         "undici-types"
       ]
     },
+    "@types/picomatch@4.0.0": {
+      "integrity": "sha512-J1Bng+wlyEERWSgJQU1Pi0HObCLVcr994xT/M+1wcl/yNRTGBupsCxthgkdYG+GCOMaQH7iSVUY3LJVBBqG7MQ=="
+    },
+    "@types/shell-quote@1.7.5": {
+      "integrity": "sha512-+UE8GAGRPbJVQDdxi16dgadcBfQ+KG2vgZhV1+3A1XmHbmwcdwhCUwIdy+d3pAGrbvgRoVSjeI9vOWyq376Yzw=="
+    },
     "bun-types@1.2.11": {
       "integrity": "sha512-dbkp5Lo8HDrXkLrONm6bk+yiiYQSntvFUzQp0v3pzTAsXk6FtgVMjdQ+lzFNVAmQFUkPQZ3WMZqH5tTo+Dp/IA==",
       "dependencies": [
@@ -109,6 +117,8 @@
         "npm:@types/bun@1",
         "npm:@types/deno@2",
         "npm:@types/node@22",
+        "npm:@types/picomatch@4",
+        "npm:@types/shell-quote@1",
         "npm:chokidar@4",
         "npm:lilconfig@3",
         "npm:mri@1",

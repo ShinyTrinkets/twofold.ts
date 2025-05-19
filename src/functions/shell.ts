@@ -92,7 +92,7 @@ async function spawnShell(name: string, cmd: string, args: string[], timeout = 5
   }
   const proc = Bun.spawn([...xs, ...args]);
 
-  let timeoutID = setTimeout(() => {
+  const timeoutID = setTimeout(() => {
     if (!proc.killed || proc.exitCode === null) {
       console.log(`Shell timeout [${timeout}s], killing...`);
       proc.kill();

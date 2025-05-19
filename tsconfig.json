@@ -1,11 +1,11 @@
 {
   "include": ["src/*.ts"],
   "compilerOptions": {
-    "lib": ["ESNext"],
-    "module": "nodenext",
-    "target": "esnext",
-    "strict": true,
+    "lib": ["ESNext", "dom"],
+    "module": "NodeNext",
+    "target": "ESNext",
     "jsx": "preserve",
+    "strict": true,
     "noEmit": true,
     "moduleResolution": "nodenext",
     "allowImportingTsExtensions": true,
