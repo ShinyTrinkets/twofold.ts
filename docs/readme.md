@@ -137,13 +137,13 @@ For text values, there are 3 ways of defining a value:
 - key1='value1' -- single quotes are identical to double quotes
 - key2="value2" -- double quotes
 - key3=`My name is ${name}` -- backtick expressions work just like JavaScript
-- key4=`some
+- key4=`
+some
 long
 text
 and
 even
-more` -- backtick expressions can span over multiple lines, but
-  single & double quotes can't
+more` -- backtick expressions can span over multiple lines, but single & double quotes can't
 
 Backtick strings are evaluated into regular strings, but they allow variable interpolation, and can
 be defined on multiple lines, exactly like in JavaScript.
@@ -155,7 +155,7 @@ Examples:
 - adv1={[1, 2, 3, 4]} -- this is a JS Array/List
 - adv2={{ firstName:'Kimball', lastName:'Cho' }} -- a JS Object
 - adv3={x => x.trim()} -- a JS function
-- adv4={adv3(name)} -- calling the JS function (if it was defined with <set adv3=../>)
+- adv4={adv3(name)} -- calling the JS function (if it was defined with `<set adv3=../>`)
 - adv5={...props} -- expanding all the variables from "props" object
 
 The JSX curly braces are inspired from React.js and should work the same. They can also span on

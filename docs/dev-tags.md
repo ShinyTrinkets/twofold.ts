@@ -53,7 +53,9 @@ specifying "start=-1" and "limit=-1".
 Check the comments in the code below to understand how this works.
 
 ```ts
-export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: any) {
+import { DoubleTag, EvalMeta, SingleTag } from "../src/types.ts";
+
+export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: EvalMeta) {
   /**
    * Read a file with limit. Similar to the "cat" command from Linux.
    * Specify start=-1 and limit=-1 to read the whole file.
@@ -65,6 +67,8 @@ export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: an
   // Example: <cat limit=-1 /> won't execute
   if (!fname) return;
 
+  // Example: <cat "someFile.md" /> is valid,
+  // and fname="someFile.md"
   let file = Bun.file(fname);
   if (start > 0 && limit > 0) {
     // when both start and limit are positive numbers
@@ -95,9 +99,10 @@ documented; feel free to raise an issue in you think something is not clear.
 
 ## Errors
 
-When a tag doesn't receive the parameters it needs, it should just return. When the TwoFold
-evaluator runs a function that returns `undefined` or `null`, it will **not destroy** the single tag
-and it will **not replace** the inner text of a double tag. The execution is basically ignored.
+When a tag doesn't receive the parameters it needs, it should log some warning and just return. When
+the TwoFold evaluator runs a function that returns `undefined` or `null`, it will **not destroy**
+the single tag and it will **not replace** the inner text of a double tag. The execution is
+basically ignored.
 
 For example, the tag `<line />` cannot return anything and is not consumed, because it needs the
 length, a valid tag would be `<line len=40 />`.
