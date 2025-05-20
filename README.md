@@ -1,7 +1,6 @@
 # TwoFold (2✂︎f)
 
-[![Project name][project-img]][project-url] [![CLI app][cli-img]](#)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ShinyTrinkets/twofold.ts)
+[![Project name][project-img]][project-url] [![CLI app][cli-img]](#) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ShinyTrinkets/twofold.ts)
 
 <!-- deno-fmt-ignore-start -->
 
@@ -104,6 +103,14 @@ bun build ./src/cli.ts --compile --production --outfile tfold
 ./tfold --help
 ```
 
+Alternatively, you can compile an executable with Deno:
+
+```sh
+deno compile --no-check --allow-all --output=tfold ./src/cli.ts
+
+./tfold --help
+```
+
 You can move the executable anywhere you need, eg: `/usr/local/bin/`.
 
 ## Usage
@@ -173,6 +180,13 @@ tfold --tags
 ```
 
 Read more in the **[Tags](/docs/readme.md) documentation**.
+
+Also check my blog posts:
+
+- https://crlf.link/log/entries/191016-twofold-v0.2/
+- https://crlf.link/log/entries/191116-twofold-v0.5/
+- https://crlf.link/log/entries/230701-twofold-v0.6/
+- https://crlf.link/log/entries/250511-twofold-v0.9/
 
 ## Development
 

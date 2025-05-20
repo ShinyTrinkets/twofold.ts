@@ -1,14 +1,19 @@
 # TwoFold (2✂︎f) variables
 
-TwoFold (2✂︎f) is a mini programming language. The tags are functions, and the variables are the props, or args of those tags.
+TwoFold (2✂︎f) is a mini programming language. The tags are functions, and the
+variables are the props, or args of those tags.
 
-There are currently three tags you can use to define variables: `set`, `json` and `toml`. The variables can be later used either in props, or in the text inside double tags.
+There are currently three tags you can use to define variables: `set`, `json`
+and `toml`. The variables can be later used either in props, or in the text
+inside double tags.
 
 ## Set
 
-The **set** tag allows defining one or more variables, either static, or composed of other transformed variables.
+The **set** tag allows defining one or more variables, either static, or
+composed of other transformed variables.
 
-The **set** tag only makes sense as a single-tag.
+The **set** tag is usually a single-tag, but you can chain set inside set
+variables, to maintain a separate inner context.
 
 Examples:
 
@@ -18,9 +23,11 @@ Hello, this is some text.
 <set name=John age=23 />
 ```
 
-Now, all the tags following the `set` tag will receive both "name" and "age" as props.
+Now, all the tags following the `set` tag will receive both "name" and "age" as
+props.
 
-A more concrete example is with the AI/LLM tag, which accepts lots and lots of options:
+A more concrete example is with the AI/LLM tag, which accepts lots and lots of
+options and it makes sense to separate them:
 
 ```md
 ( here I'm defining my name, and the name of the roleplay character )
@@ -37,9 +44,12 @@ User:
 </ai>
 ```
 
-In this example, the `ai` tag, and all following tags will receive as props: "user", "char", "keyName", "url", "model" and "stream".
+In this example, the `ai` tag, and all following tags will receive as props:
+"user", "char", "keyName", "url", "model" and "stream".
 
-In practice, if you are defining lots of variables of the same kind that you want to import from another file, or you don't want to pollute the global context, you should group them.
+In practice, if you are defining lots of variables of the same kind that you
+want to import from another file, or you don't want to pollute the global
+context, you should group them.
 
 To group variables, you just specify the group name as a zero prop:
 
@@ -55,7 +65,8 @@ To group variables, you just specify the group name as a zero prop:
 <set "strict" temp=0.1 top_p=0.1 top_k=5 min_p=0.025 />
 ```
 
-To access the data from a group, you can get it with "group dot variable", like in JavaScript:
+To access the data from a group, you can get it with "group dot variable", like
+in JavaScript:
 
 ```
 <text>
@@ -63,7 +74,8 @@ The URL for Llama 4 Maverick is {{llama4.url}}, and the model ID is {{llama4.mod
 </text>
 ```
 
-Now you can merge groups together into a new variable, with the JavaScript spread syntax:
+Now you can merge groups together into a new variable, with the JavaScript
+spread syntax:
 
 ```md
 <set "chat" user=John char=Jenna />
@@ -75,11 +87,15 @@ Or:
 
 ( if the variables are not overlapping, the merging order is not important )
 <set creativeAnubis={...chat, ...anubis, ...creative} />
+
+( to use one of the merged groups in the ai tag: ) <ai {...strictLlama}> User:
+</ai>
 ```
 
 ## JSON data
 
-This tag is useful for defining deeply nested variables inside one single tag. Example:
+This tag is useful for defining deeply nested variables inside one single tag.
+Example:
 
 ```
 We are defining a JSON data group called "users":
@@ -97,7 +113,9 @@ We are defining a JSON data group called "users":
 <set current={users[1]} id={current.id} />
 ```
 
-Here, you set the current user as the second element in the array, and `id=2`. All the tags following this `set` will receive the `users` array, and the current user and ID.
+Here, you set the current user as the second element in the array, and `id=2`.
+All the tags following this `set` will receive the `users` array, and the
+current user and ID.
 
 ```md
 ... continued
@@ -105,15 +123,20 @@ Here, you set the current user as the second element in the array, and `id=2`. A
 <set name=`${users[0].first_name}-${users[0].last_name}` />
 ```
 
-In this example, all the tags following this `set` will receive the `users` array, and also `name="Harland-Fountian"` as props.
+In this example, all the tags following this `set` will receive the `users`
+array, and also `name="Harland-Fountian"` as props.
 
-The **json** tag must be a double-tag. Unlike the `set` and `toml` tags, the JSON tag must have a group name, because they can have a top-level array which cannot be merged with the context object.
+The **json** tag must be a double-tag. Unlike the `set` and `toml` tags, the
+JSON tag must have a group name, because they can have a top-level array which
+cannot be merged with the context object.
 
-JSON data will be merged with any other `set`, `toml` or `import` data declared before.
+JSON data will be merged with any other `set`, `toml` or `import` data declared
+before.
 
 ## TOML data
 
-Just like the JSON tag, this is useful for defining nested variables inside one single tag. Example:
+Just like the JSON tag, this is useful for defining nested variables inside one
+single tag. Example:
 
 ```md
 We are defining a TOML tag called "servers":
@@ -131,17 +154,25 @@ role = "backend"
 <set current={servers.alpha} ip=`${current.ip}` />
 ```
 
-In this example, all the following tags will receive the "servers" object and `ip="10.0.0.1"`.
+In this example, all the following tags will receive the "servers" object and
+`ip="10.0.0.1"`.
 
-The **toml** tag must be a double-tag. You can load the TOML into a group name just like the `set` and `json` tags, by specifying the group name as a zero prop.
+The **toml** tag must be a double-tag. You can load the TOML into a group name
+just like the `set` and `json` tags, by specifying the group name as a zero
+prop.
 
-TOML data will be merged with any other `set`, `json` or `import` data declared before.
+TOML data will be merged with any other `set`, `json` or `import` data declared
+before.
 
 ## Import variables
 
-You can import variables from `set`, `json` or `toml` tags included in other files. You cannot import anything from other tags (currently).
+NOTE: The Import functionality is still experimental.
 
-The import syntax is very similar to the JavaScript import, and you can import anywhere in your code, not only at the beginning.
+You can import variables from `set`, `json` or `toml` tags included in other
+files. You cannot import anything from other tags (currently).
+
+The import syntax is very similar to the JavaScript import, and you can import
+anywhere in your code, not only at the beginning.
 
 All tags are public, you don't have to "export" them like in JavaScript.
 
@@ -154,15 +185,17 @@ Importing two variables from a file called "variables1.md" :
 
 <import "fullName, phone" from="variables1.md" />
 
-All the tags following this import will now have access to "fullName" and "phone".
+All the tags following this import will now have access to "fullName" and
+"phone".
 
-Here you can have more "set" tags, or whatever, and they'll all have access to "fullName" and "phone".
+Here you can have more "set" tags, or whatever, and they'll all have access to
+"fullName" and "phone".
 ```
 
 This is how "variables1.md" file could look like:
 
 ```
-This is a person.
+This is a person. It looks like one.
 
 <json "person">
 {
@@ -190,7 +223,8 @@ More text, more text.
 <set fullName=`${person.first_name} ${person.last_name}` phone={person.phone_numbers[0].number} />
 ```
 
-Unlike JavaScript, you can import very deep objects defined in a `json` or `toml` tag, example:
+Unlike JavaScript, you can import very deep objects defined in a `json` or
+`toml` tag, example:
 
 ```
 ... continued
@@ -202,11 +236,13 @@ Unlike JavaScript, you can import very deep objects defined in a `json` or `toml
 ( the text will become: The address is "21 2nd Street, New York". )
 ```
 
-The imported variables will be merged with the local variables, just like a `set`, `json` or `toml` tag.
+The imported variables will be merged with the local variables, just like a
+`set`, `json` or `toml` tag.
 
 ## Delete tag
 
-The `del` tag can be used to delete variables. You can also `set` a variable to undefined, it's almost the same.
+The `del` tag can be used to delete variables. You can also `set` a variable to
+undefined, it's almost the same.
 
 Example:
 
@@ -216,6 +252,10 @@ Example:
 <del "name"/>
 
 Now, only the "age" variable is set.
+
+<set age=undefined />
+
+Now, the age is undefined.
 ```
 
 ## Vars tag
@@ -224,7 +264,8 @@ WIP... A tag to display variables.
 
 ## Text tag
 
-You can use the text tag to display some variables, by using the curly brackets to expand the variable name. For example:
+You can use the text tag to display text and variables, by using the curly
+brackets to expand the variable name. For example:
 
 ```md
 <set name=Ana fruits=apples />
@@ -234,6 +275,9 @@ My name is {{ name }} and I like {{ fruits }}.
 </text>
 ```
 
-Obviously, you can use it to display any variable, from any source (set, json, toml, import).
+Obviously, you can use it to display any variable, from any source (set, json,
+toml, import).
 
-The text tag doesn't use any fancy templating library, but you're free to create a different tag based on this, and use something like Mustache or EJS or whatever, to expand the variables into something more useful to you.
+The text tag doesn't use any fancy templating library, but you're free to create
+a different tag based on this, and use something like Mustache or EJS or
+whatever, to expand the variables into something more useful to you.
