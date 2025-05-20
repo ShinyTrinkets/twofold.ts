@@ -208,9 +208,41 @@ export function jsDocs(_: string, args: any): string | undefined {
   return text;
 }
 
+export function vars(names: string, args: any, meta: any): string | undefined {
+  /**
+   * A tag used for DEV, to echo one or more variables.
+   * It is similar to the debug tag, but it only shows
+   * the variables.
+   * Example: <vars "name, age"/>
+   * To show all variables, use <vars "*"/>
+   */
+  if (!names) return;
+  let selected: Record<string, any> = {};
+  if (names === '*') {
+    selected = { ...args };
+    delete selected['0'];
+    delete selected.innerText;
+  } else {
+    for (let name of names.split(/[, ]/)) {
+      name = name.trim();
+      if (name.length > 0) {
+        selected[name] = args[name];
+      }
+    }
+  }
+
+  let text = JSON.stringify(selected, null, ' ');
+  const isDouble = meta.node.double || meta.node.parent.double;
+  if (isDouble) text = '\n' + text + '\n';
+  else text = `---\nVars: ${text}\n---`;
+  return text;
+}
+
 export function debug(_: string, args: any, meta: any): string {
   /**
    * A tag used for DEV, to echo the parsed tag args and metadata.
+   * It is similar to the vars tag, but it also shows the raw text
+   * of the tag, and the arguments.
    */
   if (meta.node.rawText) {
     // trim the < and > to disable the live tag

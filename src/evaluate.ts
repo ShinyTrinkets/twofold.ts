@@ -388,7 +388,7 @@ async function __specialTags(
     if (!tag.params?.['0']) return;
     // Import X from Y
     const what = tag.params?.['0']
-      .split(/[,]/)
+      .split(/[, ]/)
       .map((w: string) => w.trim())
       .filter((w: string) => w.length > 0); // The variables to import
     if (what.length === 0) return;

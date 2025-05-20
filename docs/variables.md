@@ -260,7 +260,40 @@ Now, the age is undefined.
 
 ## Vars tag
 
-WIP... A tag to display variables.
+Is a simple tag to view variables defined before this tag, similar to the "debug" tag.
+
+The **vars** tag can be single, or double.
+
+```md
+<set name=John age=23 />
+
+<vars "name" />
+```
+
+It will become:
+
+```md
+---
+Vars: {
+ "name": "John"
+}
+---
+```
+
+To view all variables, call it with "*". It will become:
+
+```md
+... continued
+
+<vars "*">
+{
+"name": "John",
+"age": 23
+}
+</vars>
+```
+
+Any variable defined after this tag won't show up.
 
 ## Text tag
 
