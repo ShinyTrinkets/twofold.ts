@@ -4,9 +4,22 @@ const { test, expect } = await testing;
 import { ConfigError, userCfg, validateCfg } from '../src/config.ts';
 
 const DIR = import.meta.dirname;
+const CONFIG = `${DIR}/fixtures/config`;
+
 //
 // Testing the config loading and validation.
 //
+
+beforeAll(() => {
+  if (!fs.existsSync(CONFIG)) {
+    fs.mkdirSync(CONFIG);
+  }
+});
+
+afterAll(() => {
+  fs.rmdirSync(CONFIG, { recursive: true });
+});
+
 test('config validation', async () => {
   expect(validateCfg({})).toBeUndefined();
   expect(
@@ -51,47 +64,71 @@ test('config errors', async () => {
   }
 });
 
-test('config loading', async () => {
-  if (!fs.existsSync(`${DIR}/fixtures/config`)) {
-    fs.mkdirSync(`${DIR}/fixtures/config`);
-  }
-  fs.writeFileSync(
-    './test/fixtures/config/twofold.config.json',
-    JSON.stringify({
+describe('cfg loading', async () => {
+  test('JSON config', async () => {
+    fs.writeFileSync(
+      `${CONFIG}/twofold.config.json`,
+      JSON.stringify({
+        openTag: '[',
+        closeTag: ']',
+        lastStopper: '.',
+      })
+    );
+
+    let cfg = await userCfg(CONFIG);
+    expect(cfg).toEqual({
       openTag: '[',
       closeTag: ']',
+      openExpr: '{',
+      closeExpr: '}',
       lastStopper: '.',
-    })
-  );
+    });
 
-  let cfg = await userCfg('./test/fixtures/config/');
-  expect(cfg).toEqual({
-    openTag: '[',
-    closeTag: ']',
-    openExpr: '{',
-    closeExpr: '}',
-    lastStopper: '.',
-  });
+    fs.writeFileSync(
+      `${CONFIG}/twofold.config.json`,
+      JSON.stringify({
+        openTag: '{',
+        closeTag: '}',
+        openExpr: '[',
+        closeExpr: ']',
+        lastStopper: '?',
+      })
+    );
 
-  fs.writeFileSync(
-    './test/fixtures/config/twofold.config.json',
-    JSON.stringify({
+    process.chdir('./test/fixtures/config/');
+    cfg = await userCfg();
+    expect(cfg).toEqual({
       openTag: '{',
       closeTag: '}',
       openExpr: '[',
       closeExpr: ']',
       lastStopper: '?',
-    })
-  );
-  process.chdir('./test/fixtures/config/');
-  cfg = await userCfg();
-  expect(cfg).toEqual({
-    openTag: '{',
-    closeTag: '}',
-    openExpr: '[',
-    closeExpr: ']',
-    lastStopper: '?',
+    });
+
+    fs.rmSync(`${CONFIG}/twofold.config.json`);
   });
 
-  fs.rmdirSync(`${DIR}/fixtures/config`, { recursive: true });
+  test('TOML config', async () => {
+    fs.writeFileSync(
+      `${CONFIG}/twofold.config.toml`,
+      `
+openTag = "["
+closeTag = "]"
+openExpr = "{"
+closeExpr = "}"
+lastStopper = "."
+`
+    );
+
+    let cfg = await userCfg(CONFIG);
+    expect(cfg).toEqual({
+      openTag: '[',
+      closeTag: ']',
+      openExpr: '{',
+      closeExpr: '}',
+      lastStopper: '.',
+    });
+
+    fs.rmSync(`${CONFIG}/twofold.config.toml`);
+  });
 });
