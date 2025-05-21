@@ -1,6 +1,10 @@
 # TwoFold (2✂︎f) changelog
 
-## v0.10 WIP
+## v0.11 WIP
+
+- ...
+
+## v0.10
 
 - BREAKING change: JSON props in backticks are gone!
   replaced by the new JSX curly braces {..} props
