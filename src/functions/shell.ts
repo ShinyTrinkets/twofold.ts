@@ -1,7 +1,11 @@
-import { joinWithMarker, splitToMarker } from '../util.ts';
-
 // @ts-ignore missing types
 import { parse } from 'shell-quote';
+import { joinWithMarker, splitToMarker } from '../util.ts';
+
+/*
+ * Functions to execute shell commands.
+ * <ignore> The following text
+ */
 
 export async function cmd(
   txtCmd: string,
@@ -10,7 +14,7 @@ export async function cmd(
 ): Promise<string | undefined> {
   /**
    * Execute a system command and return the output, *without spawning a shell*;
-   * you probably want to use SH, or Bash instead of this.
+   * you probably want to use SH, ZSH, or Bash instead of this.
    */
 
   cmd = txtCmd.trim() || cmd.trim();
@@ -50,8 +54,9 @@ export async function cmd(
 export async function sh(txtCmd: string, { cmd, args = [], t = 5 }): Promise<string | undefined> {
   /**
    * Spawn SH and execute command, with options and timeout.
-   * Example: <sh "ps aux | grep sh | grep -v grep" //>
-   * Is this SH ? <sh "echo $0" //>
+   *
+   * Example: `<sh "ps aux | grep sh | grep -v grep" />`
+   * Is this SH ? `<sh "echo $0" />`
    */
   cmd = (txtCmd || cmd || '').trim();
   if (!cmd) return;
@@ -61,8 +66,9 @@ export async function sh(txtCmd: string, { cmd, args = [], t = 5 }): Promise<str
 export async function bash(txtCmd: string, { cmd, args = [], t = 5 }): Promise<string | undefined> {
   /**
    * Spawn Bash and execute command, with options and timeout.
-   * Example: <bash "ps aux | grep bash | grep -v grep" //>
-   * Is this Bash ? <bash "echo $0" //>
+   *
+   * Example: `<bash "ps aux | grep bash | grep -v grep" />`
+   * Is this Bash ? `<bash "echo $0" />`
    */
   cmd = (txtCmd || cmd || '').trim();
   if (!cmd) return;
@@ -72,8 +78,9 @@ export async function bash(txtCmd: string, { cmd, args = [], t = 5 }): Promise<s
 export async function zsh(txtCmd: string, { cmd, args = [], t = 5 }): Promise<string | undefined> {
   /**
    * Spawn ZSH and execute command, with options and timeout.
-   * Example: <zsh "ps aux | grep zsh | grep -v grep" //>
-   * The version of ZSH : <zsh args="--version" //>
+   *
+   * Example: `<zsh "ps aux | grep zsh | grep -v grep" />`
+   * The version of ZSH : `<zsh args="--version" />`
    */
   cmd = (txtCmd || cmd || '').trim();
   if (!cmd) return;
@@ -103,3 +110,7 @@ async function spawnShell(name: string, cmd: string, args: string[], timeout = 5
   clearTimeout(timeoutID);
   return joinWithMarker(cmd, stdout);
 }
+
+/**
+ * End of </ignore>
+ */

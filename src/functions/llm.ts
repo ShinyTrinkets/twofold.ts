@@ -25,7 +25,22 @@ export async function ai(
   meta: Record<string, any> = {}
 ): Promise<string | undefined> {
   /**
-   * Chat with a local or remote LLM.
+   * Chat with a local or remote LLM. This tag can be tweaked with lots of options.
+   *
+   * Local chat example:
+   * <ai temp=0.7 top_k=10>
+   * System: You are a helpful assistant.
+   * User: What is the capital of France?
+   * Assistant: The capital of France is Paris.
+   * </ai>
+   * For local LLMs, you can start either Llama.cpp, Kobold.cpp, Ollama, or LM-Studio.
+   *
+   * Remote chat example:
+   * <ai temp=0.7 model="gpt-3.5-turbo" url="https://api.openai.com/v1/chat/completions">
+   * User: Hi, how are you?
+   * Assistant: I'm doing well, thank you! How can I assist you today?
+   * </ai>
+   * Most of the remote APIs are compatible with the OpenAI API, and usually don't allow System prompts.
    */
   text = text.trimStart();
   if (text.trim() === '') return;
@@ -84,7 +99,10 @@ function makeBody(body: Record<string, any>, args: Record<string, any>) {
   // Featherless API params for chat completion:
   // https://featherless.ai/docs/completions
   //
-  // Ollama API params for chat completion:
+  // Llama.cpp API params:
+  // https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+  //
+  // Ollama API params:
   // https://github.com/ollama/ollama/blob/main/docs/api.md
   //
   // vLLM API params for chat completion:

@@ -1,6 +1,7 @@
 # TwoFold (2✂︎f)
 
-[![Project name][project-img]][project-url] [![CLI app][cli-img]](#) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ShinyTrinkets/twofold.ts)
+[![Project name][project-img]][project-url] [![CLI app][cli-img]](#)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ShinyTrinkets/twofold.ts)
 
 <!-- deno-fmt-ignore-start -->
 
@@ -39,10 +40,11 @@ Spreadsheet application), or check for spelling errors (similar to a Document ed
 **It is editor agnostic, and will work** with any plain-text file like: .txt, Markdown, Emacs Org,
 reStructured Text, HTML, XML, and source-code files.
 
-**Probably WON'T work** with binary files like: .doc, .pages, .xls, .numbers, .pdf, images, audio,
-or video. Running TwoFold on binary files MIGHT break them (with the default config), because media
+**Don't use TwoFold** with binary files like: .doc, .pages, .xls, .numbers, .pdf, images, audio, or
+video. Rendering binary files with TwoFold MIGHT break them (with the default config), because media
 files contain XML-like [Exif](https://en.wikipedia.org/wiki/Exif) or
-[IPTC](https://en.wikipedia.org/wiki/IPTC_Information_Interchange_Model) tags.
+[IPTC](https://en.wikipedia.org/wiki/IPTC_Information_Interchange_Model) tags. We do have some tests
+to check this doesn't happen, but it's better to avoid it.
 
 The **single tags are one use only**, they are consumed after they render the response. The **double
 tags are refreshed** every time the file is rendered. They have different use-cases, different pros
@@ -190,8 +192,7 @@ Also check my blog posts:
 
 ## Development
 
-Check the [Changelog](/docs/CHANGELOG.md) (the past) and the [Roadmap](/docs/ROADMAP.md) (the
-future).
+For a history of the project, check the [Changelog](/docs/CHANGELOG.md).
 
 This TwoFold in TypeScript, running in [Bun](https://bun.sh) or [Deno](https://deno.com).
 

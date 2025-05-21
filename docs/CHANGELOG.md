@@ -15,6 +15,7 @@
   it works just like the "json" tag
 - created "del" tag to delete variables, but you can also set deep
   variables to undefined
+- created "vars" tag to view selected variables, similar to "debug"
 
 ## v0.9
 

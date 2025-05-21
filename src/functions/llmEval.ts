@@ -20,6 +20,13 @@ interface HistoryQAC {
 export async function llmEval(text: string, args: Record<string, any> = {}) {
   /**
    * Evaluate LLM answers, step by step.
+   *
+   * Example:
+   * <llmEval>
+   * Q: What is the capital of France?
+   * C: Paris
+   * A: The capital of France is Paris.
+   * </llmEval>
    */
   text = text.trimStart();
   if (text.trim() === '') return;

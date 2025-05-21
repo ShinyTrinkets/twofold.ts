@@ -137,8 +137,7 @@ For text values, there are 3 ways of defining a value:
 - key1='value1' -- single quotes are identical to double quotes
 - key2="value2" -- double quotes
 - key3=`My name is ${name}` -- backtick expressions work just like JavaScript
-- key4=`
-some
+- key4=`some
 long
 text
 and
@@ -235,12 +234,14 @@ You can also see this list by running `tfold --tags`.
 
 This list is generated with the `jsDocs` built-in tag.
 
+```md
 <jsDocs "src/functions">
 
 ## titleAll (text: string)
 
-Title case for all the words. It would be nice if this was called just "title", but there is an HTML
-tag called "title" already.
+Title case for all the words.
+It would be nice if this was called just "title", but
+there is an HTML tag called "title" already.
 
 ---
 
@@ -252,7 +253,8 @@ Draw a long line, of specified length.
 
 ## sortLines (text: string, { caseSensitive = false } = {})
 
-Sort lines of text alphabetically. By default, the sorting is case insensitive.
+Sort lines of text alphabetically.
+By default, the sorting is case insensitive.
 
 ---
 
@@ -267,6 +269,13 @@ the Markdown separator line. It's robust against extra spaces and pipes.
 ## llmEval (text: string, args: Record<string, any> = {})
 
 Evaluate LLM answers, step by step.
+
+Example:
+<llmEval>
+Q: What is the capital of France?
+C: Paris
+A: The capital of France is Paris.
+</llmEval>
 
 ---
 
@@ -321,6 +330,9 @@ No documentation.
 
 A tag used for DEV, that logs the args to the logger.
 
+Example: <log level="warn" msg="Something went wrong!"/>
+Example: <log level="info" name="John" age="30"/>
+
 ---
 
 ## increment (s: string, { plus = 1 } = {})
@@ -360,9 +372,21 @@ It is used to generate documentation for the TwoFold functions.
 
 ---
 
+## vars (names: string, args: any, meta: any)
+
+A tag used for DEV, to echo one or more variables.
+It is similar to the debug tag, but it only shows
+the variables.
+Example: <vars "name, age"/>
+To show all variables, use <vars "*"/>
+
+---
+
 ## debug (_: string, args: any, meta: any)
 
 A tag used for DEV, to echo the parsed tag args and metadata.
+It is similar to the vars tag, but it also shows the raw text
+of the tag, and the arguments.
 
 ---
 
@@ -493,7 +517,22 @@ Or something random like that.
 
 ## ai (text: string, args: Record<string, any> = {}, meta: Record<string, any> = {})
 
-Chat with a local or remote LLM.
+Chat with a local or remote LLM. This tag can be tweaked with lots of options.
+
+Local chat example:
+<ai temp=0.7 top_k=10>
+System: You are a helpful assistant.
+User: What is the capital of France?
+Assistant: The capital of France is Paris.
+</ai>
+For local LLMs, you can start either Llama.cpp, Kobold.cpp, Ollama, or LM-Studio.
+
+Remote chat example:
+<ai temp=0.7 model="gpt-3.5-turbo" url="https://api.openai.com/v1/chat/completions">
+User: Hi, how are you?
+Assistant: I'm doing well, thank you! How can I assist you today?
+</ai>
+Most of the remote APIs are compatible with the OpenAI API, and usually don't allow System prompts.
 
 ---
 
@@ -541,31 +580,34 @@ or "dir" command from Windows.
 ## cmd (txtCmd: string, { cmd, args = [] }, _meta: Record<string, any> = {})
 
 Execute a system command and return the output, _without spawning a shell_;
-you probably want to use SH, or Bash instead of this.
+you probably want to use SH, ZSH, or Bash instead of this.
 
 ---
 
 ## sh (txtCmd: string, { cmd, args = [], t = 5 })
 
 Spawn SH and execute command, with options and timeout.
-Example: <sh "ps aux | grep sh | grep -v grep" //>
-Is this SH ? <sh "echo $0" //>
+
+Example: `<sh "ps aux | grep sh | grep -v grep" />`
+Is this SH ? `<sh "echo $0" />`
 
 ---
 
 ## bash (txtCmd: string, { cmd, args = [], t = 5 })
 
 Spawn Bash and execute command, with options and timeout.
-Example: <bash "ps aux | grep bash | grep -v grep" //>
-Is this Bash ? <bash "echo $0" //>
+
+Example: `<bash "ps aux | grep bash | grep -v grep" />`
+Is this Bash ? `<bash "echo $0" />`
 
 ---
 
 ## zsh (txtCmd: string, { cmd, args = [], t = 5 })
 
 Spawn ZSH and execute command, with options and timeout.
-Example: <zsh "ps aux | grep zsh | grep -v grep" //>
-The version of ZSH : <zsh args="--version" //>
+
+Example: `<zsh "ps aux | grep zsh | grep -v grep" />`
+The version of ZSH : `<zsh args="--version" />`
 
 ---
 
@@ -668,6 +710,7 @@ Returns a zodiac sign as emoji, or text.
 ---
 
 </jsDocs>
+```
 
 **Note**: The built-in tags are simple and ZERO ext dependencies, just enough to have some tags
 available to start with. There are extra tags available in the

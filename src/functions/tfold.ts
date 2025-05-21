@@ -81,6 +81,9 @@ export function text(s: string, args: any) {
 export function log(_: string, args: any, meta: any) {
   /**
    * A tag used for DEV, that logs the args to the logger.
+   *
+   * Example: <log level="warn" msg="Something went wrong!"/>
+   * Example: <log level="info" name="John" age="30"/>
    */
   const level = args.level || args.l || args['0'] || 'info';
   const params: Record<string, any> = {};

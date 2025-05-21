@@ -756,3 +756,42 @@ test('importing files', async () => {
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 });
+
+test('vars tag', async () => {
+  const txt = `
+This is a test
+<set a=a x=1 debug=null/>
+<import "debug" from="test/fixtures/variables1.md"/>
+<vars '*'/>
+<import "person.address.home.street_address" from="test/fixtures/variables2.md"/>
+<vars/> -- Nothing will happen
+<vars "person">
+</vars>
+`;
+  const out = await twofold.renderText(txt);
+  expect(out).toBe(`
+This is a test
+<set a=a x=1 debug=null/>
+<import "debug" from="test/fixtures/variables1.md"/>
+---
+Vars: {
+ "a": "a",
+ "x": 1,
+ "debug": true
+}
+---
+<import "person.address.home.street_address" from="test/fixtures/variables2.md"/>
+<vars/> -- Nothing will happen
+<vars "person">
+{
+ "person": {
+  "address": {
+   "home": {
+    "street_address": "21 2nd Street"
+   }
+  }
+ }
+}
+</vars>
+`);
+});
