@@ -6,6 +6,7 @@ import path from 'node:path';
 
 import parse from '../parser.ts';
 import Lexer from '../lexer.ts';
+import evaluateTag from '../evaluate.ts';
 import { ParseToken } from '../types.ts';
 import { log } from '../logger.ts';
 import { interpolate, shouldInterpolate } from '../evaluate.ts';
@@ -41,7 +42,7 @@ export interface EvalMeta {
   ctx: Record<string, any>;
 }
 
-function privSet(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
+function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
   /**
    * Set (define) one or more variables.
    *
@@ -92,13 +93,11 @@ function privSet(_t: string, args: Record<string, any> = {}, meta: EvalMeta): un
       meta.ctx[k] = v;
     }
   }
-
-  // console.log('FINAL set CTX ', group, meta.ctx, '\n\n');
   // Return undefined to avoid consuming the tag
 }
 
 export const set = {
-  fn: privSet,
+  fn: __set,
   // This param tells the Evaluator to
   // run this function before the children,
   // in breadth-first order
@@ -106,7 +105,7 @@ export const set = {
   description: 'Set (define) one or more variables.',
 };
 
-function privDel(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
+function __del(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
   /**
    * Del (delete/ remove) one or more variables.
    *
@@ -135,7 +134,7 @@ function privDel(_t: string, args: Record<string, any> = {}, meta: EvalMeta): un
 }
 
 export const del = {
-  fn: privDel,
+  fn: __del,
   // This param tells the Evaluator to
   // run this function before the children,
   // in breadth-first order
@@ -248,7 +247,7 @@ export function toml(text: string, args: Record<string, any> = {}, meta: EvalMet
   }
 }
 
-export async function import_(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
+async function __import(_t: string, args: Record<string, any> = {}, meta: EvalMeta): Promise<undefined> {
   if (!args?.['0']) return;
   // Import X from Y
   const what = args?.['0']
@@ -257,7 +256,7 @@ export async function import_(_t: string, args: Record<string, any> = {}, meta: 
     .filter((w: string) => w.length > 0); // The variables to import
   if (what.length === 0) return;
 
-  let fname = args?.from; // The file to import from
+  let fname = args.from; // The file to import from
   if (!fname) return;
   if (meta.root) {
     fname = path.resolve(meta.root, fname);
@@ -275,24 +274,31 @@ export async function import_(_t: string, args: Record<string, any> = {}, meta: 
     } else if (typeof Deno !== 'undefined') {
       text = await Deno.readTextFile(fname);
     }
-    ast = parse(new Lexer(cfg).lex(text), cfg);
+    ast = parse(new Lexer(meta.config).lex(text), meta.config);
   } catch {
     log.warn(`Cannot import from "${fname}"!`);
     return;
   }
 
-  let importdData: Record<string, any> = {};
+  let importData: Record<string, any> = {};
+  let allFunctions: Record<string, any> = { set, del, json, toml };
   for (const t of ast) {
     if (t.name === 'set' || t.name === 'json' || t.name === 'toml') {
-      await evaluateTag(t, importdData, allFunctions, cfg, meta);
+      await evaluateTag(t, importData, allFunctions, meta.config, {
+        fname,
+        root: meta.root,
+        config: meta.config,
+        node: meta.node,
+        ctx: importData,
+      });
     }
   }
   ast = [];
 
   if (what.length === 1 && what[0] === '*') {
     // Import *all* variables
-    for (const key of Object.keys(importdData)) {
-      customData[key] = importdData[key];
+    for (const key of Object.keys(importData)) {
+      meta.ctx[key] = importData[key];
     }
     return;
   }
@@ -304,7 +310,7 @@ export async function import_(_t: string, args: Record<string, any> = {}, meta: 
   const selectedData: Record<string, any> = {};
   for (const path of what) {
     const keys = path.split('.');
-    let currentObj = importdData;
+    let currentObj = importData;
     let currentResult = selectedData;
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
@@ -329,13 +335,20 @@ export async function import_(_t: string, args: Record<string, any> = {}, meta: 
       }
     }
   }
-  importdData = {};
 
   // Merge the selected/ imported data with current context
   for (const key of Object.keys(selectedData)) {
-    customData[key] = selectedData[key];
+    meta.ctx[key] = selectedData[key];
   }
 }
+
+export const _import = {
+  fn: __import,
+  // This param tells the Evaluator to
+  // run this function before the children,
+  // in breadth-first order
+  evalOrder: 0,
+};
 
 export function vars(names: string, args: any, meta: EvalMeta): string | undefined {
   /**

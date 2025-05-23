@@ -3,7 +3,6 @@ import { log } from './logger.ts';
 import { defaultCfg } from './config.ts';
 import { deepClone, isFunction } from './util.ts';
 import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
-import { glob } from 'node:fs';
 
 /**
  * Evaluate a single tag, by calling the tag function.
@@ -212,9 +211,9 @@ export default async function evaluateTag(
     return;
   }
 
-  let func = allFunctions[tag.name];
   let evalOrder = 1;
-  if (isFunction(func.fn) && func.evalOrder !== undefined) {
+  let func = allFunctions[tag.name];
+  if (func && isFunction(func.fn) && func.evalOrder !== undefined) {
     evalOrder = func.evalOrder;
     func = func.fn;
   } else if (!isFunction(func)) {

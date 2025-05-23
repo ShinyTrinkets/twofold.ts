@@ -48,6 +48,8 @@ export default {
   ...filterPublicExports(llmEval),
   ...filterPublicExports(tfold),
   ...filterPublicExports(vars),
+  // import is a reserved word in JS
+  import: vars._import,
   ...matrix,
   ...globe,
   ...skeleton,
