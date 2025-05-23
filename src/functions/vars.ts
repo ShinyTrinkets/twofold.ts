@@ -60,7 +60,6 @@ function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): unde
 
   // GROUP can be a string, object or array
   // TODO :: check if group is valid
-  // console.log('INITIAL set CTX ', group, args, '->', meta.ctx, '\n');
 
   if (group) {
     // delete args['0'];
@@ -71,8 +70,16 @@ function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): unde
     for (const k of Object.keys(meta.node.params || {})) {
       if (k === group || k === '0') continue;
       if (k === 'innerText') continue;
-      const v = args[k];
-      // console.log('! SET in GROUP ', group, k, v);
+      let v = args[k];
+
+      const rawValue = meta.node.rawParams?.[k];
+      if (shouldInterpolate(rawValue, meta.config)) {
+        try {
+          v = interpolate(rawValue, meta.ctx, meta.config);
+        } catch (err: any) {
+          log.warn(`Cannot interpolate ${k}=${rawValue}!`, err.message);
+        }
+      }
       meta.ctx[group][k] = v;
     }
   } else {
@@ -89,7 +96,6 @@ function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): unde
           log.warn(`Cannot interpolate ${k}=${rawValue}!`, err.message);
         }
       }
-      // console.log('! SET :: ', k, v);
       meta.ctx[k] = v;
     }
   }

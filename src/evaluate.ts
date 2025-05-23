@@ -216,8 +216,6 @@ export default async function evaluateTag(
   if (func && isFunction(func.fn) && func.evalOrder !== undefined) {
     evalOrder = func.evalOrder;
     func = func.fn;
-  } else if (!isFunction(func)) {
-    return;
   }
 
   const localCtx = { ...globalContext, ...tag.params };
@@ -230,7 +228,22 @@ export default async function evaluateTag(
           delete interCtx['0'];
         }
         try {
-          localCtx[k] = interpolate(v, interCtx, cfg);
+          const spread = interpolate(v, interCtx, cfg);
+          if (k === '0') {
+            // Special case for the ZERO props with interpolation
+            // Zero-prop was a backtick like `${...}`
+            if (typeof spread === 'string') {
+              localCtx['0'] = spread;
+            } else {
+              delete localCtx['0'];
+              // Zero-prop was a spread like {...props}
+              for (const [kk, vv] of Object.entries(spread)) {
+                localCtx[kk] = vv;
+              }
+            }
+          } else {
+            localCtx[k] = spread;
+          }
         } catch (err: any) {
           log.warn(`Cannot interpolate string for ${k}=${v}!`, err.message);
         }
@@ -238,7 +251,7 @@ export default async function evaluateTag(
     }
   }
 
-  if (evalOrder === 0) {
+  if (evalOrder === 0 && isFunction(func)) {
     _prepareMeta(meta, tag, cfg, globalContext);
     // Prevent new properties from being added to Meta
     meta = Object.seal(meta);
@@ -274,7 +287,7 @@ export default async function evaluateTag(
     }
   }
 
-  if (evalOrder !== 0) {
+  if (evalOrder !== 0 && isFunction(func)) {
     _prepareMeta(meta, tag, cfg, globalContext);
     // Prevent new properties from being added to Meta
     meta = Object.seal(meta);
