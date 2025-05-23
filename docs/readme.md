@@ -142,7 +142,8 @@ long
 text
 and
 even
-more` -- backtick expressions can span over multiple lines, but single & double quotes can't
+more` -- backtick expressions can span over multiple lines, but
+  single & double quotes can't
 
 Backtick strings are evaluated into regular strings, but they allow variable interpolation, and can
 be defined on multiple lines, exactly like in JavaScript.

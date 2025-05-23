@@ -3,6 +3,12 @@
 TwoFold (2✂︎f) is an exceptionally unique application, a hybrid between a text expander, a template
 engine and a mini programming language. Personally, I have never found anything like it.
 
+The TwoFold binary, called `tfold` is a portable single file executable that transforms plain
+text-files into self-modifying living documents, locally.
+
+TwoFold works great with text note tools like https://obsidian.md, https://logseq.com,
+https://zettlr.com, etc.
+
 The purpose of this document is to provide a brief comparison between TwoFold and other similar
 applications.
 

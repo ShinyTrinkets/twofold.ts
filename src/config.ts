@@ -1,4 +1,5 @@
 import { lilconfig } from 'lilconfig';
+import { Config, CliConfig } from './types.ts';
 import { log } from './logger.ts';
 
 let loadToml = false;
@@ -14,20 +15,7 @@ let loadToml = false;
   }
 })();
 
-export interface Config {
-  openTag?: string;
-  closeTag?: string;
-  openExpr?: string;
-  closeExpr?: string;
-  lastStopper?: string;
-}
-
-export interface CliConfig extends Config {
-  depth?: number;
-  glob?: string;
-}
-
-export const defaultCfg: Config = {
+export const defaultCfg: Config = Object.freeze({
   // openTag, closeTag and lastStopper must be
   // strings of length 1. At least for now.
 
@@ -51,9 +39,9 @@ export const defaultCfg: Config = {
   // it will become: <debug x=[a**2] />
   openExpr: '{',
   closeExpr: '}',
-};
+});
 
-export const defaultCliCfg: CliConfig = {
+export const defaultCliCfg: CliConfig = Object.freeze({
   ...defaultCfg,
 
   // walk-dir scan depth
@@ -61,7 +49,7 @@ export const defaultCliCfg: CliConfig = {
 
   // walk-dir scan files
   glob: '*.*',
-};
+});
 
 export async function userCfg(path = undefined): Promise<CliConfig> {
   const explorer = lilconfig('twofold', {

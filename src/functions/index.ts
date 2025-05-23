@@ -14,6 +14,8 @@ import * as xeval from './xeval.ts';
 import * as llm from './llm.ts';
 import * as llmEval from './llmEval.ts';
 import * as tfold from './tfold.ts';
+import * as vars from './vars.ts';
+
 import * as matrix from './matrix.ts';
 import * as globe from './globe.ts';
 import * as skeleton from './skeleton.ts';
@@ -45,6 +47,7 @@ export default {
   ...filterPublicExports(llm),
   ...filterPublicExports(llmEval),
   ...filterPublicExports(tfold),
+  ...filterPublicExports(vars),
   ...matrix,
   ...globe,
   ...skeleton,

@@ -1,3 +1,4 @@
+// The result of lexing a text string
 export interface LexToken {
   index: number;
   rawText: string;
@@ -10,6 +11,7 @@ export interface LexToken {
   param_value?: string;
 }
 
+// The result of parsing a text string
 export interface ParseToken {
   index: number;
   path?: string;
@@ -28,7 +30,7 @@ export interface ParseToken {
 // A valid single tag
 export interface SingleTag {
   index: number;
-  path?: string;
+  path: string;
   single: boolean;
   name: string;
   rawText: string;
@@ -40,7 +42,7 @@ export interface SingleTag {
 // A valid double tag
 export interface DoubleTag {
   index: number;
-  path?: string;
+  path: string;
   double: boolean;
   name: string;
   firstTagText: string;
@@ -58,8 +60,23 @@ export interface ScanToken {
   double?: boolean;
 }
 
+export interface Config {
+  openTag?: string;
+  closeTag?: string;
+  openExpr?: string;
+  closeExpr?: string;
+  lastStopper?: string;
+}
+
+export interface CliConfig extends Config {
+  depth?: number;
+  glob?: string;
+}
+
 export interface EvalMeta {
   root?: string;
   fname?: string;
+  config?: Config;
   node?: ParseToken;
+  ctx?: Record<string, any>;
 }

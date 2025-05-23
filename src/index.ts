@@ -3,7 +3,7 @@ import path from 'node:path';
 import picomatch from 'picomatch';
 
 import * as config from './config.ts';
-import { ParseToken } from './types.ts';
+import * as T from './types.ts';
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import evaluate from './evaluate.ts';
@@ -27,8 +27,8 @@ export async function renderText(
   text: string,
   customData: Record<string, any> = {},
   customTags: Record<string, Function> = {},
-  cfg: config.Config = config.defaultCfg,
-  meta: Record<string, any> = {}
+  cfg: T.Config = config.defaultCfg,
+  meta: T.EvalMeta = {}
 ): Promise<string> {
   const allFunctions: Record<string, Function> = {
     ...functions,
@@ -54,7 +54,7 @@ export async function renderText(
 export async function renderFile(
   fname: string,
   customTags = {},
-  cfg: config.Config = config.defaultCfg,
+  cfg: T.Config = config.defaultCfg,
   meta: Record<string, any> = {}
 ): Promise<{ changed: boolean; text?: string }> {
   if (!fname) {
@@ -72,7 +72,7 @@ export async function renderFile(
   const lexer = new Lexer(cfg);
   const decoder = new TextDecoder();
   const streamHash = crypto.createHash('sha224');
-  let ast: ParseToken[] = [];
+  let ast: T.ParseToken[] = [];
 
   if (typeof Bun !== 'undefined') {
     const file = Bun.file(fname);
@@ -134,7 +134,7 @@ export async function renderFile(
 export async function renderFolder(
   dir: string,
   customTags = {},
-  cfg: config.CliConfig = {},
+  cfg: T.CliConfig = {},
   meta: Record<string, any> = {}
 ): Promise<{ found: number; rendered: number }> {
   if (!cfg) {
@@ -170,7 +170,7 @@ export async function renderFolder(
  * Edit a file, and save the changes.
  * This works by editing the AST in place.
  */
-export async function editSave(meta: Record<string, any>): Promise<ParseToken> {
+export async function editSave(meta: Record<string, any>): Promise<T.ParseToken> {
   const { node } = meta;
   // Reform/ restructure de-synced tag, in place
   syncTag(node);

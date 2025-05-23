@@ -1,5 +1,5 @@
 /**
- * TwoFold useful tags.
+ * TwoFold misc/ util tags.
  * <ignore> The following text:
  */
 import fs from 'node:fs';
@@ -17,52 +17,6 @@ export function ignore() {
    * This is similar to the freeze=true prop.
    *
    * The logic for this tag is in the evaluate tags functions.
-   */
-  return;
-}
-
-export function set() {
-  /**
-   * Set (define) one or more variables.
-   *
-   * The logic for this tag is in the evaluate tags functions.
-   *
-   * Example:
-   * <set name="John" age="30" job="engineer"/>
-   */
-  return;
-}
-
-export function json() {
-  /**
-   * Set (define) variables from a JSON object.
-   *
-   * The logic for this tag is in the evaluate tags functions.
-   *
-   * Example:
-   * <json>
-   *   {
-   *     "name": "John",
-   *     "age": 30,
-   *     "job": "engineer"
-   *   }
-   * </json>
-   */
-  return;
-}
-
-export function toml() {
-  /**
-   * Set (define) variables from a TOML object.
-   *
-   * The logic for this tag is in the evaluate tags functions.
-   *
-   * Example:
-   * <toml>
-   *  name = "John"
-   *  age = 30
-   *  job = "engineer"
-   * </toml>
    */
   return;
 }
@@ -208,68 +162,6 @@ export function jsDocs(_: string, args: any): string | undefined {
     }
     text += `\n\n---\n\n`;
   }
-  return text;
-}
-
-export function vars(names: string, args: any, meta: any): string | undefined {
-  /**
-   * A tag used for DEV, to echo one or more variables.
-   * It is similar to the debug tag, but it only shows
-   * the variables.
-   * Example: <vars "name, age"/>
-   * To show all variables, use <vars "*"/>
-   */
-  if (!names) return;
-  let selected: Record<string, any> = {};
-  if (names === '*') {
-    selected = { ...args };
-    delete selected['0'];
-    delete selected.innerText;
-  } else {
-    for (let name of names.split(/[, ]/)) {
-      name = name.trim();
-      if (name.length > 0) {
-        selected[name] = args[name];
-      }
-    }
-  }
-
-  let text = JSON.stringify(selected, null, ' ');
-  const isDouble = meta.node.double || meta.node.parent.double;
-  if (isDouble) text = '\n' + text + '\n';
-  else text = `---\nVars: ${text}\n---`;
-  return text;
-}
-
-export function debug(_: string, args: any, meta: any): string {
-  /**
-   * A tag used for DEV, to echo the parsed tag args and metadata.
-   * It is similar to the vars tag, but it also shows the raw text
-   * of the tag, and the arguments.
-   */
-  if (meta.node.rawText) {
-    // trim the < and > to disable the live tag
-    meta.node.rawText = meta.node.rawText.slice(1, -1);
-  }
-  if (meta.node.firstTagText) {
-    // disable the double tag
-    meta.node.firstTagText = meta.node.firstTagText.slice(1, -1);
-  }
-  if (meta.node.secondTagText) {
-    // disable the double tag
-    meta.node.secondTagText = meta.node.secondTagText.slice(1, -1);
-  }
-  if (meta.node.parent.secondTagText) {
-    // disable the double tag
-    meta.node.parent.secondTagText = meta.node.parent.secondTagText.slice(1, -1);
-  }
-
-  const isDouble = meta.node.double || meta.node.parent.double;
-  args = JSON.stringify(args, null, ' ');
-  meta = JSON.stringify(meta, null, ' ');
-
-  let text = `---\nArgs: ${args}\nMeta: ${meta}\n---`;
-  if (isDouble) text = '\n' + text + '\n';
   return text;
 }
 
