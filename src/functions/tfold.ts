@@ -154,6 +154,7 @@ export function jsDocs(_: string, args: any): string | undefined {
   }
   let text = '\n\n';
   for (const { funcName, args, docs } of results) {
+    if (!docs) continue;
     text += `## ${funcName} (${args})\n\n`;
     if (docs) {
       text += docs.replace(/^\s*\* ?/gm, '').trim();

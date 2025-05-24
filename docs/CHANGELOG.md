@@ -2,7 +2,7 @@
 
 ## v0.11 WIP
 
-- downgrading set, del, json, toml and import logic from evaluate,
+- upgrading set, del, json, toml and import logic from evaluate,
   to regular tags. This will allow people to implement their own
   versions of these tags and other similar data languages (eg:
   JSON5, YAML, AML, ENO, REN, etc)

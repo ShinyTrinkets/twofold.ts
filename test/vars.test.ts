@@ -684,26 +684,47 @@ test('bad spreads & dynamic groups', async () => {
 
 test('del variable', async () => {
   let vars = {};
-  let txt = '<set name="Tony"/><del "name"/>';
+  let txt = '<set name="Tony" age=50/><del "name, age"/>';
   let tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({});
   expect(tmp).toBe(txt);
 
-  // delete inexisting variable
+  // invalid: delete inexisting variable
   vars = {};
   txt = '<del "xyz"/>';
   tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({});
   expect(tmp).toBe(txt);
 
-  // delete spread variable
+  // invalid: delete object variable
+  vars = {};
+  txt = '<set "g1" x=1 y=2/> <del {g1} />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ g1: { x: 1, y: 2 } });
+  expect(tmp).toBe(txt);
+
+  // invalid: delete array variable
+  vars = {};
+  txt = '<set g2={[1,2]}/> <del {g2} />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ g2: [1,2] });
+  expect(tmp).toBe(txt);
+
+  // invalid: delete spread variable
   vars = {};
   txt = '<set "g1" x=1 y=2/> <del {...g1} />';
   tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({ g1: { x: 1, y: 2 } });
   expect(tmp).toBe(txt);
 
-  // Del broken dynamic group name
+  // invalid: delete spread array
+  vars = {};
+  txt = '<set "g2" x=1 y=2/> <del {...g2} />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ g2: { x: 1, y: 2 } });
+  expect(tmp).toBe(txt);
+
+  // invalid: del broken dynamic group name
   vars = {};
   txt = '<del `${xyz}` />';
   tmp = await twofold.renderText(txt, vars);
@@ -711,7 +732,7 @@ test('del variable', async () => {
   expect(tmp).toBe(txt);
 
   vars = {};
-  txt = '<del `${xyz}` x=1 />';
+  txt = '<del `${x}` x=1 />';
   tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({});
   expect(tmp).toBe(txt);

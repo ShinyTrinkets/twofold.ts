@@ -44,7 +44,10 @@ export interface EvalMeta {
 
 function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
   /**
-   * Set (define) one or more variables.
+   * Set (define) one or more variables, either static,
+   * or composed of other transformed variables.
+   * The Set tag is usually a single-tag, but you can chain set
+   * inside set double-tags, to maintain a separate inner context.
    *
    * Example:
    * <set name="John" age="30" job="engineer"/>
@@ -124,6 +127,7 @@ export const set = {
 function __del(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
   /**
    * Del (delete/ remove) one or more variables.
+   * You can also Set a variable to undefined, it's almost the same.
    *
    * Example:
    * <del "name"/>
@@ -139,13 +143,19 @@ function __del(_t: string, args: Record<string, any> = {}, meta: EvalMeta): unde
     return;
   }
 
-  // TODO ::
-  // Split the group name by commas
+  // The variables to delete
+  const vars = group
+    .split(/[, ]/)
+    .map((w: string) => w.trim())
+    .filter((w: string) => w.length > 0);
+  if (!vars.length) return;
 
-  if (meta.ctx[group]) {
-    // Delete the specified variable
-    delete meta.ctx[group];
-    log.debug(`Deleted var "${group}"!`);
+  for (const v of vars) {
+    if (meta.ctx[v]) {
+      // Delete the specified variable
+      delete meta.ctx[v];
+      log.debug(`Deleted var "${v}"!`);
+    }
   }
 }
 
@@ -264,6 +274,14 @@ export function toml(text: string, args: Record<string, any> = {}, meta: EvalMet
 }
 
 async function __import(_t: string, args: Record<string, any> = {}, meta: EvalMeta): Promise<undefined> {
+  /**
+   * Import one or more variables from `set`, `json` or `toml` tags included in other files.
+   * The import syntax is very similar to the JavaScript import,
+   * and you can import anywhere in your code, not only at the beginning.
+   *
+   * Example:
+   * <import "name, age, job" from="path/to/file"/>
+   */
   if (!args?.['0']) return;
   // Import X from Y
   const what = args?.['0']

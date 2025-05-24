@@ -289,41 +289,13 @@ The logic for this tag is in the evaluate tags functions.
 
 ---
 
-## set ()
-
-Set (define) one or more variables.
-
-The logic for this tag is in the evaluate tags functions.
-
-Example:
-<set name="John" age="30" job="engineer"/>
-
----
-
-## json ()
-
-No documentation.
-
----
-
-## toml ()
-
-Set (define) variables from a TOML object.
-
-The logic for this tag is in the evaluate tags functions.
-
-Example:
-<toml>
-name = "John"
-age = 30
-job = "engineer"
-</toml>
-
----
-
 ## text (s: string, args: any)
 
-No documentation.
+A tag used for DEV, that returns the text as is,
+only variable interpolation is done.
+If this wraps some tags, they will be flattened/ destroyed.
+Example: Helo {{name}}! will be returned as "Helo John!",
+if you <set name="John"/> beforehand.
 
 ---
 
@@ -370,42 +342,6 @@ from the LLM/AI tag.
 
 Scan a file or directory for TypeScript function declarations.
 It is used to generate documentation for the TwoFold functions.
-
----
-
-## vars (names: string, args: any, meta: any)
-
-A tag used for DEV, to echo one or more variables.
-It is similar to the debug tag, but it only shows
-the variables.
-Example: <vars "name, age"/>
-To show all variables, use <vars "*"/>
-
----
-
-## debug (_: string, args: any, meta: any)
-
-A tag used for DEV, to echo the parsed tag args and metadata.
-It is similar to the vars tag, but it also shows the raw text
-of the tag, and the arguments.
-
----
-
-## parseNumber (text: string)
-
-No documentation.
-
----
-
-## resolveFileName (fname: string)
-
-No documentation.
-
----
-
-## resolveDirName (dname: string)
-
-No documentation.
 
 ---
 
@@ -645,6 +581,85 @@ Blue is called within a Shell to allow it to read local config files, ENV option
 
 Format Javascript code with Prettier. Of course, Prettier needs to be installed.
 Prettier is called within a Shell to allow it to read local config files.
+
+---
+
+## set (_t: string, args: Record<string, any> = {}, meta: EvalMeta)
+
+Set (define) one or more variables, either static,
+or composed of other transformed variables.
+The Set tag is usually a single-tag, but you can chain set
+inside set double-tags, to maintain a separate inner context.
+
+Example:
+<set name="John" age="30" job="engineer"/>
+
+---
+
+## del (_t: string, args: Record<string, any> = {}, meta: EvalMeta)
+
+Del (delete/ remove) one or more variables.
+You can also Set a variable to undefined, it's almost the same.
+
+Example:
+<del "name"/>
+
+---
+
+## json (text: string, args: Record<string, any> = {}, meta: EvalMeta)
+
+Set (define) variables from a JSON object.
+
+Example:
+<json>
+{
+"name": "John",
+"age": 30,
+"job": "engineer"
+}
+</json>
+
+---
+
+## toml (text: string, args: Record<string, any> = {}, meta: EvalMeta)
+
+Set (define) variables from a TOML object.
+
+Example:
+<toml>
+name = "John"
+age = 30
+job = "engineer"
+</toml>
+
+---
+
+## import (_t: string, args: Record<string, any> = {}, meta: EvalMeta)
+
+Import one or more variables from `set`, `json` or `toml` tags included in other files.
+The import syntax is very similar to the JavaScript import,
+and you can import anywhere in your code, not only at the beginning.
+
+Example:
+<import "name, age, job" from="path/to/file"/>
+
+---
+
+## vars (names: string, args: any, meta: EvalMeta)
+
+A tag used for DEV, to echo one or more variables.
+It is similar to the debug tag, but it only shows
+the variables.
+Example: <vars "name, age"/>
+To show all variables, use <vars "*"/>
+
+---
+
+## debug (_: string, args: any, meta: EvalMeta)
+
+A tag used for DEV, to echo the parsed tag args and metadata.
+It is similar to the vars tag, but it also shows the raw text
+of the tag, and the arguments.
 
 ---
 
