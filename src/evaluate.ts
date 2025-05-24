@@ -152,7 +152,8 @@ async function evaluateDoubleTag(
   }
 }
 
-export function shouldInterpolate(v: string, cfg: T.Config) {
+export function shouldInterpolate(v: string, cfg: T.Config): boolean {
+  if (!v) return false;
   // Check if the string could be a backtick expression
   if (v.length > 4 && v[0] === '`' && v[v.length - 1] === '`' && v.includes('${') && v.includes('}')) {
     return true;
@@ -230,16 +231,16 @@ export default async function evaluateTag(
         try {
           const spread = interpolate(v, interCtx, cfg);
           if (k === '0') {
-            // Special case for the ZERO props with interpolation
-            // Zero-prop was a backtick like `${...}`
-            if (typeof spread === 'string') {
-              localCtx['0'] = spread;
-            } else {
+            // Special logic for the ZERO props with interpolation
+            if (spread && typeof spread === 'object') {
               delete localCtx['0'];
               // Zero-prop was a spread like {...props}
               for (const [kk, vv] of Object.entries(spread)) {
                 localCtx[kk] = vv;
               }
+            } else {
+              // Zero-prop was a backtick like `${...}`
+              localCtx['0'] = spread;
             }
           } else {
             localCtx[k] = spread;

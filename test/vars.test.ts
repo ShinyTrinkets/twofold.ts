@@ -107,7 +107,7 @@ test('set variable group', async () => {
 
   vars = {};
   // Set variable with function, in group + use the function from group
-  txt = "<set 'g' trim={(x)=>x.trim()}/> <set 'g' name=' Josh ' nameTrim={g.trim(name)} />";
+  txt = "<set 'g' trim={(x)=>x.trim()}/> <set 'g' name=' Josh ' nameTrim={g.trim(g.name)} />";
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars.g.name).toBe(' Josh ');
@@ -179,6 +179,13 @@ test('set variable group', async () => {
   });
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
+
+  vars = {};
+  // set array group
+  txt = `<set li={[ 1,2,3 ]}/> <set {li} x=1/>`;
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ li: [1, 2, 3] });
 
   vars = {};
   // ignore + set
@@ -569,27 +576,27 @@ test('spread syntax', async () => {
   });
   expect(tmp).toBe(txt);
 
-  // // spread grup variables + global variables
-  // vars = {};
-  // txt = '<set "g1" x=1 y=2/> <set n=null/> <set {...g1, n} />';
-  // tmp = await twofold.renderText(txt, vars);
-  // expect(vars).toEqual({ g1: { x: 1, y: 2 }, x: 1, y: 2, n: null });
-  // expect(tmp).toBe(txt);
+  // spread grup variables + global variables
+  vars = {};
+  txt = '<set "g1" x=1 y=2/> <set n=null/> <set {...g1, n} />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({ g1: { x: 1, y: 2 }, x: 1, y: 2, n: null });
+  expect(tmp).toBe(txt);
 
-  // // import + spread grup variables
-  // vars = {};
-  // txt = '<import "SshCfg" from="test/fixtures/variables1.md"/><set {...SshCfg}/><del "SshCfg"/>';
-  // tmp = await twofold.renderText(txt, vars);
-  // expect(vars).toEqual({
-  //   ForwardAgent: 'no',
-  //   ForwardX11: 'no',
-  //   User: 'user',
-  //   Port: 222,
-  //   Protocol: 2,
-  //   ServerAliveCountMax: 30,
-  //   ServerAliveInterval: 60,
-  // });
-  // expect(tmp).toBe(txt);
+  // import + spread grup variables
+  vars = {};
+  txt = '<import "SshCfg" from="test/fixtures/variables1.md"/><set {...SshCfg}/><del "SshCfg"/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(vars).toEqual({
+    ForwardAgent: 'no',
+    ForwardX11: 'no',
+    User: 'user',
+    Port: 222,
+    Protocol: 2,
+    ServerAliveCountMax: 30,
+    ServerAliveInterval: 60,
+  });
+  expect(tmp).toBe(txt);
 
   // BURN IT WITH FIRE 😡
   vars = {};
@@ -631,6 +638,13 @@ test('bad spreads & dynamic groups', async () => {
     expect(vars).toEqual({});
     expect(tmp).toBe(txt);
 
+    // array group
+    vars = {};
+    txt = `<${tag} {[]} />`;
+    tmp = await twofold.renderText(txt, vars);
+    expect(vars).toEqual({});
+    expect(tmp).toBe(txt);
+
     // expand undefined variable
     vars = {};
     txt = `<${tag} {x} />`;
@@ -641,6 +655,13 @@ test('bad spreads & dynamic groups', async () => {
     // spread undefined variables
     vars = {};
     txt = `<${tag} {...props} />`;
+    tmp = await twofold.renderText(txt, vars);
+    expect(vars).toEqual({});
+    expect(tmp).toBe(txt);
+
+    // spread undefined array
+    vars = {};
+    txt = `<${tag} {[...props]} />`;
     tmp = await twofold.renderText(txt, vars);
     expect(vars).toEqual({});
     expect(tmp).toBe(txt);

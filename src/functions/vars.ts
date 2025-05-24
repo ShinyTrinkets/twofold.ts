@@ -52,17 +52,20 @@ function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): unde
   if (!meta.node.params || !meta.node.rawParams) return;
 
   const group = args['0'];
+  const rawGroup = meta.node.rawParams?.['0'];
   if (group && Object.keys(meta.node.params).length <= 1) {
     // A group was defined, but no vars inside...
     // Tz tz tz!
     return;
   }
 
-  // GROUP can be a string, object or array
-  // TODO :: check if group is valid
-
   if (group) {
-    // delete args['0'];
+    // Group can be a string, object or array
+    if (typeof group !== 'string') {
+      log.warn(`Invalid group {${rawGroup}}=${JSON.stringify(group)}!`);
+      return;
+    }
+    // Create the group if it doesn't exist
     if (!meta.ctx[group]) {
       meta.ctx[group] = {};
     }
@@ -83,8 +86,15 @@ function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): unde
       meta.ctx[group][k] = v;
     }
   } else {
+    const cfg = meta.config;
+    let vars = meta.node.params || {};
+    // This was a consumed group, like <set {...props}>
+    // but they are exploded into separate variables
+    if (rawGroup && rawGroup[0] === cfg.openExpr && rawGroup[rawGroup.length - 1] === cfg.closeExpr) {
+      vars = args;
+    }
     // No group, set (define) one or more variables globally
-    for (const k of Object.keys(meta.node.params || {})) {
+    for (const k of Object.keys(vars)) {
       if (k === group || k === '0') continue;
       if (k === 'innerText') continue;
       let v = args[k];
