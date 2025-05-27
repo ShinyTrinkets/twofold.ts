@@ -21,7 +21,7 @@ export function increment(s: string, { plus = 1 } = {}, meta: any): number {
 }
 ```
 
-<ignore>
+<freeze>
 
 It is a TypeScript function with 3 params, but the function can decide if they need to be used.
 
@@ -125,7 +125,7 @@ To view what params a tag function can receive, you can use the `debug` tag, for
 <debug 'a' b=c d=1 />
 ```
 
-</ignore>
+</freeze>
 
 The result will look like this:
 

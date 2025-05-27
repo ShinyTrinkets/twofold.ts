@@ -91,8 +91,8 @@ test('set global variables', async () => {
   expect(vars).toEqual({ a: 'a', cut: 1 });
 
   vars = {};
-  // ignore + set
-  txt = '<ignore> <set a="a" /> </ignore>';
+  // freeze + set
+  txt = '<freeze> <set a="a" /> </freeze>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
@@ -195,8 +195,15 @@ test('set variable group', async () => {
   expect(vars).toEqual({ li: [1, 2, 3] });
 
   vars = {};
-  // ignore + set
-  txt = `<ignore> <set 'g' a="a" /> </ignore>`;
+  // freeze + set
+  txt = `<freeze> <set 'g' a="a" /> </freeze>`;
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({});
+
+  vars = {};
+  // protect + set
+  txt = `<protect> <set 'g' a="a" /> </protect>`;
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
@@ -275,9 +282,9 @@ x:1
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 
-  // ignore + json global
+  // freeze + json global
   vars = {};
-  txt = '<ignore> <json>{"a":"a"}</json><chk/> </ignore>';
+  txt = '<freeze> <json>{"a":"a"}</json><chk/> </freeze>';
   tmp = await twofold.renderText(txt, vars, {
     chk: (_t, args) => {
       // This should not be called
@@ -342,9 +349,9 @@ oct3 = 0o755
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 
-  // ignore + JSON group
+  // freeze + JSON group
   vars = {};
-  txt = '<ignore> <json "a">{"a":"a"}</json> </ignore>';
+  txt = '<freeze> <json "a">{"a":"a"}</json> </freeze>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});

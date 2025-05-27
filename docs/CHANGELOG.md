@@ -2,43 +2,48 @@
 
 ## v0.11 WIP
 
-- upgrading set, del, json, toml and import logic from evaluate,
-  to regular tags. This will allow people to implement their own
-  versions of these tags and other similar data languages (eg:
-  JSON5, YAML, AML, ENO, REN, etc)
+- upgrading set, del, json, toml and import logic from evaluate, to regular
+  tags. This will allow people to implement their own versions of these tags and
+  other similar data languages (eg: JSON5, YAML, AML, ENO, REN, etc)
+- addons! The ignore functionality moved in the ignore addon, and the consume
+  functionality moved in the consume addon. Many other types of addons are now
+  possible.
+- BREAKING change: the "ignore" tag is now called "freeze" to maintain a
+  consistent name as the freeze=true option. It's also shorter. We also have a
+  "protect" tag which makes sure the tag will never be consumed by its parent.
 
 ## v0.10
 
-- BREAKING change: JSON props in backticks are gone!
-  replaced by the new JSX curly braces {..} props
-- there is a new {..} prop type, inspired from JSX curly braces
-  and it allows newlines inside
+- BREAKING change: JSON props in backticks are gone! replaced by the new JSX
+  curly braces {..} props
+- there is a new {..} prop type, inspired from JSX curly braces and it allows
+  newlines inside
 - newlines also allowed inside backtick string props
-- new `{...}` JSX spread syntax to merge groups of variables,
-  and to export groups as global variables
-- created "import" tag to import set, json or toml variables from
-  other files. This is EXPERIMENTAL for now.
-- created "toml" tag to define variables available within the file;
-  it works just like the "json" tag
-- created "del" tag to delete variables, but you can also set deep
-  variables to undefined
+- new `{...}` JSX spread syntax to merge groups of variables, and to export
+  groups as global variables
+- created "import" tag to import set, json or toml variables from other files.
+  This is EXPERIMENTAL for now.
+- created "toml" tag to define variables available within the file; it works
+  just like the "json" tag
+- created "del" tag to delete variables, but you can also set deep variables to
+  undefined
 - created "vars" tag to view selected variables, similar to "debug"
 
 ## v0.9
 
-- BREAKING change: JSON props must be wrapped in backticks \`...\`.
-  Before v0.9, they could be wrapped in single or double quotes.
-- added rawParams for LexTokens, useful to know the type of quotes
-  for each param value; Backticks are used for string interpolation
+- BREAKING change: JSON props must be wrapped in backticks \`...\`. Before v0.9,
+  they could be wrapped in single or double quotes.
+- added rawParams for LexTokens, useful to know the type of quotes for each
+  param value; Backticks are used for string interpolation
 - can now expand/ interpolate variables inside prop values
-- ai/llm tag is now streaming live inside the file, thanks to the new
-  editSave function, that edits the AST and saves the changes on disk
+- ai/llm tag is now streaming live inside the file, thanks to the new editSave
+  function, that edits the AST and saves the changes on disk
 - the app is now logging the output, instead of just console.log
 - created "log" tag to log messages using the new logger
 - created "json" tag to define variables available within the file
 - created "jsDocs" tag to auto-generate documentation in docs/readme
-- created Matrix "smith" and "neo" tags, to demonstrate animations,
-  and changing the node properties and children
+- created Matrix "smith" and "neo" tags, to demonstrate animations, and changing
+  the node properties and children
 
 ## v0.8
 
@@ -61,8 +66,8 @@
 
 ## v0.6
 
-- moved repository to: https://github.com/ShinyTrinkets/twofold.ts ;
-  the old repository was: https://github.com/ShinyTrinkets/twofold.js
+- moved repository to: https://github.com/ShinyTrinkets/twofold.ts ; the old
+  repository was: https://github.com/ShinyTrinkets/twofold.js
 - completele re-written for Bun, in TypeScript, which makes it 2x faster
 - can now compile a standalone CLI executable from Bun
 - also thanks to Bun, added `cmd` and `req` core tags
@@ -70,13 +75,15 @@
 - zero prop values for tags (eg: {ping "1.1.1.1" /})
 - added a powerful Ignore tag to protect a part of a file from rendering
 - BREAKING change: once=true replaced with freeze=true, which is more general
-- BREAKING change: consume=true replaced with cut=true, which is shorter to write
+- BREAKING change: consume=true replaced with cut=true, which is shorter to
+  write
 - fixed writing files even if they don't have any TwoFold tags
 - a bunch of **bug fixes** in the lexer and parser
 
 ## v0.5
 
-- tag prop values can now be surrounded by: single quote `'`, double quote `"` and backtick `` ` ``
+- tag prop values can now be surrounded by: single quote `'`, double quote `"`
+  and backtick `` ` ``
 - tag functions now receive info if the tag is Single or Double
 - CLI option to render all files on watch start (not just on change)
 - CLI config now validates the openTag, closeTag and lastStopper

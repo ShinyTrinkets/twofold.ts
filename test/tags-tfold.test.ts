@@ -55,64 +55,60 @@ test('mix frozen text inside text', async () => {
   let tmp = await twofold.renderText(txt);
   expect(tmp).toBe(txt);
 
-  // BROKEN!
-  // txt = '<text>1<text freeze=true>2</text>3</text>';
-  // tmp = await twofold.renderText(txt);
-  // expect(tmp).toBe(txt);
+  txt = '<text>1<text protect=true>2</text>3</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
 
-  // BROKEN!
-  // txt = '<text>1<text freeze=true>2<text>3</text>4</text>5</text>';
-  // tmp = await twofold.renderText(txt);
-  // expect(tmp).toBe(txt);
+  txt = '<text>1<text protect=true>2<text>3</text>4</text>5</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
 
-  // BROKEN!
-  // txt = '<text id=1>1<text id=2>2<text freeze=true>3</text>4</text>5</text>';
-  // tmp = await twofold.renderText(txt);
-  // expect(tmp).toBe(txt);
+  txt = '<text id=1>1<text id=2>2<text protect=true>3</text>4</text>5</text>';
+  tmp = await twofold.renderText(txt);
+  expect(tmp).toBe(txt);
 });
 
-test('ignore tag', async () => {
-  // root ignore
-  let txt = '<ignore> <randomInt /> <now /> <asd123 /> </ignore>';
+test('freeze tag', async () => {
+  // root freeze
+  let txt = '<freeze> <randomInt /> <now /> <asd123 /> </freeze>';
   let tmp = await twofold.renderText(txt);
   expect(tmp).toBe(txt);
 
-  txt = '<ignore><text>1<text>2</text>3</text></ignore>';
+  txt = '<freeze><text>1<text>2</text>3</text></freeze>';
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe(txt);
 
-  txt = '<ignore><increment plus=4>6</increment>';
-  txt += '<sort x=t>\n<//></ignore>';
+  txt = '<freeze><increment plus=4>6</increment>';
+  txt += '<sort x=t>\n<//></freeze>';
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe(txt);
 
-  txt = '<ignore><line "40" /><random Card></randomCard></ignore>';
+  txt = '<freeze><line "40" /><random Card></randomCard></freeze>';
   tmp = await twofold.renderText(txt);
   expect(tmp).toBe(txt);
 
-  // deep ignore
-  txt = '<increment "1" /> <ignore><increment "2" /></ignore> <increment "3" />';
+  // deep freeeze
+  txt = '<increment "1" /> <freeze><increment "2" /></freeze> <increment "3" />';
   tmp = await twofold.renderText(txt);
-  expect(tmp).toBe('2 <ignore><increment "2" /></ignore> 4');
+  expect(tmp).toBe('2 <freeze><increment "2" /></freeze> 4');
 
-  txt = '<randomInt /> <ignore><randomInt /> </ignore> <randomInt />';
+  txt = '<randomInt /> <freeze><randomInt /> </freeze> <randomInt />';
   tmp = await twofold.renderText(txt);
   expect(tmp).not.toBe(txt);
-  expect(tmp.indexOf(' <ignore><randomInt /> </ignore> ') > 0).toBeTruthy();
+  expect(tmp.indexOf(' <freeze><randomInt /> </freeze> ') > 0).toBeTruthy();
 
-  // BROKEN!
-  // txt = `<upper id=1><upper id=2>aB<lower id=3>cD
-  // <ignore><title>aBc</title></ignore>
-  // eF</lower>gH</upper></upper>`;
-  // tmp = await twofold.renderText(
-  //   txt,
-  //   {},
-  //   {
-  //     upper: (s: any) => s.toUpperCase(),
-  //     lower: (s: any) => s.toLowerCase(),
-  //   }
-  // );
-  // expect(tmp).toBe(`<upper id=1><upper id=2>AB<lower id=3>cd
-  // <ignore><title>aBc</title></ignore>
-  // ef</lower>GH</upper></upper>`);
+  txt = `<upper id=1><upper id=2>aB<lower id=3>cD
+  <protect><title>aBc</title></protect>
+  eF</lower>gH</upper></upper>`;
+  tmp = await twofold.renderText(
+    txt,
+    {},
+    {
+      upper: (s: any) => s.toUpperCase(),
+      lower: (s: any) => s.toLowerCase(),
+    }
+  );
+  expect(tmp).toBe(`<upper id=1><upper id=2>AB<lower id=3>cd
+  <protect><title>aBc</title></protect>
+  ef</lower>GH</upper></upper>`);
 });

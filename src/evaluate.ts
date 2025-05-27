@@ -208,7 +208,7 @@ export default async function evaluateTag(
     // Hook interrupt callback
     for (const h of hooks.HOOKS1) {
       try {
-        h(func, tag, localCtx, globalContext, meta);
+        await h(func, tag, localCtx, globalContext, meta);
       } catch (err: any) {
         log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
         return;
@@ -228,7 +228,7 @@ export default async function evaluateTag(
     // Hook interrupt callback
     for (const h of hooks.HOOKS2) {
       try {
-        h(result, tag, localCtx, globalContext, meta);
+        await h(result, tag, localCtx, globalContext, meta);
       } catch (err: any) {
         log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
         return;
@@ -241,9 +241,9 @@ export default async function evaluateTag(
     // Hook interrupt callback
     for (const h of hooks.HOOKS3) {
       try {
-        h(tag, localCtx, globalContext, meta);
+        await h(tag, localCtx, globalContext, meta);
       } catch (err: any) {
-        log.warn(`Hook preChildren raised for tag "${tag.name}"!`, err.message);
+        log.warn(`Hook preChild raised for tag "${tag.name}"!`, err.message);
         return;
       }
     }
@@ -275,7 +275,7 @@ export default async function evaluateTag(
     // Hook interrupt callback
     for (const h of hooks.HOOKS1) {
       try {
-        h(func, tag, localCtx, globalContext, meta);
+        await h(func, tag, localCtx, globalContext, meta);
       } catch (err: any) {
         log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
         return;
@@ -295,7 +295,7 @@ export default async function evaluateTag(
     // Hook interrupt callback
     for (const h of hooks.HOOKS2) {
       try {
-        h(result, tag, localCtx, globalContext, meta);
+        await h(result, tag, localCtx, globalContext, meta);
       } catch (err: any) {
         log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
         return;

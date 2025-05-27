@@ -16,7 +16,7 @@ function increment(text: string, { plus = 1 } = {}): number {
 }
 ```
 
-<ignore>
+<freeze>
 
 And it can be called like: "`<increment plus=4>6</increment>`". The function will receive the args
 as: text="6" and plus="4".
@@ -189,7 +189,7 @@ option, the tag and all its children will never be executed.
 
 To make TwoFold render the tag again, you just need to delete the `freeze=true` prop inside the tag.
 
-You can also wrap tags in `<ignore>...</ignore>`, to ignore/ lock everything inside.
+You can also wrap tags in `<freeze>...</freeze>`, to ignore/ lock everything inside.
 
 This is useful in case you want to keep the previous text and make sure that TwoFold won't
 accidentally replace it.
@@ -227,7 +227,7 @@ eg in case of jsEval, cmd, or llm.
 
 This option works only with **double tags**.
 
-</ignore>
+</freeze>
 
 ## Built-in tags
 

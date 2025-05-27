@@ -122,7 +122,7 @@ or they don't return anything, you won't see anything in the output.
 
 If you have a Markdown file called `example.md` like this:
 
-<ignore>
+<freeze>
 
 <!-- deno-fmt-ignore-start -->
 
@@ -173,7 +173,7 @@ Should I play with TwoFold some more ? <yesOrNo>Yes</yesOrNo> ugh...
 
 <!-- deno-fmt-ignore-end -->
 
-</ignore>
+</freeze>
 
 To see a list with all available tags you can use, call:
 

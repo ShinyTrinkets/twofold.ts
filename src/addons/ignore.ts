@@ -1,62 +1,132 @@
 import * as T from '../types.ts';
+import { getText } from '../tags.ts';
+
+function isProtected(tag: T.ParseToken): boolean {
+  return tag.name === 'protect' || tag.params?.protect;
+}
 
 /**
- * TwoFold Addon: Ignore
+ * TwoFold Addon: Freeze/ Protect
  *
- * This addon allows you to ignore/ freeze sub-tags in TwoFold templates.
+ * This addon allows you to freeze or protect sub-tags in TwoFold templates.
  * It is useful when you want to prevent certain tags from being evaluated.
+ * Freeze tags will not be evaluated, but its parents can evaluate it.
+ * Protect tag will not be evaluated, and its parents won't evaluate it either,
+ * making sure it won't be destroyed or modified.
  */
 const addon: T.TwoFoldAddon = {
-  name: 'Ignore',
+  name: 'Freeze/ Protect',
 
-  preEval: (
+  preEval: async (
     fn: T.TwoFoldTag,
     tag: T.ParseToken,
     localCtx: Record<string, any>,
-    globalContext: Record<string, any>,
+    globCtx: Record<string, any>,
     meta: T.EvalMetaFull
-  ): void => {
+  ): Promise<void> => {
     // This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
-    if (tag.name === 'ignore') {
-      throw new Error('Ignore tag detected.');
-    }
     // Local context is made of globalContext +
     // resolved tag.params.
-    if (localCtx.freeze) {
+    if (localCtx.freeze || localCtx.protect) {
       throw new Error('Frozen tag detected pre-eval!');
+    } else if (tag.name === 'freeze') {
+      throw new Error('The tag is frozen and will not be evaluated!');
+    } else if (tag.name === 'protect') {
+      throw new Error('The tag is protected and will not be evaluated!');
+    }
+
+    //
+    // Check all children for protect params.
+    //
+    let hasProtected = false;
+    if (tag.children) {
+      for (const c of tag.children) {
+        if (isProtected(c)) {
+          hasProtected = true;
+          break;
+        }
+      }
+    }
+    if (hasProtected) {
+      if (!tag.params) tag.params = {};
+      // Protect tag, to maintain structure for parent eval
+      tag.params.protect = true;
+
+      const tagChildren = tag.children || [];
+      tag.children = [];
+
+      const firstParam = localCtx!['0'] || '';
+      const parent = structuredClone(tag);
+      delete parent.children;
+      delete parent.parent;
+
+      for (const c of tagChildren) {
+        // If the double tag has protected children
+        // all protect nodes must be kept untouched, in place
+        if (isProtected(c)) {
+          tag.children.push(c);
+        } else {
+          const innerText = getText(c);
+          let tmp = innerText;
+          if (c.name && (c.single || c.double)) {
+            // Inject the missing stuff into the function meta
+            meta.node = structuredClone(c);
+            if (!c.params) meta.node.params = {};
+            meta.node.parent = parent;
+          }
+          try {
+            // @ts-ignore It's OK, we are calling a tag function
+            tmp = await fn(firstParam || innerText, { ...localCtx, innerText }, meta);
+          } catch (err: any) {
+            console.log(`Cannot evaluate 2x-tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
+          }
+          if (tmp === undefined || tmp === null) tmp = '';
+          if (typeof tmp === 'object') {
+            // If the result is a tag object, we cannot apply it
+            tag.children.push(c);
+          } else {
+            // When evaluating a normal tag, it is flattened
+            tag.children.push({ index: -1, rawText: tmp.toString() });
+          }
+        }
+      }
+
+      throw new Error('Protected tags are already evaluated!');
     }
   },
 
-  postEval: (
+  postEval: async (
     result: any,
     tag: T.ParseToken,
     localCtx: Record<string, any>,
-    globalContext: Record<string, any>,
+    globCtx: Record<string, any>,
     meta: T.EvalMetaFull
-  ): void => {
+  ): Promise<void> => {
     // Called after evaluating the tag.
 
     // If the tag function wants to freeze the tag,
-    // it can set args.freeze to true.
-    if (localCtx.freeze) {
+    // it can set args.freeze=true.
+    if (localCtx.freeze || localCtx.protect) {
       throw new Error('Frozen tag detected post-eval!');
     }
   },
 
-  preChildren: (
+  preChildren: async (
     tag: T.ParseToken,
     localCtx: Record<string, any>,
-    globalContext: Record<string, any>,
+    globCtx: Record<string, any>,
     meta: T.EvalMetaFull
-  ): void => {
+  ): Promise<void> => {
     // Called before evaluating children.
 
-    // That's omnious...
-    // This can be set with args.freezeChildren=true.
-    if (localCtx.freeze || localCtx.freezeChildren) {
+    if (localCtx.freeze || localCtx.protect || localCtx.freezeChildren) {
       throw new Error('Child nodes will not be evaluated!');
+    } else if (tag.name === 'freeze') {
+      throw new Error("It is frozen and child nodes won't be evaluated!");
+    } else if (tag.name === 'protect') {
+      throw new Error("It is protected and child nodes won't be evaluated!");
     }
   },
 };
