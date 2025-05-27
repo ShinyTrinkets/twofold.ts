@@ -103,9 +103,9 @@ In this example, the 3 options are: `'readme.md' start=0 limit=90`.
 Usually options are... optional, but they don't always have a default; for example calculating or
 executing an expression **absolutely requires** an expression. Importing some file absolutely
 requires that you specify what file to import. When a tag doesn't have all the required values, it
-will not run, and will not be consumed.
+won't run, and won't be consumed.
 
-If the values contain space, they can be surrounded by a matching _single quotes_, _double quotes_,
+If the prop values contain space, they can be surrounded by a matching _single quotes_, _double quotes_,
 or backticks.
 
 Newlines are not allowed in _single quotes_ or _double quotes_, but they are allowed in backticks

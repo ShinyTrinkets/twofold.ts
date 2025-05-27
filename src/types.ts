@@ -117,7 +117,7 @@ export interface TwoFoldWrap {
 }
 
 export interface TwoFoldAddon {
-  name?: string;
+  name: string;
   preEval?: Function;
   postEval?: Function;
   preChildren?: Function;

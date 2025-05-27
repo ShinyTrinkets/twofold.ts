@@ -1,4 +1,4 @@
-## Tags development
+# TwoFold (2✂︎f) tag development
 
 TwoFold (2✂︎f) tags are super flexible and powerful. They are just TypeScript/ JavaScript functions.
 Async functions are supported.
@@ -8,6 +8,8 @@ some functionality that you cannot use. The "builtin" tags are "builtin" only be
 inside the `tfold` executable.<br/> What I'm trying to say is that you can copy any of the builtin
 tags, hack around and import your code and use that as an alternative, if you want custom logic, or
 the builtin tags are missing something.
+
+## Example
 
 The simple core tag called `increment` looks like this:
 
@@ -101,11 +103,12 @@ documented; feel free to raise an issue in you think something is not clear.
 
 When a tag doesn't receive the parameters it needs, it should log some warning and just return. When
 the TwoFold evaluator runs a function that returns `undefined` or `null`, it will **not destroy**
-the single tag and it will **not replace** the inner text of a double tag. The execution is
-basically ignored.
+the single tag and it will **not replace** the inner text of a double tag. The tag is basically
+ignored.
 
-For example, the tag `<line />` cannot return anything and is not consumed, because it needs the
-length, a valid tag would be `<line len=40 />`.
+For example, the tag `<line .../>` cannot return anything and is not consumed, because it needs the
+length, a valid tag would be `<line len=40 />`. The tag `<cat .../>` cannot read any file, because
+it needs a valid file name.
 
 If you try to render any random HTML, or XML file, there will be lots of pseudo-valid tags in there,
 but TwoFold won't execute them, and the HTML, or XML file will not be changed.
