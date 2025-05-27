@@ -13,11 +13,11 @@ test('simple evaluate', async () => {
   const txt = ' <main><increment "8" /></main>';
   const ast = parse(new Lexer().lex(txt));
 
-  await evaluate(ast[0], {}, functions, {});
+  await evaluate(ast[0], {}, functions);
   expect(ast.length).toBe(2);
   expect(ast[0]).toEqual({ index: 0, rawText: ' ' });
 
-  await evaluate(ast[1], {}, functions, {});
+  await evaluate(ast[1], {}, functions);
   expect(ast[1]).toEqual({
     index: 1,
     double: true,
@@ -97,8 +97,6 @@ test('evaluate custom tags', async () => {
 });
 
 test('evaluate consumable custom tags', async () => {
-  // CUT doesn't work for functions that return the node
-  // ALL functions here return the node
   let txt = `<t1><t2 cut=1>
       <t3 />
     </t2>
@@ -127,11 +125,7 @@ test('evaluate consumable custom tags', async () => {
       },
     }
   );
-  expect(unParse(ast[0])).toBe(`<t1><t2 cut=1>
-      <t3 />
-    </t2>
-    <t4 cut=1 />
-  </t1>`);
+  expect(unParse(ast[0])).toBe('<t1>\n      <t3 />\n    \n    <t4 cut=1 />\n  </t1>');
 });
 
 test('evaluate frozen custom tags', async () => {
@@ -172,7 +166,7 @@ test('evaluate frozen custom tags', async () => {
       },
     }
   );
-  expect(unParse(ast[0])).toBe(`<t1>
+  expect(unParse(ast[0])).toBe(`<t1 x="x">
     <t2 freeze=true>
       <t3 />
       <t4> </t4>

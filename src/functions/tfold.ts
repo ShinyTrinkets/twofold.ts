@@ -5,23 +5,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { parseNumber } from './common.ts';
-import { editSave } from '../index.ts';
-import { templite } from '../util.ts';
-import { extractFunctions } from '../docs.ts';
+import * as T from '../types.ts';
 import * as logger from '../logger.ts';
+import { templite } from '../util.ts';
+import { parseNumber } from './common.ts';
+import { extractFunctions } from '../docs.ts';
+import { editSave } from '../index.ts';
 
-export function ignore() {
-  /**
-   * When it's a double tag, all tags inside it are protected (frozen).
-   * This is similar to the freeze=true prop.
-   *
-   * The logic for this tag is in the evaluate tags functions.
-   */
-  return;
-}
-
-export function text(s: string, args: any) {
+export function text(s: string, args: any): string {
   /**
    * A tag used for DEV, that returns the text as is,
    * only variable interpolation is done.
@@ -32,7 +23,7 @@ export function text(s: string, args: any) {
   return templite(s, args);
 }
 
-export function log(_: string, args: any, meta: any) {
+export function log(_: string, args: any, meta: any): void {
   /**
    * A tag used for DEV, that logs the args to the logger.
    *
@@ -48,7 +39,7 @@ export function log(_: string, args: any, meta: any) {
   logger.log._log(level, [params]);
 }
 
-export function increment(s: string, { plus = 1 } = {}): number {
+export function increment(s: string, { plus = 1 } = {}, _m: any): number {
   /**
    * Very silly DEV tag, increment the input with a number.
    * The increment can be any integer, or float, positive or negative.
@@ -165,6 +156,27 @@ export function jsDocs(_: string, args: any): string | undefined {
   }
   return text;
 }
+
+function __ignore(_t: string, args: any, _m: any): void {
+  /**
+   * When it's a double tag, all tags inside it are
+   * ignored/ frozen.
+   * This is identical to the freeze=true prop.
+   */
+
+  // Send a flag to the Ignore addon to stop
+  // evaluating this tag and its children.
+  // The flag must be truthy, and evalOrder
+  // must be 0, so it runs before the children.
+  args.freeze = true;
+}
+
+export const ignore: T.TwoFoldWrap = {
+  fn: __ignore,
+  // This param tells the Evaluator to run this
+  // before the children, in breadth-first order
+  evalOrder: 0,
+};
 
 /**
  * End of </ignore>

@@ -14,7 +14,7 @@ The simple core tag called `increment` looks like this:
 ```ts
 import { parseNumber } from "./common.ts";
 
-export function increment(s: string, { plus = 1 } = {}): number {
+export function increment(s: string, { plus = 1 } = {}, meta: any): number {
   return parseNumber(s) + parseNumber(plus);
 }
 ```

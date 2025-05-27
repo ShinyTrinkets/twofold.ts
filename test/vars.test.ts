@@ -84,6 +84,13 @@ test('set global variables', async () => {
   expect(vars).toEqual({ x: 2 });
 
   vars = {};
+  // cut + set
+  txt = '<set a="a" cut=1>?</set>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe('?');
+  expect(vars).toEqual({ a: 'a', cut: 1 });
+
+  vars = {};
   // ignore + set
   txt = '<ignore> <set a="a" /> </ignore>';
   tmp = await twofold.renderText(txt, vars);
@@ -707,7 +714,7 @@ test('del variable', async () => {
   vars = {};
   txt = '<set g2={[1,2]}/> <del {g2} />';
   tmp = await twofold.renderText(txt, vars);
-  expect(vars).toEqual({ g2: [1,2] });
+  expect(vars).toEqual({ g2: [1, 2] });
   expect(tmp).toBe(txt);
 
   // invalid: delete spread variable

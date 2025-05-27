@@ -68,9 +68,22 @@ export interface Config {
   lastStopper?: string;
 }
 
+export interface ConfigFull {
+  openTag: string;
+  closeTag: string;
+  openExpr: string;
+  closeExpr: string;
+  lastStopper: string;
+}
+
 export interface CliConfig extends Config {
   depth?: number;
   glob?: string;
+}
+
+export interface CliConfigFull extends Config {
+  depth: number;
+  glob: string;
 }
 
 export interface EvalMeta {
@@ -79,4 +92,33 @@ export interface EvalMeta {
   config?: Config;
   node?: ParseToken;
   ctx?: Record<string, any>;
+}
+
+export interface EvalMetaFull {
+  root: string;
+  fname: string;
+  config: ConfigFull;
+  node: ParseToken;
+  ctx: Record<string, any>;
+}
+
+// Type signature for TwoFold tag functions
+export type TwoFoldTag = (
+  text: string,
+  args: Record<string, any>,
+  meta: EvalMetaFull
+) => void | string | Promise<void> | Promise<string>;
+
+// Type signature for TwoFold function wrappers
+export interface TwoFoldWrap {
+  fn: TwoFoldTag;
+  evalOrder?: number;
+  description?: string;
+}
+
+export interface TwoFoldAddon {
+  name?: string;
+  preEval?: Function;
+  postEval?: Function;
+  preChildren?: Function;
 }

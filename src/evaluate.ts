@@ -1,8 +1,10 @@
 import * as T from './types.ts';
+import * as hooks from './addons/hooks.ts';
 import { log } from './logger.ts';
 import { defaultCfg } from './config.ts';
 import { deepClone, isFunction } from './util.ts';
-import { consumeTag, getText, isDoubleTag, isProtectedTag, isSingleTag, syncTag } from './tags.ts';
+import { consumeTag, getText, isDoubleTag, isSingleTag, syncTag } from './tags.ts';
+import './addons/index.ts'; // Trigger all addons
 
 /**
  * Evaluate a single tag, by calling the tag function.
@@ -12,7 +14,7 @@ async function evaluateSingleTag(
   params: Record<string, any>,
   func: Function,
   meta: T.EvalMeta = {}
-): Promise<void> {
+): Promise<any> {
   // Zero param text from the single tag &
   // A prop: built-in option that allows single tags to receive text, just like double tags
   // For single tags, zero params have higher priority
@@ -36,20 +38,21 @@ async function evaluateSingleTag(
   if (typeof result === 'object' && (!result.single || result.name !== tag.name || result.index !== tag.index)) {
     return;
   }
+
   // If the result is a tag object, apply on top of the current tag
   // @ts-ignore It's fine, this is a valid single tag
   if (typeof result === 'object' && result.single && result.name === tag.name && result.index === tag.index) {
     tag.rawText = result.rawText;
     tag.params = result.params;
     syncTag(tag);
+    result = undefined; // Don't return the tag object, it is already applied
   } else {
     tag.rawText = result.toString();
   }
-  // When evaluating a single tag, it is normally reduced to raw text
-  // When cut=false, the tag should be kept
-  if (!tag.params || (tag.params && (tag.params.cut === undefined || !!tag.params.cut))) {
-    consumeTag(tag);
-  }
+  // When evaluating a single tag,
+  // if there is a result, it is reduced to raw text
+  consumeTag(tag);
+  return result;
 }
 
 /*
@@ -61,98 +64,47 @@ async function evaluateDoubleTag(
   params: Record<string, any>,
   func: Function,
   meta: T.EvalMeta = {}
-): Promise<void> {
-  let hasFrozen = false;
-  if (tag.children) {
-    for (const c of tag.children) {
-      if (isProtectedTag(c)) {
-        hasFrozen = true;
-        break;
-      }
-    }
-  }
+): Promise<any> {
   const firstParam = params!['0'] || '';
-  //
-  // Execute the tag function with params
-  //
-  if (hasFrozen) {
-    // Freeze tag, to maintain structure for the parent evaluate
-    if (!tag.params) tag.params = {};
-    tag.params.freeze = true;
+  // The input text for the double tag is
+  // a flat text of all children combined
+  // Probably not ideal ...
+  const innerText = getText(tag);
+  let result = innerText;
+  try {
+    //
+    // Execute the tag function with params
+    //
+    result = await func(firstParam || innerText, { ...params, innerText }, meta);
+  } catch (err: any) {
+    // If the function call crashed, DON'T change the tag
+    log.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
+  }
 
-    const tagChildren = tag.children || [];
-    tag.children = [];
+  // If the single tag doesn't have a result, DON'T change the tag
+  if (result === undefined || result === null) return;
+  // Broken, hacked tag, ignore it
+  // @ts-ignore It's fine, this is a valid double tag
+  if (typeof result === 'object' && (!result.double || result.name !== tag.name || result.index !== tag.index)) {
+    return;
+  }
 
-    for (const c of tagChildren) {
-      // If the double tag has frozen/ ignored children
-      // all frozen nodes must be kept untouched, in place
-      if (isProtectedTag(c)) {
-        tag.children.push(c);
-      } else {
-        const innerText = getText(c);
-        let tmp = innerText;
-        if (c.name && (c.single || c.double)) {
-          // Inject the parsed tag into the function meta
-          meta.node = structuredClone(c);
-          if (!c.params) meta.node.params = {};
-        }
-        try {
-          tmp = await func(firstParam || innerText, { ...params, innerText }, meta);
-        } catch (err: any) {
-          log.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
-        }
-        if (tmp === undefined || tmp === null) tmp = '';
-        if (typeof tmp === 'object') {
-          // If the result is a tag object, we cannot apply it
-          tag.children.push(c);
-        } else {
-          // When evaluating a normal tag, it is flattened
-          // These kinds of tags cannot be cut (consumed)
-          tag.children.push({ index: -1, rawText: tmp.toString() });
-        }
-      }
-    }
+  // If the result is a tag object, apply on top of the current tag
+  // @ts-ignore It's fine, this is a valid double tag
+  if (typeof result === 'object' && result.double && result.name === tag.name && result.index === tag.index) {
+    // .secondTagText = result.secondTagText; // safety first; enforce to have the same name
+    tag.firstTagText = result.firstTagText;
+    tag.params = result.params;
+    tag.children = result.children;
+    syncTag(tag as T.ParseToken);
   } else {
-    // The input text for the double tag is
-    // a flat text of all children combined
-    // Probably not ideal ...
-    const innerText = getText(tag);
-    let result = innerText;
-    try {
-      result = await func(firstParam || innerText, { ...params, innerText }, meta);
-    } catch (err: any) {
-      // If the function call crashed, DON'T change the tag
-      log.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
-    }
-
-    // If the single tag doesn't have a result, DON'T change the tag
-    if (result === undefined || result === null) return;
-    // Broken, hacked tag, ignore it
-    // @ts-ignore It's fine, this is a valid double tag
-    if (typeof result === 'object' && (!result.double || result.name !== tag.name || result.index !== tag.index)) {
-      return;
-    }
-    // If the result is a tag object, apply on top of the current tag
-    // @ts-ignore It's fine, this is a valid double tag
-    if (typeof result === 'object' && result.double && result.name === tag.name && result.index === tag.index) {
-      // .secondTagText = result.secondTagText; // safety first; enforce to have the same name
-      tag.firstTagText = result.firstTagText;
-      tag.params = result.params;
-      tag.children = result.children;
-      syncTag(tag as T.ParseToken);
-    } else {
-      // After evaluating a double tag, all children are flattened
-      tag.children = [{ index: -1, rawText: result.toString() }];
-      // Cut (consume) the tag to make it behave like a single tag
-      if (tag.params && !!tag.params.cut) {
-        consumeTag(tag);
-        tag.rawText = result.toString();
-      }
-    }
+    // After evaluating a double tag, all children are flattened
+    tag.children = [{ index: -1, rawText: result.toString() }];
+    return result;
   }
 }
 
-export function shouldInterpolate(v: string, cfg: T.Config): boolean {
+export function shouldInterpolate(v: string, cfg: T.ConfigFull): boolean {
   if (!v) return false;
   // Check if the string could be a backtick expression
   if (v.length > 4 && v[0] === '`' && v[v.length - 1] === '`' && v.includes('${') && v.includes('}')) {
@@ -165,7 +117,7 @@ export function shouldInterpolate(v: string, cfg: T.Config): boolean {
   return false;
 }
 
-export function interpolate(body: string, args: Record<string, any>, cfg: T.Config) {
+export function interpolate(body: string, args: Record<string, any>, cfg: T.ConfigFull): any {
   // Raw property value is always trimmed
   if (body[0] === cfg.openExpr && body[body.length - 1] === cfg.closeExpr) {
     body = body.slice(1, -1);
@@ -202,21 +154,20 @@ export default async function evaluateTag(
   tag: T.ParseToken,
   globalContext: Record<string, any>,
   allFunctions: Record<string, any>,
-  cfg: Readonly<T.Config> = defaultCfg,
+  cfg: Readonly<T.ConfigFull> = defaultCfg,
   meta: T.EvalMeta = {}
 ) {
   if (!tag.name) {
     return;
   }
-  if (isProtectedTag(tag)) {
-    return;
-  }
 
   let evalOrder = 1;
   let func = allFunctions[tag.name];
-  if (func && isFunction(func.fn) && func.evalOrder !== undefined) {
-    evalOrder = func.evalOrder;
-    func = func.fn;
+  if (func && isFunction(func.fn)) {
+    if (typeof func.evalOrder === 'number') {
+      evalOrder = func.evalOrder as number;
+    }
+    func = func.fn as T.TwoFoldTag;
   }
 
   const localCtx = { ...globalContext, ...tag.params };
@@ -254,17 +205,48 @@ export default async function evaluateTag(
 
   if (evalOrder === 0 && isFunction(func)) {
     _prepareMeta(meta, tag, cfg, globalContext);
+    // Hook interrupt callback
+    for (const h of hooks.HOOKS1) {
+      try {
+        h(func, tag, localCtx, globalContext, meta);
+      } catch (err: any) {
+        log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
+        return;
+      }
+    }
     // Prevent new properties from being added to Meta
     meta = Object.seal(meta);
+
+    let result: any;
+    // Call the specialized evaluate function, in order (BFS)
     if (isDoubleTag(tag)) {
-      await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, meta);
+      result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, meta);
     } else if (isSingleTag(tag)) {
-      await evaluateSingleTag(tag as T.SingleTag, localCtx, func, meta);
+      result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, meta);
+    }
+
+    // Hook interrupt callback
+    for (const h of hooks.HOOKS2) {
+      try {
+        h(result, tag, localCtx, globalContext, meta);
+      } catch (err: any) {
+        log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
+        return;
+      }
     }
   }
 
   // Deep evaluate all children, including invalid TwoFold tags
   if (tag.children) {
+    // Hook interrupt callback
+    for (const h of hooks.HOOKS3) {
+      try {
+        h(tag, localCtx, globalContext, meta);
+      } catch (err: any) {
+        log.warn(`Hook preChildren raised for tag "${tag.name}"!`, err.message);
+        return;
+      }
+    }
     // Make a deep copy of the local context, to create
     // a separate variable scope for the children
     // At this point, the parent props are interpolated
@@ -290,13 +272,34 @@ export default async function evaluateTag(
 
   if (evalOrder !== 0 && isFunction(func)) {
     _prepareMeta(meta, tag, cfg, globalContext);
+    // Hook interrupt callback
+    for (const h of hooks.HOOKS1) {
+      try {
+        h(func, tag, localCtx, globalContext, meta);
+      } catch (err: any) {
+        log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
+        return;
+      }
+    }
+
     // Prevent new properties from being added to Meta
     meta = Object.seal(meta);
+    let result: any;
     // Call the specialized evaluate function, depth-first order
     if (isDoubleTag(tag)) {
-      await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, meta);
+      result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, meta);
     } else if (isSingleTag(tag)) {
-      await evaluateSingleTag(tag as T.SingleTag, localCtx, func, meta);
+      result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, meta);
+    }
+
+    // Hook interrupt callback
+    for (const h of hooks.HOOKS2) {
+      try {
+        h(result, tag, localCtx, globalContext, meta);
+      } catch (err: any) {
+        log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
+        return;
+      }
     }
   }
 }

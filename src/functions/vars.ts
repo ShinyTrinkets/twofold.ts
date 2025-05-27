@@ -7,6 +7,7 @@ import path from 'node:path';
 import parse from '../parser.ts';
 import Lexer from '../lexer.ts';
 import evaluateTag from '../evaluate.ts';
+import * as T from '../types.ts';
 import { ParseToken } from '../types.ts';
 import { log } from '../logger.ts';
 import { interpolate, shouldInterpolate } from '../evaluate.ts';
@@ -24,25 +25,7 @@ let parseToml: Function | undefined = undefined;
   }
 })();
 
-// A copy of Config where all properties are defined
-export interface Config {
-  openTag: string;
-  closeTag: string;
-  openExpr: string;
-  closeExpr: string;
-  lastStopper: string;
-}
-
-// A copy of EvalMeta where all properties are defined
-export interface EvalMeta {
-  root: string;
-  fname: string;
-  config: Config;
-  node: ParseToken;
-  ctx: Record<string, any>;
-}
-
-function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
+function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): undefined {
   /**
    * Set (define) one or more variables, either static,
    * or composed of other transformed variables.
@@ -115,7 +98,7 @@ function __set(_t: string, args: Record<string, any> = {}, meta: EvalMeta): unde
   // Return undefined to avoid consuming the tag
 }
 
-export const set = {
+export const set: T.TwoFoldWrap = {
   fn: __set,
   // This param tells the Evaluator to
   // run this function before the children,
@@ -124,7 +107,7 @@ export const set = {
   description: 'Set (define) one or more variables.',
 };
 
-function __del(_t: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
+function __del(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): undefined {
   /**
    * Del (delete/ remove) one or more variables.
    * You can also Set a variable to undefined, it's almost the same.
@@ -159,7 +142,7 @@ function __del(_t: string, args: Record<string, any> = {}, meta: EvalMeta): unde
   }
 }
 
-export const del = {
+export const del: T.TwoFoldWrap = {
   fn: __del,
   // This param tells the Evaluator to
   // run this function before the children,
@@ -168,7 +151,7 @@ export const del = {
   description: 'Del (delete/ remove) one or more variables.',
 };
 
-export function json(text: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
+export function json(text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): undefined {
   /**
    * Set (define) variables from a JSON object.
    *
@@ -226,7 +209,7 @@ export function json(text: string, args: Record<string, any> = {}, meta: EvalMet
   }
 }
 
-export function toml(text: string, args: Record<string, any> = {}, meta: EvalMeta): undefined {
+export function toml(text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): undefined {
   /**
    * Set (define) variables from a TOML object.
    *
@@ -273,7 +256,7 @@ export function toml(text: string, args: Record<string, any> = {}, meta: EvalMet
   }
 }
 
-async function __import(_t: string, args: Record<string, any> = {}, meta: EvalMeta): Promise<undefined> {
+async function __import(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): Promise<undefined> {
   /**
    * Import one or more variables from `set`, `json` or `toml` tags included in other files.
    * The import syntax is very similar to the JavaScript import,
@@ -376,15 +359,14 @@ async function __import(_t: string, args: Record<string, any> = {}, meta: EvalMe
   }
 }
 
-export const _import = {
+export const _import: T.TwoFoldWrap = {
   fn: __import,
-  // This param tells the Evaluator to
-  // run this function before the children,
-  // in breadth-first order
+  // This param tells the Evaluator to run this
+  // before the children, in breadth-first order
   evalOrder: 0,
 };
 
-export function vars(names: string, args: any, meta: EvalMeta): string | undefined {
+export function vars(names: string, args: any, meta: T.EvalMetaFull): string | undefined {
   /**
    * A tag used for DEV, to echo one or more variables.
    * It is similar to the debug tag, but it only shows
@@ -413,7 +395,7 @@ export function vars(names: string, args: any, meta: EvalMeta): string | undefin
   return text;
 }
 
-export function debug(_: string, args: any, meta: EvalMeta): string {
+export function debug(_: string, args: any, meta: T.EvalMetaFull): string {
   /**
    * A tag used for DEV, to echo the parsed tag args and metadata.
    * It is similar to the vars tag, but it also shows the raw text

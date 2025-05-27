@@ -136,7 +136,7 @@ export function templite(str: string, mix: any): string {
    * - templite('Hello, {{name}}!', { name: 'world' });
    * - templite('Howdy, {{0}}! {{1}}', ['partner', '🤠']);
    */
-  return str.replace(TMPL_REGEX, (x, key, y) => {
+  return str.replace(TMPL_REGEX, (x: any, key: any, y: string) => {
     x = 0;
     y = mix;
     key = key.trim().split('.');
@@ -153,6 +153,7 @@ export function deepGet(target: any, path: string | ArrayLike<string>, def = und
    * By: Jason Miller, @developit ; License: MIT
    * Deeply get a value from an object or array.
    */
+  // @ts-ignore It's OK to check this
   path = path.split ? path.split('.') : path;
   for (let p = 0; p < path.length; p++) {
     target = target ? target[path[p]] : undef;
@@ -166,6 +167,7 @@ export function deepSet(target: any, path: string | ArrayLike<string>, value: an
    * By: Luke Edwards, @lukeed ; License: MIT
    * Deeply set a value in an object or array.
    */
+  // @ts-ignore It's OK to check this
   path = path.split ? path.split('.') : path;
   const pathLen = path.length;
   let i = 0,

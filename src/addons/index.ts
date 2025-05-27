@@ -1,0 +1,23 @@
+/*
+ * Modular extensions/ middlewares that enhance TwoFold's functionality.
+ */
+
+import ignore from './ignore.ts';
+import consume from './consume.ts';
+import * as T from '../types.ts';
+import * as hooks from './hooks.ts';
+
+// The order is important here.
+const ADDONS: T.TwoFoldAddon[] = [ignore, consume];
+
+for (const addon of ADDONS) {
+  if (addon.preEval) {
+    hooks.HOOKS1.push(addon.preEval);
+  }
+  if (addon.postEval) {
+    hooks.HOOKS2.push(addon.postEval);
+  }
+  if (addon.preChildren) {
+    hooks.HOOKS3.push(addon.preChildren);
+  }
+}

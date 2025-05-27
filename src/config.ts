@@ -1,21 +1,21 @@
-import { lilconfig } from 'lilconfig';
-import { Config, CliConfig } from './types.ts';
+import * as T from './types.ts';
 import { log } from './logger.ts';
+import { lilconfig } from 'lilconfig';
 
-let loadToml = false;
+let loadToml: (fpath: string, content: string) => Record<string, any>;
 
 (async () => {
   // typeof Bun !== "undefined"
   if (process.versions.bun) {
-    loadToml = (fpath: string, content: string) => Bun.TOML.parse(content);
+    loadToml = (_fpath: string, content: string) => Bun.TOML.parse(content);
   } else if (process.versions.deno) {
     // typeof Deno !== "undefined"
     const { parse } = await import('jsr:@std/toml');
-    loadToml = (fpath: string, content: string) => parse(content);
+    loadToml = (_fpath: string, content: string) => parse(content);
   }
 })();
 
-export const defaultCfg: Config = Object.freeze({
+export const defaultCfg: T.ConfigFull = Object.freeze({
   // openTag, closeTag and lastStopper must be
   // strings of length 1. At least for now.
 
@@ -41,7 +41,7 @@ export const defaultCfg: Config = Object.freeze({
   closeExpr: '}',
 });
 
-export const defaultCliCfg: CliConfig = Object.freeze({
+export const defaultCliCfg: T.CliConfigFull = Object.freeze({
   ...defaultCfg,
 
   // walk-dir scan depth
@@ -51,7 +51,7 @@ export const defaultCliCfg: CliConfig = Object.freeze({
   glob: '*.*',
 });
 
-export async function userCfg(path = undefined): Promise<CliConfig> {
+export async function userCfg(path = undefined): Promise<T.ConfigFull> {
   const explorer = lilconfig('twofold', {
     loaders: {
       '.toml': loadToml,
@@ -80,7 +80,7 @@ export async function userCfg(path = undefined): Promise<CliConfig> {
 
 const ALLOWED_LAST_STOPPER = /^[\/\?\!\.#]$/;
 
-export function validateCfg(cfg: CliConfig) {
+export function validateCfg(cfg: T.CliConfig) {
   if (cfg.openTag && cfg.openTag.length !== 1) {
     throw new ConfigError('Open tag validation error');
   }

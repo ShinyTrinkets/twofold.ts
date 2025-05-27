@@ -236,7 +236,7 @@ You can also see this list by running `tfold --tags`.
 This list is generated with the `jsDocs` built-in tag.
 
 ```md
-<jsDocs "src/functions">
+<jsDocs "src/functions" freezeChildren=1>
 
 ## titleAll (text: string)
 
