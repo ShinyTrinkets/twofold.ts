@@ -280,15 +280,6 @@ A: The capital of France is Paris.
 
 ---
 
-## ignore ()
-
-When it's a double tag, all tags inside it are protected (frozen).
-This is similar to the freeze=true prop.
-
-The logic for this tag is in the evaluate tags functions.
-
----
-
 ## text (s: string, args: any)
 
 A tag used for DEV, that returns the text as is,
@@ -308,7 +299,7 @@ Example: <log level="info" name="John" age="30"/>
 
 ---
 
-## increment (s: string, { plus = 1 } = {})
+## increment (s: string, { plus = 1 } = {}, _m: any)
 
 Very silly DEV tag, increment the input with a number.
 The increment can be any integer, or float, positive or negative.
@@ -342,6 +333,20 @@ from the LLM/AI tag.
 
 Scan a file or directory for TypeScript function declarations.
 It is used to generate documentation for the TwoFold functions.
+
+---
+
+## freeze (_t: string, args: any, _m: any)
+
+When it's a double tag, all tags inside it are frozen.
+This is identical to the freeze=true prop.
+
+---
+
+## protect (_t: string, args: any, _m: any)
+
+When it's a double tag, all tags inside it are protected.
+This is identical to the protect=true prop.
 
 ---
 
@@ -584,7 +589,7 @@ Prettier is called within a Shell to allow it to read local config files.
 
 ---
 
-## set (_t: string, args: Record<string, any> = {}, meta: EvalMeta)
+## set (_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
 
 Set (define) one or more variables, either static,
 or composed of other transformed variables.
@@ -596,7 +601,7 @@ Example:
 
 ---
 
-## del (_t: string, args: Record<string, any> = {}, meta: EvalMeta)
+## del (_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
 
 Del (delete/ remove) one or more variables.
 You can also Set a variable to undefined, it's almost the same.
@@ -606,7 +611,7 @@ Example:
 
 ---
 
-## json (text: string, args: Record<string, any> = {}, meta: EvalMeta)
+## json (text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
 
 Set (define) variables from a JSON object.
 
@@ -621,7 +626,7 @@ Example:
 
 ---
 
-## toml (text: string, args: Record<string, any> = {}, meta: EvalMeta)
+## toml (text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
 
 Set (define) variables from a TOML object.
 
@@ -634,7 +639,7 @@ job = "engineer"
 
 ---
 
-## import (_t: string, args: Record<string, any> = {}, meta: EvalMeta)
+## import (_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
 
 Import one or more variables from `set`, `json` or `toml` tags included in other files.
 The import syntax is very similar to the JavaScript import,
@@ -645,7 +650,7 @@ Example:
 
 ---
 
-## vars (names: string, args: any, meta: EvalMeta)
+## vars (names: string, args: any, meta: T.EvalMetaFull)
 
 A tag used for DEV, to echo one or more variables.
 It is similar to the debug tag, but it only shows
@@ -655,7 +660,7 @@ To show all variables, use <vars "*"/>
 
 ---
 
-## debug (_: string, args: any, meta: EvalMeta)
+## debug (_: string, args: any, meta: T.EvalMetaFull)
 
 A tag used for DEV, to echo the parsed tag args and metadata.
 It is similar to the vars tag, but it also shows the raw text

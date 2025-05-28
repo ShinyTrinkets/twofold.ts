@@ -1,6 +1,9 @@
 import * as T from './types.ts';
 import { log } from './logger.ts';
+import { unTildify } from './util.ts';
 import { lilconfig } from 'lilconfig';
+
+export const CONFIG_DIR = unTildify('~/.config/twofold');
 
 let loadToml: (fpath: string, content: string) => Record<string, any>;
 
@@ -60,9 +63,6 @@ export async function userCfg(path = undefined): Promise<T.ConfigFull> {
       '.twofold.js',
       '.twofold.json',
       '.twofold.toml',
-      'twofold.conf.js',
-      'twofold.conf.json',
-      'twofold.conf.toml',
       'twofold.config.js',
       'twofold.config.json',
       'twofold.config.toml',

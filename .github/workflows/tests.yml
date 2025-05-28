@@ -25,5 +25,7 @@ jobs:
           deno test -RS --no-check test/tags.test.ts && \
           deno test -RS --no-check test/vars.test.ts && \
           deno test -RS --no-check test/util.test.ts && \
+          deno test -RS --no-check test/llm.test.ts && \
           deno test -RS --no-check test/tags-os.test.ts && \
+          deno test -RS --no-check test/tags-table.test.ts && \
           deno test -RS --no-check test/tags-time.test.ts || exit 1

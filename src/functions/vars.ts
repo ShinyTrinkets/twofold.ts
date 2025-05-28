@@ -12,16 +12,16 @@ import { ParseToken } from '../types.ts';
 import { log } from '../logger.ts';
 import { interpolate, shouldInterpolate } from '../evaluate.ts';
 
-let parseToml: Function | undefined = undefined;
+let parseToml: (fpath: string, content: string) => Record<string, any>;
 
 (async () => {
   // typeof Bun !== "undefined"
   if (process.versions.bun) {
-    parseToml = Bun.TOML.parse;
+    parseToml = (_fpath: string, content: string) => Bun.TOML.parse(content);
   } else if (process.versions.deno) {
     // typeof Deno !== "undefined"
     const { parse } = await import('jsr:@std/toml');
-    parseToml = parse;
+    parseToml = (_fpath: string, content: string) => parse(content);
   }
 })();
 
@@ -297,8 +297,8 @@ async function __import(_t: string, args: Record<string, any> = {}, meta: T.Eval
     return;
   }
 
-  let importData: Record<string, any> = {};
-  let allFunctions: Record<string, any> = { set, del, json, toml };
+  const importData: Record<string, any> = {};
+  const allFunctions: Record<string, any> = { set, del, json, toml };
   for (const t of ast) {
     if (t.name === 'set' || t.name === 'json' || t.name === 'toml') {
       await evaluateTag(t, importData, allFunctions, meta.config, {

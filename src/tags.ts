@@ -20,13 +20,14 @@ export function consumeTag(tag: SingleTag | DoubleTag) {
  */
 export function getText(node: SingleTag | DoubleTag): string {
   let text = '';
-  if (!node.children) {
-    if (isRawText(node)) {
-      return node.rawText;
+  if (!(node as ParseToken).children) {
+    if (isRawText(node as ParseToken)) {
+      return (node as ParseToken).rawText;
     } else {
       return '';
     }
   }
+  // @ts-ignore It's fine
   for (const c of node.children) {
     if (isDoubleTag(c)) {
       text += getText(c);

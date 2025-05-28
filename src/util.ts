@@ -19,22 +19,18 @@ export function deepClone<T>(source: T): T {
   if (source === null || source === undefined || typeof source !== 'object') {
     return source;
   }
-
   // Handle Date objects
   if (source instanceof Date) {
     return new Date(source.getTime()) as unknown as T;
   }
-
   // Handle RegExp objects
   if (source instanceof RegExp) {
     return new RegExp(source.source, source.flags) as unknown as T;
   }
-
   // Handle Array objects
   if (Array.isArray(source)) {
     return source.map(item => deepClone(item)) as unknown as T;
   }
-
   // Handle plain objects
   const clonedObj = {} as Record<string, any>;
 
@@ -57,7 +53,7 @@ export function deepClone<T>(source: T): T {
  * Split text at the ✂----- marker.
  */
 export function splitToMarker(txt: string) {
-  const m = txt.match(/(.+)✂[-]+[!]?/s);
+  const m = txt.match(/(.+)✂[-]+[!?]?/s);
   return m && m[1] ? m[1].trimEnd() : txt;
 }
 
@@ -98,7 +94,7 @@ export function toCamelCase(str: string) {
 }
 
 export function sleep(nr: number) {
-  /** Returns a promise that resolves after a fixed time. */
+  /** A promise that resolves after a fixed time. */
   return new Promise(r => setTimeout(r, nr));
 }
 
@@ -183,6 +179,7 @@ export function deepSet(target: any, path: string | ArrayLike<string>, value: an
         ? value
         : typeof (currentVal = target[key]) === typeof path
           ? currentVal
+          // @ts-ignore It's OK
           : path[i] * 0 !== 0 || ('' + path[i]).indexOf('.') >= 0
             ? {}
             : [];

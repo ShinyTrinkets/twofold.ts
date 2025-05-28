@@ -1,7 +1,8 @@
-import { LexToken } from './types.ts';
+import * as T from './types.ts';
 import * as config from './config.ts';
-import { isRawText } from './tags.ts';
 import { toCamelCase } from './util.ts';
+import { LexToken } from './types.ts';
+import { isRawText } from './tags.ts';
 import { log } from './logger.ts';
 
 const STATE_RAW_TEXT = 's__raw_';
@@ -52,12 +53,12 @@ const MAX_NAME_LEN = 42;
 export default class Lexer {
   index: number;
   state: string;
-  config: config.Config;
+  config: T.Config;
   priorState: string;
   _pendingState: LexToken;
   _processed: LexToken[];
 
-  constructor(cfg: config.Config = {}) {
+  constructor(cfg: T.Config = {}) {
     this.index = 0;
     this.state = STATE_RAW_TEXT;
     this.config = { ...config.defaultCfg, ...cfg };

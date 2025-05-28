@@ -32,10 +32,13 @@ const addon: T.TwoFoldAddon = {
     // Called after evaluating the tag.
 
     if (localCtx.cut === 1 || localCtx.cut === true) {
+      // @ts-ignore It's safe to assume that `tag` is a `T.ParseToken`
       if (tag.double) {
-        tag.rawText = (result || getText(tag)).toString();
-      } else if (tag.single) {
-        tag.rawText = '';
+        (tag as T.ParseToken).rawText = (result || getText(tag)).toString();
+      }
+      // @ts-ignore It's safe to assume that `tag` is a `T.ParseToken`
+      else if (tag.single) {
+        (tag as T.ParseToken).rawText = '';
       }
       consumeTag(tag);
     }

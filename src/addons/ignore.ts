@@ -72,7 +72,7 @@ const addon: T.TwoFoldAddon = {
         if (isProtected(c)) {
           tag.children.push(c);
         } else {
-          const innerText = getText(c);
+          const innerText = getText(c as T.DoubleTag);
           let tmp = innerText;
           if (c.name && (c.single || c.double)) {
             // Inject the missing stuff into the function meta
