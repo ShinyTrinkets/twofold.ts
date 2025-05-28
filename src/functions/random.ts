@@ -1,6 +1,6 @@
 /**
  * Functions for generating randomness, available as tags.
- * <ignore> The following text:
+ * <freeze> The following text:
  */
 
 function randomChoice(choices: any[]): any {
@@ -148,5 +148,5 @@ export function shuffle(text: string, { lines = false, words = false } = {}): st
 }
 
 /**
- * End of </ignore>
+ * End of </freeze>
  */

@@ -4,7 +4,7 @@ import { joinWithMarker, splitToMarker } from '../util.ts';
 
 /*
  * Functions to execute shell commands.
- * <ignore> The following text
+ * <freeze> The following text
  */
 
 export async function cmd(
@@ -112,5 +112,5 @@ async function spawnShell(name: string, cmd: string, args: string[], timeout = 5
 }
 
 /**
- * End of </ignore>
+ * End of </freeze>
  */

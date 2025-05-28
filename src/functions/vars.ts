@@ -1,6 +1,6 @@
 /**
  * TwoFold vars tags.
- * <ignore> The following text:
+ * <freeze> The following text:
  */
 import path from 'node:path';
 
@@ -425,5 +425,5 @@ export function debug(_: string, args: any, meta: T.EvalMetaFull): string {
 }
 
 /**
- * End of </ignore>
+ * End of </freeze>
  */

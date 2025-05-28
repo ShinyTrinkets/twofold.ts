@@ -1,5 +1,6 @@
 /*
  * Modular extensions/ middlewares that enhance TwoFold's functionality.
+ * They can intercept and modify the normal behaviour of the tags.
  */
 
 import ignore from './ignore.ts';

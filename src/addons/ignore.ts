@@ -10,9 +10,13 @@ function isProtected(tag: T.ParseToken): boolean {
  *
  * This addon allows you to freeze or protect sub-tags in TwoFold templates.
  * It is useful when you want to prevent certain tags from being evaluated.
- * Freeze tags will not be evaluated, but its parents can evaluate it.
- * Protect tag will not be evaluated, and its parents won't evaluate it either,
- * making sure it won't be destroyed or modified.
+ *
+ * Level 0 protection: freezeChildren=true, will not evaluate children,
+ * but the tag itself will be evaluated.
+ * Level 1 protection: Freeze tags will not be evaluated, but its parents can
+ * evaluate the frozen tag.
+ * Level 2 protection: Protect tag will not be evaluated, and its parents
+ * won't evaluate it either, making sure it won't be destroyed or modified.
  */
 const addon: T.TwoFoldAddon = {
   name: 'Freeze/ Protect',
@@ -97,13 +101,13 @@ const addon: T.TwoFoldAddon = {
     }
   },
 
-  postEval: async (
+  postEval: (
     result: any,
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
     meta: T.EvalMetaFull
-  ): Promise<void> => {
+  ): void => {
     // Called after evaluating the tag.
 
     // If the tag function wants to freeze the tag,
@@ -113,12 +117,12 @@ const addon: T.TwoFoldAddon = {
     }
   },
 
-  preChildren: async (
+  preChildren: (
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
     meta: T.EvalMetaFull
-  ): Promise<void> => {
+  ): void => {
     // Called before evaluating children.
 
     if (localCtx.freeze || localCtx.protect || localCtx.freezeChildren) {

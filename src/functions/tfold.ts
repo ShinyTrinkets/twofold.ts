@@ -1,6 +1,6 @@
 /**
  * TwoFold misc/ util tags.
- * <ignore> The following text:
+ * <freeze> The following text:
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -157,10 +157,9 @@ export function jsDocs(_: string, args: any): string | undefined {
   return text;
 }
 
-function __ignore(_t: string, args: any, _m: any): void {
+function __freeze(_t: string, args: any, _m: any): void {
   /**
-   * When it's a double tag, all tags inside it are
-   * ignored/ frozen.
+   * When it's a double tag, all tags inside it are frozen.
    * This is identical to the freeze=true prop.
    */
 
@@ -171,13 +170,34 @@ function __ignore(_t: string, args: any, _m: any): void {
   args.freeze = true;
 }
 
-export const ignore: T.TwoFoldWrap = {
-  fn: __ignore,
+export const freeze: T.TwoFoldWrap = {
+  fn: __freeze,
   // This param tells the Evaluator to run this
-  // before the children, in breadth-first order
+  // before the children, in natural order
+  evalOrder: 0,
+};
+
+function __protect(_t: string, args: any, _m: any): void {
+  /**
+   * When it's a double tag, all tags inside it are protected.
+   * This is identical to the protect=true prop.
+   */
+
+  // Send a flag to the Ignore addon to stop
+  // evaluating this tag, its children and
+  // protect the tag from destruction.
+  // The flag must be truthy, and evalOrder
+  // must be 0, so it runs before the children.
+  args.protect = true;
+}
+
+export const protect: T.TwoFoldWrap = {
+  fn: __protect,
+  // This param tells the Evaluator to run this
+  // before the children, in natural order
   evalOrder: 0,
 };
 
 /**
- * End of </ignore>
+ * End of </freeze>
  */

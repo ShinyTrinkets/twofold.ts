@@ -84,7 +84,14 @@ test('set global variables', async () => {
   expect(vars).toEqual({ x: 2 });
 
   vars = {};
-  // cut + set
+  // cut single + set
+  txt = '<set a="a" cut=1 />';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe('');
+  expect(vars).toEqual({ a: 'a', cut: 1 });
+
+  vars = {};
+  // cut double + set
   txt = '<set a="a" cut=1>?</set>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe('?');
