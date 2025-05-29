@@ -14,7 +14,7 @@ export async function cat(txtFile: string, { f = null, start = 0, limit = 0 } = 
   /**
    * Read a file with limit. Similar to the "cat" command from Linux.
    * Specify start=-1 and limit=-1 to read the whole file.
-   * Example: <cat 'file.txt' start=0 limit=100 />
+   * Example: <cat 'file.txt' start=0 limit=100></cat>
    */
   const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
@@ -56,25 +56,34 @@ export async function cat(txtFile: string, { f = null, start = 0, limit = 0 } = 
 
 export async function head(txtFile: string, { f = null, lines = 10 } = {}, meta = {}) {
   /**
-   * Read a number of lines from file. Similar to "head" commant from Linux.
+   * Read a number of lines from file. Similar to "head" command from Linux.
+   * Specify lines=-1 to read the whole file.
+   * Example: <head 'file.txt' lines=10 />
    */
   const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
-  const input = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
-  const text = input.slice(0, lines).join('\n');
+  let text = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
+  if (lines > 0) text = text.slice(0, lines).join('\n');
   if (meta.node.double) return `\n${text}\n`;
   return text;
 }
 
 export async function tail(txtFile: string, { f = null, lines = 10 } = {}, meta = {}) {
   /**
-   * Read a number of lines from the end of file. Similar to "tail" commant from Linux.
+   * Read a number of lines from the end of file. Similar to "tail" command from Linux.
+   * Specify lines=-1 to read the whole file.
+   * Example: <tail 'file.txt' lines=10 />
    */
   const fname = await _resolvFname(f, txtFile);
   if (!fname) return;
   const input = fs.readFileSync(fname, 'utf-8').split(/\r?\n/);
-  const lastLine = input.length - 1;
-  const text = input.slice(lastLine - lines, lastLine).join('\n');
+  let text = '';
+  if (lines > 0) {
+    const lastLine = input.length - 1;
+    text = input.slice(lastLine - lines, lastLine).join('\n');
+  } else {
+    text = input.join('\n');
+  }
   if (meta.node.double) return `\n${text}\n`;
   return text;
 }

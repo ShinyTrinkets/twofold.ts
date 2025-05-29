@@ -46,7 +46,6 @@ export function leftOrRight(_: string, { emoji = true } = {}): string {
    * Random left or right (arrow, or text).
    * Example: <leftOrRight></leftOrRight> will return either '←' or '→'.
    * Example: <leftOrRight emoji=false></leftOrRight> will return either 'left' or 'right'.
-   *
    */
   if (emoji) {
     return randomChoice(['←', '→']);

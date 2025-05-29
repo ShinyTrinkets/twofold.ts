@@ -17,8 +17,10 @@ export function text(s: string, args: any): string {
    * A tag used for DEV, that returns the text as is,
    * only variable interpolation is done.
    * If this wraps some tags, they will be flattened/ destroyed.
-   * Example: Helo {{name}}! will be returned as "Helo John!",
-   * if you <set name="John"/> beforehand.
+   * Example:
+   * <set name="John"/>
+   * <text>Hello {{name}}!</text>
+   * will become "Hello John!".
    */
   return templite(s, args);
 }
@@ -51,6 +53,9 @@ export function countDown(s: string, args: any, meta: any) {
   /**
    * Experimental: Tick tick tick!
    * It will count down from N down to 0, and then stop.
+   * Example:
+   * <countDown n=5></countDown>
+   * It will count down from 5 to 0, and then stop.
    */
   let n = s || args.n;
   if (n === undefined || n === null) return;
@@ -161,6 +166,9 @@ function __freeze(_t: string, args: any, _m: any): void {
   /**
    * When it's a double tag, all tags inside it are frozen.
    * This is identical to the freeze=true prop.
+   * Example:
+   * <freeze> <randomInt></randomInt> </freeze>
+   * will not evaluate the randomInt tag.
    */
 
   // Send a flag to the Ignore addon to stop

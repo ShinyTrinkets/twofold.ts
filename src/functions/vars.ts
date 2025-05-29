@@ -12,16 +12,16 @@ import { ParseToken } from '../types.ts';
 import { log } from '../logger.ts';
 import { interpolate, shouldInterpolate } from '../evaluate.ts';
 
-let parseToml: (fpath: string, content: string) => Record<string, any>;
+let parseToml: (content: string) => Record<string, any>;
 
 (async () => {
   // typeof Bun !== "undefined"
   if (process.versions.bun) {
-    parseToml = (_fpath: string, content: string) => Bun.TOML.parse(content);
+    parseToml = Bun.TOML.parse;
   } else if (process.versions.deno) {
     // typeof Deno !== "undefined"
     const { parse } = await import('jsr:@std/toml');
-    parseToml = (_fpath: string, content: string) => parse(content);
+    parseToml = parse;
   }
 })();
 
@@ -34,6 +34,7 @@ function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
    *
    * Example:
    * <set name="John" age="30" job="engineer"/>
+   * <set greet=`My name is ${name} and I am ${age} years old.`/>
    */
   if (!meta.node.params || !meta.node.rawParams) return;
 

@@ -179,8 +179,8 @@ export function deepSet(target: any, path: string | ArrayLike<string>, value: an
         ? value
         : typeof (currentVal = target[key]) === typeof path
           ? currentVal
-          // @ts-ignore It's OK
-          : path[i] * 0 !== 0 || ('' + path[i]).indexOf('.') >= 0
+          : // @ts-ignore It's OK
+            path[i] * 0 !== 0 || ('' + path[i]).indexOf('.') >= 0
             ? {}
             : [];
   }

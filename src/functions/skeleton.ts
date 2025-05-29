@@ -395,11 +395,13 @@ const mrSkeleton = `
   .map(s => s.replace(/^\n+/, ''))
   .filter(s => s !== '');
 
-export function skeleton(_: string, args: any, meta: any) {
+export function skeleton(_s: string, args: any, meta: any) {
   /**
    * Draws a cute skeleton, frame by frame.
    * Demonstrates how to create a tag with animations,
    * and how to use the meta object to modify the tree.
+   * Example:
+   * <skeleton n=99></skeleton>
    */
   if (args.n === undefined || args.n === null) return;
   args.n = parseNumber(args.n);

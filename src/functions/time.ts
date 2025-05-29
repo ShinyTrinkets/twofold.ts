@@ -1,5 +1,6 @@
 /**
  * Basic time and date functions, available as tags.
+ * <freeze> The following text:
  */
 
 function getDate(text: string | Date): Date {
@@ -15,6 +16,7 @@ export function now(txtDate: string, { date = null } = {}): string {
   /**
    * Returns the current date and time as a string.
    * The format is YYYY-MM-DD HH:MM:SS ;
+   * Example: <now>2019-10-23 12:34:56</now> ;
    */
   date = getDate(txtDate || date);
   return date.toISOString().split('.')[0].replace('T', ' ');
@@ -24,6 +26,7 @@ export function date(txtDate: string, { date = null } = {}): string {
   /**
    * Returns the current date as a string.
    * The format is YYYY-MM-DD ;
+   * Example: <date>2019-10-23</date> ;
    */
   date = getDate(txtDate || date);
   return date.toISOString().split('T')[0];
@@ -46,6 +49,7 @@ export function emojiSunMoon(txtDate: string, { date = null, splitHour = 6 } = {
   /**
    * Returns an emoji representing day or night.
    * Day=☀️ ; Night=🌙 ;
+   * Example: <emojiSunMoon>☀️/emojiSunMoon> ;
    */
   const dn = dayOrNight(txtDate, { date, splitHour });
   if (dn === 'day') {
@@ -59,6 +63,7 @@ export function emojiDayNight(txtDate: string, { date = null, splitHour = 6 } = 
   /**
    * Returns an emoji representing day or night.
    * Day=🏙 ; Night=🌃 ;
+   * Example: <emojiDayNight>🏙/emojiDayNight> ;
    */
   const dn = dayOrNight(txtDate, { date, splitHour });
   if (dn === 'day') {
@@ -104,6 +109,7 @@ const halfHours = {
 export function emojiClock(txtDate: string, { date = null, showHalf = true } = {}): string {
   /**
    * Returns the current time as emoji clock.
+   * Example: <emojiClock>🕦</emojiClock> ;
    */
   date = getDate(txtDate || date);
   let h = date.getHours();
@@ -143,6 +149,8 @@ const zodiacSigns = [
 export function zodiacSign(txtDate: string, { date = null, emoji = true } = {}): string {
   /**
    * Returns a zodiac sign as emoji, or text.
+   * Example: <zodiacSign>♒</zodiacSign> ;
+   * Example: <zodiacSign emoji="false">Aquarius</zodiacSign> ;
    */
   date = getDate(txtDate || date);
   const day = date.getDate();
@@ -154,3 +162,7 @@ export function zodiacSign(txtDate: string, { date = null, emoji = true } = {}):
   const [prevEmoji, prevName, _] = month ? zodiacSigns[month - 1] : zodiacSigns[12];
   return emoji ? prevEmoji : prevName;
 }
+
+/**
+ * End of </freeze>
+ */
