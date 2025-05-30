@@ -1,7 +1,6 @@
 # TwoFold (2✂︎f)
 
 [![Project name][project-img]][project-url] [![CLI app][cli-img]](#)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ShinyTrinkets/twofold.ts)
 
 <!-- deno-fmt-ignore-start -->
 
@@ -15,6 +14,8 @@
 > Sorcery of the highest order.
 
 <!-- deno-fmt-ignore-end -->
+
+![TwoFold logo](https://raw.githubusercontent.com/ShinyTrinkets/twofold.ts/master/img/logo1.jpg)
 
 ## What is this ?
 
