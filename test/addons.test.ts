@@ -112,3 +112,22 @@ test('freeze tag', async () => {
   <protect><title>aBc</title></protect>
   ef</lower>GH</upper></upper>`);
 });
+
+test('freeze children, omnious', async () => {
+  let txt = '<main freezeChildren=true> <aside/> </main>';
+  let tmp = await twofold.renderText(
+    txt,
+    {},
+    {
+      main: (s: any) => {
+        return s;
+      },
+      aside: (s: any) => {
+        // should not be called
+        expect(true).toBe(false);
+        return 'error';
+      },
+    }
+  );
+  expect(tmp).toBe(txt);
+});

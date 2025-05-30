@@ -6,7 +6,7 @@
 import ignore from './ignore.ts';
 import consume from './consume.ts';
 // import cache from './cache.ts';
-import * as T from '../types.ts';
+import * as T from './types.ts';
 import * as hooks from './hooks.ts';
 
 // The order is important here.

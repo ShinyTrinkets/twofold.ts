@@ -1,3 +1,4 @@
+import * as Z from './types.ts';
 import * as T from '../types.ts';
 import { getText } from '../tags.ts';
 
@@ -18,7 +19,7 @@ function isProtected(tag: T.ParseToken): boolean {
  * Level 2 protection: Protect tag will not be evaluated, and its parents
  * won't evaluate it either, making sure it won't be destroyed or modified.
  */
-const addon: T.TwoFoldAddon = {
+const addon: Z.TwoFoldAddon = {
   name: 'Freeze/ Protect',
 
   preEval: async (
@@ -113,7 +114,7 @@ const addon: T.TwoFoldAddon = {
     // If the tag function wants to freeze the tag,
     // it can set args.freeze=true.
     if (localCtx.freeze || localCtx.protect) {
-      throw new Error('Frozen tag detected post-eval!');
+      throw new Error('Frozen tag post-eval!');
     }
   },
 
@@ -124,9 +125,10 @@ const addon: T.TwoFoldAddon = {
     meta: T.EvalMetaFull
   ): void => {
     // Called before evaluating children.
-
-    if (localCtx.freeze || localCtx.protect || localCtx.freezeChildren) {
-      throw new Error('Child nodes will not be evaluated!');
+    if (localCtx.freeze || localCtx.protect) {
+      throw new Error('Frozen tag pre-children!');
+    } else if (localCtx.freezeChildren) {
+      throw new Z.IgnoreNext('Child nodes will be ignored!');
     } else if (tag.name === 'freeze') {
       throw new Error("It is frozen and child nodes won't be evaluated!");
     } else if (tag.name === 'protect') {

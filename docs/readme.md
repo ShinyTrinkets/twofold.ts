@@ -105,8 +105,8 @@ executing an expression **absolutely requires** an expression. Importing some fi
 requires that you specify what file to import. When a tag doesn't have all the required values, it
 won't run, and won't be consumed.
 
-If the prop values contain space, they can be surrounded by a matching _single quotes_, _double quotes_,
-or backticks.
+If the prop values contain space, they can be surrounded by a matching _single quotes_, _double
+quotes_, or backticks.
 
 Newlines are not allowed in _single quotes_ or _double quotes_, but they are allowed in backticks
 and JSX curly braces.
@@ -240,9 +240,8 @@ This list is generated with the `jsDocs` built-in tag.
 
 ## titleAll (text: string)
 
-Title case for all the words.
-It would be nice if this was called just "title", but
-there is an HTML tag called "title" already.
+Title case for all the words. It would be nice if this was called just "title", but there is an HTML
+tag called "title" already.
 
 ---
 
@@ -254,16 +253,15 @@ Draw a long line, of specified length.
 
 ## sortLines (text: string, { caseSensitive = false } = {})
 
-Sort lines of text alphabetically.
-By default, the sorting is case insensitive.
+Sort lines of text alphabetically. By default, the sorting is case insensitive.
 
 ---
 
 ## asciiTable (text: string, args: Record<string, string> = {})
 
-Beautifies an ASCII table string into a Markdown formatted table string.
-It aligns columns based on the widest content in each column and adds
-the Markdown separator line. It's robust against extra spaces and pipes.
+Beautifies an ASCII table string into a Markdown formatted table string. It aligns columns based on
+the widest content in each column and adds the Markdown separator line. It's robust against extra
+spaces and pipes.
 
 ---
 
@@ -285,8 +283,10 @@ A: The capital of France is Paris.
 A tag used for DEV, that returns the text as is,
 only variable interpolation is done.
 If this wraps some tags, they will be flattened/ destroyed.
-Example: Helo {{name}}! will be returned as "Helo John!",
-if you <set name="John"/> beforehand.
+Example:
+<set name="John"/>
+<text>Hello {{name}}!</text>
+will become "Hello John!".
 
 ---
 
@@ -301,8 +301,8 @@ Example: <log level="info" name="John" age="30"/>
 
 ## increment (s: string, { plus = 1 } = {}, _m: any)
 
-Very silly DEV tag, increment the input with a number.
-The increment can be any integer, or float, positive or negative.
+Very silly DEV tag, increment the input with a number. The increment can be any integer, or float,
+positive or negative.
 
 ---
 
@@ -310,6 +310,9 @@ The increment can be any integer, or float, positive or negative.
 
 Experimental: Tick tick tick!
 It will count down from N down to 0, and then stop.
+Example:
+<countDown n=5></countDown>
+It will count down from 5 to 0, and then stop.
 
 ---
 
@@ -331,8 +334,8 @@ from the LLM/AI tag.
 
 ## jsDocs (_: string, args: any)
 
-Scan a file or directory for TypeScript function declarations.
-It is used to generate documentation for the TwoFold functions.
+Scan a file or directory for TypeScript function declarations. It is used to generate documentation
+for the TwoFold functions.
 
 ---
 
@@ -340,6 +343,9 @@ It is used to generate documentation for the TwoFold functions.
 
 When it's a double tag, all tags inside it are frozen.
 This is identical to the freeze=true prop.
+Example:
+<freeze> <randomInt></randomInt> </freeze>
+will not evaluate the randomInt tag.
 
 ---
 
@@ -484,11 +490,13 @@ Make an HTTP request.
 
 ---
 
-## globe (_: string, args: any, meta: any)
+## globe (_s: string, args: any, meta: any)
 
 Draws an ASCII globe, frame by frame.
 Demonstrates how to create a tag with animations,
 and how to use the meta object to modify the tree.
+Example:
+<globe n=99></globe>
 
 ---
 
@@ -496,19 +504,23 @@ and how to use the meta object to modify the tree.
 
 Read a file with limit. Similar to the "cat" command from Linux.
 Specify start=-1 and limit=-1 to read the whole file.
-Example: <cat 'file.txt' start=0 limit=100 />
+Example: <cat 'file.txt' start=0 limit=100></cat>
 
 ---
 
 ## head (txtFile: string, { f = null, lines = 10 } = {}, meta = {})
 
-Read a number of lines from file. Similar to "head" commant from Linux.
+Read a number of lines from file. Similar to "head" command from Linux.
+Specify lines=-1 to read the whole file.
+Example: <head 'file.txt' lines=10 />
 
 ---
 
 ## tail (txtFile: string, { f = null, lines = 10 } = {}, meta = {})
 
-Read a number of lines from the end of file. Similar to "tail" commant from Linux.
+Read a number of lines from the end of file. Similar to "tail" command from Linux.
+Specify lines=-1 to read the whole file.
+Example: <tail 'file.txt' lines=10 />
 
 ---
 
@@ -553,39 +565,41 @@ The version of ZSH : `<zsh args="--version" />`
 
 ---
 
-## skeleton (_: string, args: any, meta: any)
+## skeleton (_s: string, args: any, meta: any)
 
 Draws a cute skeleton, frame by frame.
 Demonstrates how to create a tag with animations,
 and how to use the meta object to modify the tree.
+Example:
+<skeleton n=99></skeleton>
 
 ---
 
 ## fmtYapf (pyTxt: string, { based_on_style = 'pep8', column_limit = 120 }, meta = {})
 
-Format Python code with YAPF. Of course, YAPF needs to be installed.
-YAPF is called within a Shell to allow it to read local config files, ENV options, etc.
+Format Python code with YAPF. Of course, YAPF needs to be installed. YAPF is called within a Shell
+to allow it to read local config files, ENV options, etc.
 
 ---
 
 ## fmtBlack (pyTxt: string, args: any, meta = {})
 
-Format Python code with Black. Of course, Black needs to be installed.
-Black is called within a Shell to allow it to read local config files, ENV options, etc.
+Format Python code with Black. Of course, Black needs to be installed. Black is called within a
+Shell to allow it to read local config files, ENV options, etc.
 
 ---
 
 ## fmtBlue (pyTxt: string, args: any, meta = {})
 
-Format Python code with Blue. Of course, Blue needs to be installed.
-Blue is called within a Shell to allow it to read local config files, ENV options, etc.
+Format Python code with Blue. Of course, Blue needs to be installed. Blue is called within a Shell
+to allow it to read local config files, ENV options, etc.
 
 ---
 
 ## fmtPrettier (text: string, { print_width = 120 }, meta = {})
 
-Format Javascript code with Prettier. Of course, Prettier needs to be installed.
-Prettier is called within a Shell to allow it to read local config files.
+Format Javascript code with Prettier. Of course, Prettier needs to be installed. Prettier is called
+within a Shell to allow it to read local config files.
 
 ---
 
@@ -598,6 +612,7 @@ inside set double-tags, to maintain a separate inner context.
 
 Example:
 <set name="John" age="30" job="engineer"/>
+<set greet=`My name is ${name} and I am ${age} years old.`/>
 
 ---
 
@@ -662,25 +677,22 @@ To show all variables, use <vars "*"/>
 
 ## debug (_: string, args: any, meta: T.EvalMetaFull)
 
-A tag used for DEV, to echo the parsed tag args and metadata.
-It is similar to the vars tag, but it also shows the raw text
-of the tag, and the arguments.
+A tag used for DEV, to echo the parsed tag args and metadata. It is similar to the vars tag, but it
+also shows the raw text of the tag, and the arguments.
 
 ---
 
-## smith (_s: any, _a: any, meta: Record<string, any>)
+## smith (_s: any, _a: any, meta: T.EvalMetaFull)
 
-Agent Smith tag, that creates clones if itself.
-Demonstrates how to create a tag with animations,
+Agent Smith tag, that creates clones if itself. Demonstrates how to create a tag with animations,
 and how to use the meta object to modify the tree.
 
 ---
 
-## neo (_s: any, _a: any, meta: Record<string, any>)
+## neo (_s: any, _a: any, meta: T.EvalMetaFull)
 
-Matrix Neo tag, that destroys Smith agents inside it.
-Demonstrates how to create a tag with animations,
-and how to use the meta object to modify the tree.
+Matrix Neo tag, that destroys Smith agents inside it. Demonstrates how to create a tag with
+animations, and how to use the meta object to modify the tree.
 
 ---
 
@@ -688,6 +700,7 @@ and how to use the meta object to modify the tree.
 
 Returns the current date and time as a string.
 The format is YYYY-MM-DD HH:MM:SS ;
+Example: <now>2019-10-23 12:34:56</now> ;
 
 ---
 
@@ -695,6 +708,7 @@ The format is YYYY-MM-DD HH:MM:SS ;
 
 Returns the current date as a string.
 The format is YYYY-MM-DD ;
+Example: <date>2019-10-23</date> ;
 
 ---
 
@@ -708,6 +722,7 @@ Returns the text: day or night.
 
 Returns an emoji representing day or night.
 Day=☀️ ; Night=🌙 ;
+Example: <emojiSunMoon>☀️/emojiSunMoon> ;
 
 ---
 
@@ -715,18 +730,22 @@ Day=☀️ ; Night=🌙 ;
 
 Returns an emoji representing day or night.
 Day=🏙 ; Night=🌃 ;
+Example: <emojiDayNight>🏙/emojiDayNight> ;
 
 ---
 
 ## emojiClock (txtDate: string, { date = null, showHalf = true } = {})
 
 Returns the current time as emoji clock.
+Example: <emojiClock>🕦</emojiClock> ;
 
 ---
 
 ## zodiacSign (txtDate: string, { date = null, emoji = true } = {})
 
 Returns a zodiac sign as emoji, or text.
+Example: <zodiacSign>♒</zodiacSign> ;
+Example: <zodiacSign emoji="false">Aquarius</zodiacSign> ;
 
 ---
 

@@ -1,5 +1,6 @@
 import * as T from './types.ts';
 import * as hooks from './addons/hooks.ts';
+import * as A from './addons/types.ts';
 import { log } from './logger.ts';
 import { defaultCfg } from './config.ts';
 import { deepClone, isFunction } from './util.ts';
@@ -237,36 +238,44 @@ export default async function evaluateTag(
   }
 
   // Deep evaluate all children, including invalid TwoFold tags
+  let evalChildren = true;
   if (tag.children) {
     // Hook interrupt callback
     for (const h of hooks.HOOKS3) {
       try {
         await h(tag, localCtx, globalContext, meta);
       } catch (err: any) {
-        log.warn(`Hook preChild raised for tag "${tag.name}"!`, err.message);
-        return;
+        if (err instanceof A.IgnoreNext) {
+          log.warn(`Hook preChild ignore for tag "${tag.name}"!`, err.message);
+          evalChildren = false;
+        } else {
+          log.warn(`Hook preChild raised for tag "${tag.name}"!`, err.message);
+          return;
+        }
       }
     }
     // Make a deep copy of the local context, to create
     // a separate variable scope for the children
     // At this point, the parent props are interpolated
-    const childrenMeta: T.EvalMeta = {
-      root: meta.root,
-      fname: meta.fname,
-      ctx: deepClone(globalContext),
-      config: cfg,
-    };
-    for (const c of tag.children) {
-      if (c.name && (c.single || c.double)) {
-        c.parent = { name: tag.name, index: tag.index, params: tag.params };
-        if (tag.single) c.parent.single = true;
-        else if (tag.double) c.parent.double = true;
-        c.parent.params = { ...tag.params };
-        if (tag.rawParams) c.parent.rawParams = tag.rawParams;
-        // Inject the parsed tag into the child meta
-        childrenMeta.node = c;
+    if (evalChildren) {
+      const childrenMeta: T.EvalMeta = {
+        root: meta.root,
+        fname: meta.fname,
+        ctx: deepClone(globalContext),
+        config: cfg,
+      };
+      for (const c of tag.children) {
+        if (c.name && (c.single || c.double)) {
+          c.parent = { name: tag.name, index: tag.index, params: tag.params };
+          if (tag.single) c.parent.single = true;
+          else if (tag.double) c.parent.double = true;
+          c.parent.params = { ...tag.params };
+          if (tag.rawParams) c.parent.rawParams = tag.rawParams;
+          // Inject the parsed tag into the child meta
+          childrenMeta.node = c;
+        }
+        await evaluateTag(c, childrenMeta.ctx!, allFunctions, cfg, childrenMeta);
       }
-      await evaluateTag(c, childrenMeta.ctx!, allFunctions, cfg, childrenMeta);
     }
   }
 

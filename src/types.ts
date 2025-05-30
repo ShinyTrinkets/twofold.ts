@@ -115,10 +115,3 @@ export interface TwoFoldWrap {
   evalOrder?: number;
   description?: string;
 }
-
-export interface TwoFoldAddon {
-  name: string;
-  preEval?: Function;
-  postEval?: Function;
-  preChildren?: Function;
-}

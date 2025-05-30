@@ -1,3 +1,4 @@
+import * as Z from './types.ts';
 import * as T from '../types.ts';
 import { consumeTag, getText } from '../tags.ts';
 
@@ -8,7 +9,7 @@ import { consumeTag, getText } from '../tags.ts';
  * effectively removing the tag from the output.
  * If the tag is single, it will be removed entirely.
  */
-const addon: T.TwoFoldAddon = {
+const addon: Z.TwoFoldAddon = {
   name: 'Consume',
 
   // preEval: ( NOT USED
