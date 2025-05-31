@@ -1,13 +1,17 @@
 # TwoFold (2✂︎f) changelog
 
-## v0.11 WIP
+## v0.12 WIP
+
+-
+
+## v0.11
 
 - upgrading set, del, json, toml and import logic from evaluate, to regular
   tags. This will allow people to implement their own versions of these tags and
   other similar data languages (eg: JSON5, YAML, AML, ENO, REN, etc)
 - addons! The ignore functionality moved in the ignore addon, and the consume
   functionality moved in the consume addon. Many other types of addons are now
-  possible.
+  possible, caching is work in progress.
 - BREAKING change: the "ignore" tag is now called "freeze" to maintain a
   consistent name as the freeze=true option. It's also shorter. We also have a
   "protect" tag which makes sure the tag will never be consumed by its parent.

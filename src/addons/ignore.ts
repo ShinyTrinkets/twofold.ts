@@ -54,6 +54,10 @@ const addon: Z.TwoFoldAddon = {
         }
       }
     }
+    //
+    // Here comes a custom evaluation logic.
+    // TODO: keep this in sync with the main eval function!
+    //
     if (hasProtected) {
       if (!tag.params) tag.params = {};
       // Protect tag, to maintain structure for parent eval
