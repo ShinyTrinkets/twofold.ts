@@ -7,11 +7,11 @@ It's very important to understand that the "builtin" tags are not special, they 
 some functionality that you cannot use. The "builtin" tags are "builtin" only because they are baked
 inside the `tfold` executable.<br/> What I'm trying to say is that you can copy any of the builtin
 tags, hack around and import your code and use that as an alternative, if you want custom logic, or
-the builtin tags are missing something.
+the builtin tags are missing something important to you.
 
 ## Example
 
-The simple core tag called `increment` looks like this:
+The simple builtin tag called `increment` looks like this:
 
 ```ts
 import { parseNumber } from "./common.ts";
@@ -96,7 +96,7 @@ export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: Ev
 }
 ```
 
-You can find more examples of tags in the `/src/functions/` folder. The core tags should be well
+You can find more examples of tags in the `/src/functions/` folder. The builtin tags should be well
 documented; feel free to raise an issue in you think something is not clear.
 
 ## Errors

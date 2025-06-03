@@ -7,11 +7,14 @@ TwoFold (2✂︎f) tags are just regular TypeScript/ JavaScript functions.
 They receive as input: the text inside the tags (in case of double tags), extra tag props and user
 settings (in case they are defined) and meta about the file and tag node.
 
+To understand how tags work, look at the **"dev-dags.md" document**.
+
 For example, the `increment()` function looks like this:
 
 ```js
 // src/functions/tfold.ts file
 function increment(text: string, { plus = 1 } = {}): number {
+    // Very silly example tag, increment the input with a number
     return parseNumber(text) + parseNumber(plus);
 }
 ```
@@ -24,7 +27,7 @@ as: text="6" and plus="4".
 All tags can be called in camelCase (eg: `<emojiClock />`), or separated by underline (eg:
 `<emoji_clock />`).
 
-The built-in tags are located in `/src/functions/` and are available automatically. To create extra
+The builtin tags are located in `/src/functions/` and are available automatically. To create extra
 tags, make a folder eg: "mkdir myFuncs" and create your TypeScript/ JavaScript files and expose the
 functions that you want.<br/> Then run `tfold --funcs myFuncs ...` to point it to your folder. All
 JavaScript files will be scanned and all exposed functions will be available as tags.<br/> You can
@@ -184,18 +187,21 @@ This option works with **single tags** and **double tags**.
 
 Example: `<randomCard freeze=true></randomCard>`
 
-"Freeze" is a built-in prop that tells TwoFold to ignore/ lock the tag. As long as the tag has this
-option, the tag and all its children will never be executed.
+"Freeze" is an addon prop that tells TwoFold to not execute the tag and its children. As long as the
+tag has this option, it won't be executed.
 
-To make TwoFold render the tag again, you just need to delete the `freeze=true` prop inside the tag.
+To make TwoFold render the tag again, you just need to delete the `freeze=true` prop.
 
-You can also wrap tags in `<freeze>...</freeze>`, to ignore/ lock everything inside.
+You can also wrap bigger sections of text in `<freeze>...</freeze>`, to freeze all the tags inside.
+
+"Protect" is a stricter version of "Freeze" that tells TwoFold to protect the tag and all its
+children. They won't be executed, but also they won't be consumed by outer tags.
 
 This is useful in case you want to keep the previous text and make sure that TwoFold won't
 accidentally replace it.
 
-You can also invalidate tags in many ways, eg: by adding a double // in the closing tag, or making
-the tag name Upper-case.
+You can also **invalidate/ disable tags** in many ways, eg: by adding a double // in the closing
+tag, or making the tag name Upper-case.
 
 Invalid tag examples:
 
@@ -217,15 +223,13 @@ here
 </sortLines>
 ```
 
-"Cut" is a built-in option that tells TwoFold to consume a double tag after it's rendered, basically
-to convert it into a single tag.
+"Cut" is an addon prop that tells TwoFold to consume a double tag after it's rendered, basically to
+convert it into a single tag.
 
 The value of cut can be "true", or "1", eg: `cut=1` is shorter to write.
 
 It is useful to wrap a big chunk of text within a double tag, and consume the tag after processing,
 eg in case of jsEval, cmd, or llm.
-
-This option works only with **double tags**.
 
 </freeze>
 
@@ -233,7 +237,7 @@ This option works only with **double tags**.
 
 You can also see this list by running `tfold --tags`.
 
-This list is generated with the `jsDocs` built-in tag.
+This list is generated with the `jsDocs` builtin tag.
 
 ```md
 <jsDocs "src/functions" freezeChildren=1>
@@ -752,7 +756,7 @@ Example: <zodiacSign emoji="false">Aquarius</zodiacSign> ;
 </jsDocs>
 ```
 
-**Note**: The built-in tags are simple and ZERO ext dependencies, just enough to have some tags
+**Note**: The builtin tags are simple and ZERO ext dependencies, just enough to have some tags
 available to start with. There are extra tags available in the
 [twofold-extras](https://github.com/ShinyTrinkets/twofold-extras) repository. You can of course,
 write your own tags, and load them with the `--funcs` cmd line switch.
