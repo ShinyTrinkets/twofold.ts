@@ -6,6 +6,8 @@ import { unTildify } from '../util.ts';
 
 export const CACHE_DIR = unTildify('~/.cache/twofold');
 
+const DEFAULT_TTL = 1000 * 60 * 60 * 24; // 24 hours
+
 if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
@@ -121,8 +123,23 @@ const addon: Z.TwoFoldAddon = {
   ): Promise<void> => {
     // This is a pre-evaluation hook,
     // called before evaluating the tag itself.
-    // ---
-    // Check if the tag has a cache key and a TTL
+
+    // Make sure that the user REALLY wants to use the cache
+    if (!tag.params?.cache && !localCtx.cacheKey) {
+      return;
+    }
+
+    // Check if the local context has defined cacheName and cacheKey
+    const cacheName = localCtx.cacheName || meta.fname || 'default';
+    const cacheKey = localCtx.cacheKey || tag.name;
+    // The cacheTTL is the only optional parameter
+    const cache = getCache(cacheName, localCtx.cacheTTL || DEFAULT_TTL) || {};
+    if (cache[cacheKey]) {
+      console.debug(`Cache hit for ${cacheName}::${cacheKey}::`, cache[cacheKey]);
+      // If the cache entry exists, set the result to the cached value
+      // localCtx.result = cache[cacheKey];
+      // Optionally, you can skip further evaluation by returning early
+    }
   },
 
   postEval: (
@@ -133,8 +150,20 @@ const addon: Z.TwoFoldAddon = {
     meta: T.EvalMetaFull
   ): void => {
     // Called after evaluating the tag.
-    // ---
-    // Save the result to cache if a key is provided
+
+    // Make sure that the user REALLY wants to use the cache
+    if (!tag.params?.cache && !localCtx.cacheKey) {
+      return;
+    }
+
+    // Save the result to cache?
+    const cacheName = localCtx.cacheName || meta.fname || 'default';
+    const cacheKey = localCtx.cacheKey || tag.name;
+    // The cacheTTL is the only optional parameter
+    const cacheTTL = localCtx.cacheTTL || DEFAULT_TTL;
+    const cache = getCache(cacheName, cacheTTL) || {};
+    cache[cacheKey] = result;
+    setCache(cacheName, cache, cacheTTL);
   },
 };
 
