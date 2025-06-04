@@ -1,24 +1,11 @@
 import fs from 'node:fs';
 import { testing } from './wrap.ts';
-const { test, expect } = await testing;
+const { test, expect, describe, afterAll } = await testing;
 import { ConfigError, userCfg, validateCfg } from '../src/config.ts';
-
-const DIR = import.meta.dirname;
-const CONFIG = `${DIR}/fixtures/config`;
 
 //
 // Testing the config loading and validation.
 //
-
-beforeAll(() => {
-  if (!fs.existsSync(CONFIG)) {
-    fs.mkdirSync(CONFIG);
-  }
-});
-
-afterAll(() => {
-  fs.rmdirSync(CONFIG, { recursive: true });
-});
 
 test('config validation', async () => {
   expect(validateCfg({})).toBeUndefined();
@@ -64,7 +51,14 @@ test('config errors', async () => {
   }
 });
 
-describe('cfg loading', async () => {
+describe('cfg loading', () => {
+  const DIR = import.meta.dirname;
+  const CONFIG = `${DIR}/fixtures/config`;
+
+  if (!fs.existsSync(CONFIG)) {
+    fs.mkdirSync(CONFIG);
+  }
+
   test('JSON config', async () => {
     fs.writeFileSync(
       `${CONFIG}/twofold.config.json`,
@@ -130,5 +124,9 @@ lastStopper = "."
     });
 
     fs.rmSync(`${CONFIG}/twofold.config.toml`);
+  });
+
+  afterAll(() => {
+    fs.rmdirSync(CONFIG, { recursive: true });
   });
 });

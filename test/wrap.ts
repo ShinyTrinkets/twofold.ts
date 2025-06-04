@@ -2,30 +2,36 @@
 // Usage: import { testing } from './wrap.ts';
 // const { test, expect } = await testing;
 //
-type TestFn = () => void | Promise<void>;
-type ExpectFn = (actual: any) => { toBe: (expected: any) => void };
 
 const isBun = typeof Bun !== 'undefined';
 const isDeno = typeof Deno !== 'undefined';
 
-// Promise to resolve test and expect functions
-let testFn: (name: string, fn: TestFn) => void = () => {};
-let expectFn: ExpectFn;
-
 // Initialize the wrapper asynchronously
-const init = async (): Promise<{ test: typeof testFn; expect: typeof expectFn }> => {
+const init = async (): Promise<any> => {
   if (isBun) {
-    const { test: bunTest, expect: bunExpect } = await import('bun:test');
-    testFn = bunTest;
-    expectFn = bunExpect;
+    const BunTest = await import('bun:test');
+    const test = BunTest.test;
+    const expect = BunTest.expect;
+    const describe = BunTest.describe;
+    const beforeAll = BunTest.beforeAll;
+    const afterAll = BunTest.afterAll;
+    // const beforeEach = BunTest.beforeEach;
+    // const afterEach = BunTest.afterEach;
+    return { test, expect, describe, beforeAll, afterAll };
   } else if (isDeno) {
-      const { expect: denoExpect } = await import('jsr:@std/expect');
-      expectFn = denoExpect;
-      testFn = Deno.test;
+    const test = Deno.test;
+    const bdd = await import('jsr:@std/testing/bdd');
+    const DenoTest = await import('jsr:@std/expect');
+    const expect = DenoTest.expect;
+    const describe = bdd.describe;
+    const beforeAll = bdd.beforeAll;
+    const afterAll = bdd.afterAll;
+    // const beforeEach = bdd.beforeEach;
+    // const afterEach = bdd.afterEach;
+    return { test, expect, describe, beforeAll, afterAll };
   } else {
     throw new Error('Unsupported runtime: Neither Bun nor Deno detected.');
   }
-  return { test: testFn, expect: expectFn };
 };
 
 // Export a promise that resolves to the test and expect functions
