@@ -7,6 +7,7 @@ import * as time from './time.ts';
 import * as os from './os.ts';
 import * as shell from './shell.ts';
 import * as request from './request.ts';
+import * as weather from './weather.ts';
 
 import * as fmt from './fmt.ts';
 import * as table from './table.ts';
@@ -43,6 +44,7 @@ export default {
   ...filterPublicExports(shell),
   ...filterPublicExports(table),
   ...filterPublicExports(request),
+  ...filterPublicExports(weather),
   ...filterPublicExports(xeval),
   ...filterPublicExports(llm),
   ...filterPublicExports(llmEval),
