@@ -78,7 +78,8 @@ export async function _fetchWeatherAPI(
   const url = buildUrl('https://api.weatherapi.com/v1/current.json', {
     key: apiKey,
     q: location,
-    ...params,
+    aqi: 'no',
+    // ...params,
   });
   log.debug(`Weather data from WeatherAPI: ${url}`);
   const data = await fetchWithTimeout(url, timeout);
@@ -109,7 +110,7 @@ export async function _fetchOpenWeatherMap(
     appid: apiKey,
     q: location,
     units: 'metric',
-    ...params,
+    // ...params,
   });
   log.debug(`Weather data from OpenWeatherMap: ${url}`);
   const data = await fetchWithTimeout(url, timeout);
@@ -191,7 +192,7 @@ export async function _fetchOpenMeteo(
     latitude,
     longitude,
     current_weather: 'true',
-    ...params,
+    // ...params,
   });
   log.debug(`Weather data from Open-Meteo: ${url}`);
   const data = await fetchWithTimeout(`${url}`, timeout);
