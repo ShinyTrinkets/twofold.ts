@@ -12,7 +12,7 @@ To understand how tags work, look at the **"dev-dags.md" document**.
 For example, the `increment()` function looks like this:
 
 ```js
-// src/functions/tfold.ts file
+// src/builtin/tfold.ts file
 function increment(text: string, { plus = 1 } = {}): number {
     // Very silly example tag, increment the input with a number
     return parseNumber(text) + parseNumber(plus);
@@ -27,11 +27,11 @@ as: text="6" and plus="4".
 All tags can be called in camelCase (eg: `<emojiClock />`), or separated by underline (eg:
 `<emoji_clock />`).
 
-The builtin tags are located in `/src/functions/` and are available automatically. To create extra
+The builtin tags are located in `/src/builtin/` and are available automatically. To create extra
 tags, make a folder eg: "mkdir myFuncs" and create your TypeScript/ JavaScript files and expose the
 functions that you want.<br/> Then run `tfold --funcs myFuncs ...` to point it to your folder. All
 JavaScript files will be scanned and all exposed functions will be available as tags.<br/> You can
-check the `/src/functions/` for examples to get you started.
+check the `/src/builtin/` for examples to get you started.
 
 You can **customize the tag markers**, so you can make them look like jinja2, nunjucks (eg:
 `{emojiClock %}`), or like LISP (eg: `(emojiClock .)`), or with square brackets (eg:
@@ -240,7 +240,7 @@ You can also see this list by running `tfold --tags`.
 This list is generated with the `jsDocs` builtin tag.
 
 ```md
-<jsDocs "src/functions" freezeChildren=1>
+<jsDocs "src/builtin" freezeChildren=1>
 
 ## titleAll (text: string)
 

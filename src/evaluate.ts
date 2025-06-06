@@ -204,21 +204,33 @@ export default async function evaluateTag(
     }
   }
 
+  // BFS evaluation order
   if (evalOrder === 0 && isFunction(func)) {
     _prepareMeta(meta, tag, cfg, globalContext);
+    let result: any = undefined;
     // Hook interrupt callback
     for (const h of hooks.HOOKS1) {
       try {
-        await h(func, tag, localCtx, globalContext, meta);
+        result = await h(func, tag, localCtx, globalContext, meta);
       } catch (err: any) {
         log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
         return;
       }
+      if (result !== undefined && result !== null) {
+        // If the hook returned a value, it is used as a result
+        // and the tag is not evaluated
+        log.info(`Hook preEval returned value for tag "${tag.name}".`);
+        if (isDoubleTag(tag)) {
+          tag.children = [{ index: -1, rawText: result.toString() }];
+        } else if (isSingleTag(tag)) {
+          tag.rawText = result.toString();
+        }
+        return;
+      }
     }
+
     // Prevent new properties from being added to Meta
     meta = Object.seal(meta);
-
-    let result: any;
     // Call the specialized evaluate function, in order (BFS)
     if (isDoubleTag(tag)) {
       result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, meta);
@@ -279,21 +291,33 @@ export default async function evaluateTag(
     }
   }
 
+  // DFS evaluation order
   if (evalOrder !== 0 && isFunction(func)) {
     _prepareMeta(meta, tag, cfg, globalContext);
+    let result: any = undefined;
     // Hook interrupt callback
     for (const h of hooks.HOOKS1) {
       try {
-        await h(func, tag, localCtx, globalContext, meta);
+        result = await h(func, tag, localCtx, globalContext, meta);
       } catch (err: any) {
         log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
+        return;
+      }
+      if (result !== undefined && result !== null) {
+        // If the hook returned a value, it is used as a result
+        // and the tag is not evaluated
+        log.info(`Hook preEval returned value for tag "${tag.name}".`);
+        if (isDoubleTag(tag)) {
+          tag.children = [{ index: -1, rawText: result.toString() }];
+        } else if (isSingleTag(tag)) {
+          tag.rawText = result.toString();
+        }
         return;
       }
     }
 
     // Prevent new properties from being added to Meta
     meta = Object.seal(meta);
-    let result: any;
     // Call the specialized evaluate function, depth-first order
     if (isDoubleTag(tag)) {
       result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, meta);

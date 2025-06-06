@@ -5,6 +5,8 @@ import { homedir } from 'node:os';
 import { types } from 'node:util';
 import { log } from './logger.ts';
 
+const HOME_DIR = homedir();
+
 // lower latin + greek alphabet letters
 export const LOWER_LETTERS = /^[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]/;
 // arabic numbers, all latin + greek alphabet
@@ -115,8 +117,14 @@ export function listTree(dir: string, depth = Infinity): string[] {
 
 export function unTildify(pth: string) {
   if (pth[0] === '~') {
-    const homeDir = homedir();
-    return pth.replace(/^~(?=$|\/|\\)/, homeDir);
+    return pth.replace(/^~(?=$|\/|\\)/, HOME_DIR);
+  }
+  return pth;
+}
+
+export function doTildify(pth: string) {
+  if (pth.startsWith(HOME_DIR)) {
+    return '~/' + pth.slice(HOME_DIR.length).replace(/^[\/\\]+/, '');
   }
   return pth;
 }

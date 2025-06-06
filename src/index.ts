@@ -7,7 +7,7 @@ import * as T from './types.ts';
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import evaluate from './evaluate.ts';
-import functions from './functions/index.ts';
+import functions from './builtin/index.ts';
 import { syncTag, unParse } from './tags.ts';
 import { deepGet, deepSet, listTree } from './util.ts';
 

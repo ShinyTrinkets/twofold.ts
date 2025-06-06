@@ -1,6 +1,6 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import func from '../src/functions/index.ts';
+import func from '../src/builtin/index.ts';
 
 test('day or night time', () => {
   let d: any;

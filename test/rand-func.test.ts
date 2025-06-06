@@ -1,6 +1,6 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import func from '../src/functions/index.ts';
+import func from '../src/builtin/index.ts';
 
 test('random int function', () => {
   for (let i = 0; i < 10; i++) {

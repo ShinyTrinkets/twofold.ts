@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 
 import twofold from './index.ts';
-import tags from './functions/index.ts';
+import tags from './builtin/index.ts';
 
 import { userCfg } from './config.ts';
 import * as scan from './scan.ts';

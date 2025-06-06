@@ -1,6 +1,6 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import { cat } from '../src/functions/os.ts';
+import { cat } from '../src/builtin/os.ts';
 
 test('cat command', async () => {
   let text = await cat('test/fixtures/blns.txt', { limit: 66 }, { node: {} });

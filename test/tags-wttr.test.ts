@@ -1,5 +1,5 @@
 import { afterEach, expect, mock, test } from 'bun:test';
-import * as w from '../src/functions/weather.ts';
+import * as w from '../src/builtin/weather.ts';
 
 const mockFetch = mock();
 global.fetch = mockFetch as any;

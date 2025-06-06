@@ -1,6 +1,6 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import { sortLines } from '../src/functions/string.ts';
+import { sortLines } from '../src/builtin/string.ts';
 
 test('sort lines', () => {
   let txt;

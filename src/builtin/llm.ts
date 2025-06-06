@@ -60,12 +60,6 @@ export async function ai(
   const linesBefore = '\n'.repeat(histAndLines.lines.before > 0 ? histAndLines.lines.before + 1 : 1);
   const linesAfter = '\n'.repeat(histAndLines.lines.after > 0 ? histAndLines.lines.after : 1);
 
-  // Feedback to the user, ASAP
-  setTimeout(async () => {
-    meta.node.children[0].rawText = `\n${text}Assistant: ...${linesBefore}User:${linesAfter}`;
-    await editSave(meta);
-  }, 1);
-
   const body: Record<string, any> = {
     messages: histAndLines.history,
     stream: !!args.stream || args.stream === undefined,
@@ -78,10 +72,16 @@ export async function ai(
 
   const content = await _makeRequest(apiUrl, body, args, onSave);
   if (!content) {
-    meta.node.children[0].rawText = `\n${text}`;
-    await editSave(meta);
+  //   meta.node.children[0].rawText = `\n${text}`;
+  //   await editSave(meta);
     return;
   }
+
+  // Feedback to the user
+  setTimeout(async () => {
+    meta.node.children[0].rawText = `\n${text}Assistant: ...${linesBefore}User:${linesAfter}`;
+    await editSave(meta);
+  }, 1);
 
   return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
 }

@@ -96,7 +96,7 @@ export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: Ev
 }
 ```
 
-You can find more examples of tags in the `/src/functions/` folder. The builtin tags should be well
+You can find more examples of tags in the `/src/builtin/` folder. The builtin tags should be well
 documented; feel free to raise an issue in you think something is not clear.
 
 ## Errors

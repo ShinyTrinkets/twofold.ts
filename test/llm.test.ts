@@ -1,7 +1,7 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import * as llm from '../src/functions/llm.ts';
-import * as llmEval from '../src/functions/llmEval.ts';
+import * as llm from '../src/builtin/llm.ts';
+import * as llmEval from '../src/builtin/llmEval.ts';
 
 test('parse conversation', () => {
   let body = llm._parseConversation(`

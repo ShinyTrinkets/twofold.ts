@@ -4,8 +4,7 @@ const { test, expect } = await testing;
 import twofold from '../src/index.ts';
 import parse from '../src/parser.ts';
 import Lexer from '../src/lexer.ts';
-import helpers from '../src/functions/index.ts';
-import functions from '../src/functions/index.ts';
+import builtin from '../src/builtin/index.ts';
 import evaluate from '../src/evaluate.ts';
 import { unParse } from '../src/tags.ts';
 
@@ -13,11 +12,11 @@ test('simple evaluate', async () => {
   const txt = ' <main><increment "8" /></main>';
   const ast = parse(new Lexer().lex(txt));
 
-  await evaluate(ast[0], {}, functions);
+  await evaluate(ast[0], {}, builtin);
   expect(ast.length).toBe(2);
   expect(ast[0]).toEqual({ index: 0, rawText: ' ' });
 
-  await evaluate(ast[1], {}, functions);
+  await evaluate(ast[1], {}, builtin);
   expect(ast[1]).toEqual({
     index: 1,
     double: true,
@@ -36,12 +35,12 @@ test('simple evaluate', async () => {
 test('evaluate countDown tag', async () => {
   let txt = '<main><countDown "9" /></main>';
   let ast = parse(new Lexer().lex(txt));
-  await evaluate(ast[0], {}, functions, {});
+  await evaluate(ast[0], {}, builtin, {});
   expect(ast[0].children[0].rawText).toBe('<countDown "8" />');
 
   txt = '<main><countDown "9">.</countDown></main>';
   ast = parse(new Lexer().lex(txt));
-  await evaluate(ast[0], {}, functions, {});
+  await evaluate(ast[0], {}, builtin, {});
   expect(ast[0].children[0].firstTagText).toBe('<countDown "8">');
   expect(ast[0].children[0].secondTagText).toBe('</countDown>');
 });
@@ -276,21 +275,21 @@ test('separated sort render', async () => {
   const li3 = ['x2', 'x1'];
   let blob = li1.join('\n') + '\n\n' + li2.join('\n') + '\n\n' + li3.join('\n');
   let txt = `... <sort>\n${blob}\n</sort> ...`;
-  let tmp = await twofold.renderText(txt, {}, { sort: helpers.sortLines });
+  let tmp = await twofold.renderText(txt, {}, { sort: builtin.sortLines });
   expect(tmp).not.toBe(txt);
   expect(tmp).toHaveLength(txt.length);
   expect(tmp.indexOf('...')).toBe(0);
 
   blob += '\n\n';
   txt = `??? <sort>\n${blob}</sort> ???`;
-  tmp = await twofold.renderText(txt, {}, { sort: helpers.sortLines });
+  tmp = await twofold.renderText(txt, {}, { sort: builtin.sortLines });
   expect(tmp).not.toBe(txt);
   expect(tmp).toHaveLength(txt.length);
   expect(tmp.indexOf('???')).toBe(0);
 
   blob = '\r\n' + blob;
   txt = `!!! <sort>\n${blob}</sort> !!!`;
-  tmp = await twofold.renderText(txt, {}, { sort: helpers.sortLines });
+  tmp = await twofold.renderText(txt, {}, { sort: builtin.sortLines });
   expect(tmp).not.toBe(txt);
   expect(tmp).toHaveLength(txt.length);
   expect(tmp.indexOf('!!!')).toBe(0);

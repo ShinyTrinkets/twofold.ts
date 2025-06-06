@@ -1,6 +1,6 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import { asciiTable, _parseRow } from '../src/functions/table.ts';
+import { asciiTable, _parseRow } from '../src/builtin/table.ts';
 
 test('parse row', () => {
   expect(_parseRow('A | B | C')).toEqual(['A', 'B', 'C']);

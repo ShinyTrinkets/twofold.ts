@@ -1,6 +1,6 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import { cmd } from '../src/functions/shell.ts';
+import { cmd } from '../src/builtin/shell.ts';
 
 test('shell cmd', async () => {
   // Doesn't work with Deno right now
