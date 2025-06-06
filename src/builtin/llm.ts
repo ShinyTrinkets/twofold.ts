@@ -65,25 +65,25 @@ export async function ai(
     stream: !!args.stream || args.stream === undefined,
   };
 
-  const onSave = async (response: string) => {
+  // Feedback to the user
+  const feedbackTimer = setTimeout(async () => {
+    meta.node.children[0].rawText = `\n${text}Assistant: ...${linesBefore}`;
+    await editSave(meta);
+  }, 250);
+
+  const content = await _makeRequest(apiUrl, body, args, async (response: string) => {
     meta.node.children[0].rawText = `\n${text}Assistant: ${response}${linesBefore}User:${linesAfter}`;
     await editSave(meta);
-  };
+  });
 
-  const content = await _makeRequest(apiUrl, body, args, onSave);
-  if (!content) {
-  //   meta.node.children[0].rawText = `\n${text}`;
-  //   await editSave(meta);
-    return;
+  // Clear the feedback timer
+  clearTimeout(feedbackTimer);
+
+  if (content) {
+    return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
+  } else {
+    return `\n${text}`;
   }
-
-  // Feedback to the user
-  setTimeout(async () => {
-    meta.node.children[0].rawText = `\n${text}Assistant: ...${linesBefore}User:${linesAfter}`;
-    await editSave(meta);
-  }, 1);
-
-  return `\n${text}Assistant: ${content}${linesBefore}User:${linesAfter}`;
 }
 
 function makeBody(body: Record<string, any>, args: Record<string, any>) {
@@ -358,6 +358,12 @@ export function _prepareConversation1(text: string): null | HistoryAndLines {
     const lastMessage = history.at(-1);
     // The last User message is empty
     if (lastMessage?.role === 'user' && lastMessage.content.trim() === '') {
+      // console.warn('Last User message is empty, ignoring it.');
+      return null;
+    }
+    // The last Assistant message is empty
+    if (lastMessage?.role === 'assistant' && /^\.+$/.test(lastMessage.content.trim())) {
+      // console.warn('Last Assistant message is just dots, ignoring it.');
       return null;
     }
   }
