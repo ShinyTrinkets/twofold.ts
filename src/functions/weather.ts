@@ -86,7 +86,7 @@ export async function _fetchWeatherAPI(
   return {
     location: data.location.name,
     temperature: data.current.temp_c,
-    condition: data.current.condition.text,
+    condition: data.current.condition.text.toLowerCase(),
     humidity: data.current.humidity,
     windSpeed: data.current.wind_kph,
     time: dateWithTimezone(new Date(data.current.last_updated), data.location.tz_id),

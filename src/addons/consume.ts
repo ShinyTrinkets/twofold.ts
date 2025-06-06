@@ -12,47 +12,26 @@ import { consumeTag, getText } from '../tags.ts';
 const addon: Z.TwoFoldAddon = {
   name: 'Consume',
 
-  // preEval: ( NOT USED
-  //   fn: T.TwoFoldTag,
-  //   tag: T.ParseToken,
-  //   localCtx: Record<string, any>,
-  //   globCtx: Record<string, any>,
-  //   meta: T.EvalMetaFull
-  // ): void => {
-  //   // This is a pre-evaluation hook,
-  //   // called before evaluating the tag itself.
-  // },
-  //
   postEval: (
     result: any,
-    tag: T.SingleTag | T.DoubleTag,
-    localCtx: Record<string, any>,
-    globalContext: Record<string, any>,
-    meta: T.EvalMetaFull
+    tag: T.SingleTag | T.DoubleTag
+    // localCtx: Record<string, any>,
+    // globalCtx: Record<string, any>,
+    // meta: T.EvalMetaFull
   ): void => {
     // Called after evaluating the tag.
 
-    if (localCtx.cut === 1 || localCtx.cut === true) {
+    if (tag.params && (tag.params.cut === 1 || tag.params.cut === true)) {
       // @ts-ignore It's safe to assume that `tag` is a `T.ParseToken`
       if (tag.double) {
         (tag as T.ParseToken).rawText = (result || getText(tag)).toString();
-      }
-      // @ts-ignore It's safe to assume that `tag` is a `T.ParseToken`
+      } // @ts-ignore It's safe to assume that `tag` is a `T.ParseToken`
       else if (tag.single) {
         (tag as T.ParseToken).rawText = '';
       }
       consumeTag(tag);
     }
   },
-  //
-  // preChildren: ( NOT USED
-  //   tag: T.ParseToken,
-  //   localCtx: Record<string, any>,
-  //   globCtx: Record<string, any>,
-  //   meta: T.EvalMetaFull
-  // ): void => {
-  //   // Called before evaluating children.
-  // },
 };
 
 export default addon;

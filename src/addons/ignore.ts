@@ -1,5 +1,6 @@
 import * as Z from './types.ts';
 import * as T from '../types.ts';
+import { log } from '../logger.ts';
 import { getText } from '../tags.ts';
 
 function isProtected(tag: T.ParseToken): boolean {
@@ -28,7 +29,7 @@ const addon: Z.TwoFoldAddon = {
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
     meta: T.EvalMetaFull
-  ): Promise<void> => {
+  ): Promise<any> => {
     // This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
@@ -89,7 +90,7 @@ const addon: Z.TwoFoldAddon = {
             // @ts-ignore It's OK, we are calling a tag function
             tmp = await fn(firstParam || innerText, { ...localCtx, innerText }, meta);
           } catch (err: any) {
-            console.log(`Cannot evaluate 2x-tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
+            log.warn(`Cannot evaluate 2x-tag "${tag.firstTagText}...${tag.secondTagText}"! ERR: ${err.message}`);
           }
           if (tmp === undefined || tmp === null) tmp = '';
           if (typeof tmp === 'object') {
@@ -109,12 +110,11 @@ const addon: Z.TwoFoldAddon = {
   postEval: (
     result: any,
     tag: T.ParseToken,
-    localCtx: Record<string, any>,
-    globCtx: Record<string, any>,
-    meta: T.EvalMetaFull
+    localCtx: Record<string, any>
+    // globCtx: Record<string, any>,
+    // meta: T.EvalMetaFull
   ): void => {
     // Called after evaluating the tag.
-
     // If the tag function wants to freeze the tag,
     // it can set args.freeze=true.
     if (localCtx.freeze || localCtx.protect) {
@@ -124,9 +124,9 @@ const addon: Z.TwoFoldAddon = {
 
   preChildren: (
     tag: T.ParseToken,
-    localCtx: Record<string, any>,
-    globCtx: Record<string, any>,
-    meta: T.EvalMetaFull
+    localCtx: Record<string, any>
+    // globCtx: Record<string, any>,
+    // meta: T.EvalMetaFull
   ): void => {
     // Called before evaluating children.
     if (localCtx.freeze || localCtx.protect) {
@@ -134,9 +134,9 @@ const addon: Z.TwoFoldAddon = {
     } else if (localCtx.freezeChildren) {
       throw new Z.IgnoreNext('Child nodes will be ignored!');
     } else if (tag.name === 'freeze') {
-      throw new Error("It is frozen and child nodes won't be evaluated!");
+      throw new Error("Frozen! Child nodes won't be evaluated!");
     } else if (tag.name === 'protect') {
-      throw new Error("It is protected and child nodes won't be evaluated!");
+      throw new Error("Protected! Child nodes won't be evaluated!");
     }
   },
 };

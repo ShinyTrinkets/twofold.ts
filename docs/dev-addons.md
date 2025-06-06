@@ -1,5 +1,9 @@
 # TwoFold (2✂︎f) addons
 
+**Note**: Addons are considered experimental for now. This means the hooks are likely to change in
+the next versions of TwoFold. I need more time to understand what's the best way to interrupt the
+execution, return values, what's the minimum number of params needed, etc.
+
 Addons are a new feature in TwoFold v0.11 and they are hooks that get executed at the evaluation of
 the tag function. They allow intercepting the tag node, tag function and the context, or hacking the
 function results, in order to modify the normal behaviour of the tags.

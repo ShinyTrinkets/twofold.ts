@@ -22,7 +22,7 @@ test('WeatherAPI.com should return correct data', async () => {
   expect(data).toEqual({
     location,
     temperature: 10.8,
-    condition: 'Patchy rain nearby',
+    condition: 'patchy rain nearby',
     humidity: 74,
     windSpeed: 24.1,
     time: '06/05/2025, 22:45 GMT+1',
