@@ -4,15 +4,17 @@
   "keywords": [
     "✂",
     "bun",
+    "deno",
     "app",
     "cli",
-    "tags",
+    "text",
     "tool",
     "util",
-    "2fold",
-    "template"
+    "tfold",
+    "template",
+    "productivity"
   ],
-  "version": "0.10.0",
+  "version": "0.11.0",
   "license": "MIT",
   "authors": [
     "Cristi Constantin (https://crlf.link/)"

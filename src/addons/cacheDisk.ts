@@ -187,7 +187,7 @@ const addon: Z.TwoFoldAddon = {
       // TODO :: tag.name is NOT a good cache key, it should be something unique!
       const cacheKey = localCtx.cacheKey || tag.name;
       // The cacheTTL is the least important parameter
-      const cachedValue = getCache(cacheName, cacheKey, localCtx.cacheTTL || DEFAULT_TTL) || {};
+      const cachedValue = getCache(cacheName, cacheKey, localCtx.cacheTTL || DEFAULT_TTL);
       if (cachedValue) {
         log.info(`Cache hit for "${cacheName}::${cacheKey}". Returning cached value.`);
         return cachedValue;
