@@ -186,10 +186,11 @@ Read more in the **[Tags](/docs/readme.md) documentation**.
 
 Also check my blog posts:
 
-- https://crlf.link/log/entries/191016-twofold-v0.2/
-- https://crlf.link/log/entries/191116-twofold-v0.5/
-- https://crlf.link/log/entries/230701-twofold-v0.6/
+- https://crlf.link/log/entries/250531-twofold-v0.11/
 - https://crlf.link/log/entries/250511-twofold-v0.9/
+- https://crlf.link/log/entries/230701-twofold-v0.6/
+- https://crlf.link/log/entries/191116-twofold-v0.5/
+- https://crlf.link/log/entries/191016-twofold-v0.2/
 
 ## Development
 
