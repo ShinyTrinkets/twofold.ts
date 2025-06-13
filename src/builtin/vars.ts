@@ -2,7 +2,9 @@
  * TwoFold vars tags.
  * <freeze> The following text:
  */
+import fs from 'node:fs';
 import path from 'node:path';
+import picomatch from 'picomatch';
 
 import parse from '../parser.ts';
 import Lexer from '../lexer.ts';
@@ -25,7 +27,7 @@ let parseToml: (content: string) => Record<string, any>;
   }
 })();
 
-function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): undefined {
+function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): void {
   /**
    * Set (define) one or more variables, either static,
    * or composed of other transformed variables.
@@ -108,10 +110,11 @@ export const set: T.TwoFoldWrap = {
   description: 'Set (define) one or more variables.',
 };
 
-function __del(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): undefined {
+function __del(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): void {
   /**
    * Del (delete/ remove) one or more variables.
    * You can also Set a variable to undefined, it's almost the same.
+   * It makese sense to be a single tag.
    *
    * Example:
    * <del "name"/>
@@ -152,7 +155,7 @@ export const del: T.TwoFoldWrap = {
   description: 'Del (delete/ remove) one or more variables.',
 };
 
-export function json(text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): undefined {
+export function json(text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): void {
   /**
    * Set (define) variables from a JSON object.
    *
@@ -210,7 +213,7 @@ export function json(text: string, args: Record<string, any> = {}, meta: T.EvalM
   }
 }
 
-export function toml(text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): undefined {
+export function toml(text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): void {
   /**
    * Set (define) variables from a TOML object.
    *
@@ -253,6 +256,69 @@ export function toml(text: string, args: Record<string, any> = {}, meta: T.EvalM
       }
     } catch (err: any) {
       log.warn(`Cannot parse TOML glob tag!`, err.message);
+    }
+  }
+}
+
+export async function loadAll(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): Promise<void> {
+  /**
+   * Load all variables from all the files matched by the glob pattern.
+   * This is a special tag that is used to load JSON or TOML files.
+   * It makese sense to be a single tag.
+   *
+   * Example:
+   * <loadAll from="path/to/files/*.json"/>
+   */
+  const patt = args['0'] || args.src || args.from || args.path;
+  if (!patt) return;
+
+  for (const fname of fs.readdirSync(meta.root || '.')) {
+    if (picomatch.isMatch(fname, patt, { contains: true })) {
+      const fullPath = path.resolve(meta.root || '.', fname);
+      let text = '';
+      try {
+        if (typeof Bun !== 'undefined') {
+          const file = Bun.file(fullPath);
+          text = await file.text();
+        } else if (typeof Deno !== 'undefined') {
+          text = Deno.readTextFileSync(fullPath);
+        } else {
+          text = fs.readFileSync(fullPath, 'utf-8');
+        }
+      } catch (err: any) {
+        log.warn(`Cannot read file "${fullPath}"!`, err.message);
+        continue;
+      }
+
+      // Check the file extension
+      const ext = path.extname(fname).toLowerCase();
+      if (ext === '.json') {
+        // Load JSON file
+        try {
+          const data = JSON.parse(text);
+          if (typeof data !== 'object' || Array.isArray(data)) {
+            log.warn(`Cannot use JSON file "${fname}"! ERROR: Not an object!`);
+          } else {
+            for (const [k, v] of Object.entries(data)) {
+              meta.ctx[k] = v;
+            }
+          }
+        } catch (err: any) {
+          log.warn(`Cannot parse JSON file "${fname}"!`, err.message);
+        }
+      } else if (ext === '.toml') {
+        // Load TOML file
+        try {
+          const data = parseToml!(text);
+          for (const [k, v] of Object.entries(data)) {
+            meta.ctx[k] = v;
+          }
+        } catch (err: any) {
+          log.warn(`Cannot parse TOML file "${fname}"!`, err.message);
+        }
+      } else {
+        log.warn(`Unsupported file type "${ext}" for file "${fname}"! Only JSON and TOML are supported.`);
+      }
     }
   }
 }

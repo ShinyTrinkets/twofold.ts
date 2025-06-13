@@ -1,6 +1,6 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import { importAny, templite, toCamelCase } from '../src/util.ts';
+import { importAny, toCamelCase } from '../src/util.ts';
 
 test('camel case', () => {
   expect(toCamelCase('blah_blah')).toBe('blahBlah');
@@ -15,41 +15,6 @@ test('camel case', () => {
 
   expect(toCamelCase('XML-Http-Request')).toBe('xmlHttpRequest');
   expect(toCamelCase('Ajax-XML-http-request')).toBe('ajaxXmlHttpRequest');
-});
-
-test('templite basic object', () => {
-  let x = 'Hello, {{name}}!';
-  let y = { name: 'world' };
-  expect(templite(x, y)).toBe('Hello, world!');
-  expect(x).toBe('Hello, {{name}}!');
-  expect(y).toEqual({ name: 'world' });
-});
-
-test('templite basic array', () => {
-  let x = 'Hello, {{0}}!';
-  let y = ['world'];
-  expect(templite(x, y)).toBe('Hello, world!');
-  expect(x).toBe('Hello, {{0}}!');
-  expect(y).toEqual(['world']);
-});
-
-test('templite repeats', () => {
-  expect(templite('{{0}}{{0}}{{0}}', ['🎉'])).toBe('🎉🎉🎉');
-  expect(templite('{{x}}{{x}}{{x}}', { x: 'hi~' })).toBe('hi~hi~hi~');
-});
-
-test('nested keys', () => {
-  const obj = {
-    name: 'John',
-    foo: {
-      bar: {
-        baz: 'Smith',
-      },
-    },
-  };
-  const arr = ['John', [[['Smith']]]];
-  expect(templite('{{name}} {{foo.bar.baz}}', obj)).toBe('John Smith');
-  expect(templite('{{0}} {{1.0.0}}', arr)).toBe('John Smith');
 });
 
 test('import any', async () => {
