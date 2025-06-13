@@ -63,17 +63,16 @@ const addon: Z.TwoFoldAddon = {
     fn: T.TwoFoldTag,
     tag: T.ParseToken,
     localCtx: Record<string, any>,
-    globalCtx: Record<string, any>,
+    globCtx: Record<string, any>,
     meta: T.EvalMetaFull
   ): any => {
     // This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
     // Make sure that the user REALLY wants to use the cache
-    if (tag.params?.cache && localCtx.cacheKey) {
+    if (tag.params?.cache && (localCtx.cacheKey || localCtx.cacheTTL)) {
       // TODO :: tag.name is NOT a good cache key, it should be something unique!
       const cacheKey = localCtx.cacheKey || tag.name;
-      // The cacheTTL is the least important parameter
       const cachedValue = getCache(cacheKey, localCtx.cacheTTL || DEFAULT_TTL);
       if (cachedValue) {
         log.info(`Cache hit for: "${cacheKey}". Returning cached value.`);
@@ -92,10 +91,8 @@ const addon: Z.TwoFoldAddon = {
     // Called after evaluating the tag.
 
     // Make sure that the user REALLY wants to use the cache
-    if (tag.params?.cache && localCtx.cacheKey) {
-      // Save the result to cache?
+    if (tag.params?.cache && (localCtx.cacheKey || localCtx.cacheTTL)) {
       const cacheKey = localCtx.cacheKey || tag.name;
-      // The cacheTTL is the least important parameter
       const cacheTTL = localCtx.cacheTTL || DEFAULT_TTL;
       setCache(cacheKey, result, cacheTTL);
     }

@@ -9,6 +9,12 @@ export const CACHE_DIR = unTildify('~/.cache/twofold');
 
 const DEFAULT_TTL = 1000 * 60 * 60 * 6; // 6 hours
 
+//
+// TODO :: setup a lazy cleanup process !!
+// If any of the cache files get touched by get or set,
+// delete any entries that are older than their TTL.
+//
+
 interface CacheEntry {
   value: any;
   date: number; // when the cache was set (in milliseconds)
@@ -122,37 +128,60 @@ export function getCache(fname: string, key: string, ttlOvr: number = -1): any {
 }
 
 /**
- * Delete a specific cache key from a file, or the entire cache file.
+ * Delete a specific cache key from a file.
  * @param fname - The name of the cache file.
- * @param key - Optional. The key to delete. If not provided, the entire file is deleted.
+ * @param key - The key to delete.
  */
-export function delCache(fname: string, key?: string): void {
+export function delCache(fname: string, key: string): void {
   const filePath = getCacheFilePath(fname);
   if (!fs.existsSync(filePath)) {
     return;
   }
 
-  // Delete a specific key
-  if (key) {
-    try {
-      const dataStr = fs.readFileSync(filePath, 'utf8');
-      const fileContent: CacheFileContent = JSON.parse(dataStr);
-      if (fileContent.hasOwnProperty(key)) {
-        delete fileContent[key];
-        // If the file content is now empty, delete the file
-        if (Object.keys(fileContent).length === 0) {
-          fs.unlinkSync(filePath);
-        } else {
-          fs.writeFileSync(filePath, JSON.stringify(fileContent), 'utf8');
-        }
+  try {
+    const dataStr = fs.readFileSync(filePath, 'utf8');
+    const fileContent: CacheFileContent = JSON.parse(dataStr);
+    if (fileContent.hasOwnProperty(key)) {
+      delete fileContent[key];
+      // If the file content is now empty, delete the file
+      if (Object.keys(fileContent).length === 0) {
+        fs.unlinkSync(filePath);
+      } else {
+        fs.writeFileSync(filePath, JSON.stringify(fileContent), 'utf8');
       }
-    } catch (error) {
-      // If error reading/parsing, might be safer to delete the whole file
-      log.warn(`Error processing cache file ${fname} for key deletion. Deleting file. ERR: ${error}`);
-      fs.unlinkSync(filePath);
     }
-  } else {
-    // Delete the entire file
+  } catch (error) {
+    // If error reading/parsing, might be safer to delete the whole file
+    log.warn(`Error processing cache file ${fname} for key deletion. Deleting file. ERR: ${error}`);
+    fs.unlinkSync(filePath);
+  }
+}
+
+function cleanupCache(fname: string): void {
+  // This function should be called periodically to clean up expired cache entries.
+  const filePath = getCacheFilePath(fname);
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+  try {
+    const dataStr = fs.readFileSync(filePath, 'utf8');
+    const fileContent: CacheFileContent = JSON.parse(dataStr);
+    const now = Date.now();
+    for (const key in fileContent) {
+      const entry = fileContent[key];
+      if (now - entry.date > entry.ttl) {
+        delete fileContent[key]; // Remove expired entry
+      }
+    }
+    // If the file content is now empty, delete the file
+    if (Object.keys(fileContent).length === 0) {
+      fs.unlinkSync(filePath);
+    } else {
+      fs.writeFileSync(filePath, JSON.stringify(fileContent), 'utf8');
+    }
+  } catch (error) {
+    log.warn(`Error cleaning up cache file ${fname}. Deleting file. ERR: ${error}`);
+    // If error reading/parsing, might be safer to delete the whole file
     fs.unlinkSync(filePath);
   }
 }
@@ -174,14 +203,14 @@ const addon: Z.TwoFoldAddon = {
     fn: T.TwoFoldTag,
     tag: T.ParseToken,
     localCtx: Record<string, any>,
-    globalCtx: Record<string, any>,
+    globCtx: Record<string, any>,
     meta: T.EvalMetaFull
   ): any => {
     // This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
     // Make sure that the user REALLY wants to use the cache
-    if (tag.params?.cache && localCtx.cacheKey) {
+    if (tag.params?.persist && localCtx.cache) {
       // Check if the local context has defined cacheName and cacheKey
       const cacheName = doTildify(localCtx.cacheName || meta.fname) || 'default';
       // TODO :: tag.name is NOT a good cache key, it should be something unique!
@@ -205,11 +234,9 @@ const addon: Z.TwoFoldAddon = {
     // Called after evaluating the tag.
 
     // Make sure that the user REALLY wants to use the cache
-    if (tag.params?.cache && localCtx.cacheKey) {
-      // Save the result to cache?
+    if (tag.params?.persist && localCtx.cache) {
       const cacheName = doTildify(localCtx.cacheName || meta.fname) || 'default';
       const cacheKey = localCtx.cacheKey || tag.name;
-      // The cacheTTL is the least important parameter
       const cacheTTL = localCtx.cacheTTL || DEFAULT_TTL;
       setCache(cacheName, cacheKey, result, cacheTTL);
     }
