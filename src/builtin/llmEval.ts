@@ -3,7 +3,7 @@
  */
 
 import { _makeRequest } from './llm.ts';
-import { templite } from '../util.ts';
+import { templite } from '../tmpl.ts';
 
 interface HistoryMessage {
   role: string;

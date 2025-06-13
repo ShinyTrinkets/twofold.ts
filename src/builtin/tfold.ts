@@ -7,7 +7,7 @@ import path from 'node:path';
 
 import * as T from '../types.ts';
 import * as logger from '../logger.ts';
-import { templite } from '../util.ts';
+import { templite } from '../tmpl.ts';
 import { parseNumber } from './common.ts';
 import { extractFunctions } from '../docs.ts';
 import { editSave } from '../index.ts';

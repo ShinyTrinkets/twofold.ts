@@ -3,7 +3,7 @@
  */
 
 import { editSave } from '../index.ts';
-import { templite } from '../util.ts';
+import { templite } from '../tmpl.ts';
 import { log } from '../logger.ts';
 
 interface HistoryMessage {
