@@ -154,7 +154,7 @@ function _prepareMeta(meta: T.EvalMeta, tag: T.ParseToken, cfg: Readonly<T.Confi
 export default async function evaluateTag(
   tag: T.ParseToken,
   allFunctions: Record<string, any>,
-  globalContext: Record<string, any>,
+  globalContext: Record<string, any> = {},
   cfg: Readonly<T.ConfigFull> = defaultCfg,
   meta: T.EvalMeta = {},
   filter: { only?: Set<string>; skip?: Set<string> } = {}

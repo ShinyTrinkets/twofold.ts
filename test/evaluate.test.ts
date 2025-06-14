@@ -12,11 +12,11 @@ test('simple evaluate', async () => {
   const txt = ' <main><increment "8" /></main>';
   const ast = parse(new Lexer().lex(txt));
 
-  await evaluate(ast[0], {}, builtin);
+  await evaluate(ast[0], builtin);
   expect(ast.length).toBe(2);
   expect(ast[0]).toEqual({ index: 0, rawText: ' ' });
 
-  await evaluate(ast[1], {}, builtin);
+  await evaluate(ast[1], builtin);
   expect(ast[1]).toEqual({
     index: 1,
     double: true,
@@ -35,12 +35,12 @@ test('simple evaluate', async () => {
 test('evaluate countDown tag', async () => {
   let txt = '<main><countDown "9" /></main>';
   let ast = parse(new Lexer().lex(txt));
-  await evaluate(ast[0], {}, builtin, {});
+  await evaluate(ast[0], builtin);
   expect(ast[0].children[0].rawText).toBe('<countDown "8" />');
 
   txt = '<main><countDown "9">.</countDown></main>';
   ast = parse(new Lexer().lex(txt));
-  await evaluate(ast[0], {}, builtin, {});
+  await evaluate(ast[0], builtin);
   expect(ast[0].children[0].firstTagText).toBe('<countDown "8">');
   expect(ast[0].children[0].secondTagText).toBe('</countDown>');
 });
@@ -55,38 +55,34 @@ test('evaluate custom tags', async () => {
   </t1>`;
   let ast = parse(new Lexer().lex(txt));
   expect(ast.length).toBe(1);
-  await evaluate(
-    ast[0],
-    {},
-    {
-      t1: (_s, _a, meta) => {
-        expect(meta.node.children.length).toBe(5);
-        expect(meta.node.parent).toEqual({});
-        meta.node.params.x = 'x';
-        return meta.node;
-      },
-      t2: (_s, _a, meta) => {
-        expect(meta.node.children.length).toBe(3);
-        expect(meta.node.parent.name).toBe('t1');
-        meta.node.params = { z: 'z' };
-        return meta.node;
-      },
-      t3: (_s, _a, meta) => {
-        expect(meta.node.rawText).toBe('<t3 "a" b=1 />');
-        expect(meta.node.parent.name).toBe('t2');
-        meta.node.params.b = 2;
-        return meta.node;
-      },
-      t4: (_s, _a, meta) => {
-        // console.log('t4', meta.node);
-        expect(meta.node.rawText).toBe('<t4 "c" d=false />');
-        expect(meta.node.parent.name).toBe('t1');
-        meta.node.params.d = true;
-        meta.node.params.e = 'e';
-        return meta.node;
-      },
-    }
-  );
+  await evaluate(ast[0], {
+    t1: (_s, _a, meta) => {
+      expect(meta.node.children.length).toBe(5);
+      expect(meta.node.parent).toEqual({});
+      meta.node.params.x = 'x';
+      return meta.node;
+    },
+    t2: (_s, _a, meta) => {
+      expect(meta.node.children.length).toBe(3);
+      expect(meta.node.parent.name).toBe('t1');
+      meta.node.params = { z: 'z' };
+      return meta.node;
+    },
+    t3: (_s, _a, meta) => {
+      expect(meta.node.rawText).toBe('<t3 "a" b=1 />');
+      expect(meta.node.parent.name).toBe('t2');
+      meta.node.params.b = 2;
+      return meta.node;
+    },
+    t4: (_s, _a, meta) => {
+      // console.log('t4', meta.node);
+      expect(meta.node.rawText).toBe('<t4 "c" d=false />');
+      expect(meta.node.parent.name).toBe('t1');
+      meta.node.params.d = true;
+      meta.node.params.e = 'e';
+      return meta.node;
+    },
+  });
   expect(unParse(ast[0])).toBe(`<t1 x="x">
     <t2 z="z">
       <t3 "a" b=2 />
@@ -103,27 +99,23 @@ test('evaluate consumable custom tags', async () => {
   </t1>`;
   let ast = parse(new Lexer().lex(txt));
   expect(ast.length).toBe(1);
-  await evaluate(
-    ast[0],
-    {},
-    {
-      t1: (_s, _a, meta) => {
-        return meta.node;
-      },
-      t2: (_s, _a, meta) => {
-        expect(meta.node.parent.name).toBe('t1');
-        return meta.node;
-      },
-      t3: (_s, _a, meta) => {
-        expect(meta.node.parent.name).toBe('t2');
-        return meta.node;
-      },
-      t4: (_s, _a, meta) => {
-        expect(meta.node.parent.name).toBe('t1');
-        return meta.node;
-      },
-    }
-  );
+  await evaluate(ast[0], {
+    t1: (_s, _a, meta) => {
+      return meta.node;
+    },
+    t2: (_s, _a, meta) => {
+      expect(meta.node.parent.name).toBe('t1');
+      return meta.node;
+    },
+    t3: (_s, _a, meta) => {
+      expect(meta.node.parent.name).toBe('t2');
+      return meta.node;
+    },
+    t4: (_s, _a, meta) => {
+      expect(meta.node.parent.name).toBe('t1');
+      return meta.node;
+    },
+  });
   expect(unParse(ast[0])).toBe('<t1>\n      <t3 />\n    \n    <t4 cut=1 />\n  </t1>');
 });
 
@@ -138,33 +130,29 @@ test('evaluate frozen custom tags', async () => {
   </t1>`;
   let ast = parse(new Lexer().lex(txt));
   expect(ast.length).toBe(1);
-  await evaluate(
-    ast[0],
-    {},
-    {
-      t1: (_s, _a, meta) => {
-        // console.log('T1');
-        meta.node.params.x = 'x';
-        return meta.node;
-      },
-      t2: (_s, _a, meta) => {
-        meta.node.params.a = '1';
-        // frozen, so children should be kept
-        meta.node.children = [];
-        return meta.node;
-      },
-      t3: (_s, _a, meta) => {
-        meta.node.params.b = '2';
-        return meta.node;
-      },
-      t4: (_s, _a, meta) => {
-        meta.node.params.c = '3';
-        // frozen, so inner text should be kept
-        meta.node.children = [];
-        return meta.node;
-      },
-    }
-  );
+  await evaluate(ast[0], {
+    t1: (_s, _a, meta) => {
+      // console.log('T1');
+      meta.node.params.x = 'x';
+      return meta.node;
+    },
+    t2: (_s, _a, meta) => {
+      meta.node.params.a = '1';
+      // frozen, so children should be kept
+      meta.node.children = [];
+      return meta.node;
+    },
+    t3: (_s, _a, meta) => {
+      meta.node.params.b = '2';
+      return meta.node;
+    },
+    t4: (_s, _a, meta) => {
+      meta.node.params.c = '3';
+      // frozen, so inner text should be kept
+      meta.node.children = [];
+      return meta.node;
+    },
+  });
   expect(unParse(ast[0])).toBe(`<t1 x="x">
     <t2 freeze=true>
       <t3 />
@@ -181,31 +169,27 @@ test('destroy ☠️ custom tags', async () => {
   </t1>`;
   let ast = parse(new Lexer().lex(txt));
   expect(ast.length).toBe(1);
-  await evaluate(
-    ast[0],
-    {},
-    {
-      t1: (_s, _a, meta) => {
-        meta.node.firstTagText = '<hack1>';
-        meta.node.secondTagText = '</hack1>';
-        return meta.node;
-      },
-      t2: (_s, _a, meta) => {
-        meta.node.name = 'hack2';
-        // hacking children really removes them
-        // meta.node.children = [];
-        return meta.node;
-      },
-      t3: (_s, _a, meta) => {
-        meta.node.parent.name = 'hack2';
-        return meta.node;
-      },
-      t4: (_s, _a, meta) => {
-        delete meta.node.single;
-        return meta.node;
-      },
-    }
-  );
+  await evaluate(ast[0], {
+    t1: (_s, _a, meta) => {
+      meta.node.firstTagText = '<hack1>';
+      meta.node.secondTagText = '</hack1>';
+      return meta.node;
+    },
+    t2: (_s, _a, meta) => {
+      meta.node.name = 'hack2';
+      // hacking children really removes them
+      // meta.node.children = [];
+      return meta.node;
+    },
+    t3: (_s, _a, meta) => {
+      meta.node.parent.name = 'hack2';
+      return meta.node;
+    },
+    t4: (_s, _a, meta) => {
+      delete meta.node.single;
+      return meta.node;
+    },
+  });
   expect(unParse(ast[0])).toBe(`<t1><t2>
       <t3 />
     </t2>
