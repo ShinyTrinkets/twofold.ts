@@ -24,6 +24,6 @@ ServerAliveInterval = 60
 ServerAliveCountMax = 30
 </toml>
 
-Some random variables; should <yesOrNo/> be imported.
+Some random variables; should <yesOrNo freeze=1/> be imported.
 
-<randomInt/>
+<randomInt freeze=1/>
