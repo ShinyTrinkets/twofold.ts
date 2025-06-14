@@ -269,12 +269,14 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
    * Example:
    * <loadAll from="path/to/files/*.json"/>
    */
-  const patt = args['0'] || args.src || args.from || args.path;
+  let patt = args['0'] || args.src || args.from || args.path;
   if (!patt) return;
+  const root = path.join(meta.root || '.', path.dirname(patt));
+  patt = path.basename(patt);
 
-  for (const fname of fs.readdirSync(meta.root || '.')) {
+  for (const fname of fs.readdirSync(root)) {
     if (picomatch.isMatch(fname, patt, { contains: true })) {
-      const fullPath = path.resolve(meta.root || '.', fname);
+      const fullPath = path.resolve(root, fname);
       let text = '';
       try {
         if (typeof Bun !== 'undefined') {
@@ -292,6 +294,7 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
 
       // Check the file extension
       const ext = path.extname(fname).toLowerCase();
+      const key = path.basename(fname, ext);
       if (ext === '.json') {
         // Load JSON file
         try {
@@ -299,8 +302,9 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
           if (typeof data !== 'object' || Array.isArray(data)) {
             log.warn(`Cannot use JSON file "${fname}"! ERROR: Not an object!`);
           } else {
+            meta.ctx[key] = meta.ctx[key] || {};
             for (const [k, v] of Object.entries(data)) {
-              meta.ctx[k] = v;
+              meta.ctx[key][k] = v;
             }
           }
         } catch (err: any) {
@@ -310,8 +314,9 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
         // Load TOML file
         try {
           const data = parseToml!(text);
+          meta.ctx[key] = meta.ctx[key] || {};
           for (const [k, v] of Object.entries(data)) {
-            meta.ctx[k] = v;
+            meta.ctx[key][k] = v;
           }
         } catch (err: any) {
           log.warn(`Cannot parse TOML file "${fname}"!`, err.message);
