@@ -153,12 +153,21 @@ function _prepareMeta(meta: T.EvalMeta, tag: T.ParseToken, cfg: Readonly<T.Confi
 
 export default async function evaluateTag(
   tag: T.ParseToken,
-  globalContext: Record<string, any>,
   allFunctions: Record<string, any>,
+  globalContext: Record<string, any>,
   cfg: Readonly<T.ConfigFull> = defaultCfg,
-  meta: T.EvalMeta = {}
+  meta: T.EvalMeta = {},
+  filter: { only?: Set<string>; skip?: Set<string> } = {}
 ) {
   if (!tag.name) {
+    return;
+  }
+  if (filter.only && !filter.only.has(tag.name)) {
+    log.debug(`Skipping tag "${tag.name}" evaluation! Not in filter.only!`);
+    return;
+  }
+  if (filter.skip && filter.skip.has(tag.name)) {
+    log.debug(`Skipping tag "${tag.name}" evaluation! Already in filter.skip!`);
     return;
   }
 
@@ -286,7 +295,7 @@ export default async function evaluateTag(
           // Inject the parsed tag into the child meta
           childrenMeta.node = c;
         }
-        await evaluateTag(c, childrenMeta.ctx!, allFunctions, cfg, childrenMeta);
+        await evaluateTag(c, allFunctions, childrenMeta.ctx!, cfg, childrenMeta);
       }
     }
   }

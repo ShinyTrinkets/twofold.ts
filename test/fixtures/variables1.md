@@ -23,3 +23,7 @@ Protocol = 2
 ServerAliveInterval = 60
 ServerAliveCountMax = 30
 </toml>
+
+Some random variables; should <yesOrNo/> be imported.
+
+<randomInt/>

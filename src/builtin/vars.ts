@@ -369,18 +369,23 @@ async function __import(_t: string, args: Record<string, any> = {}, meta: T.Eval
     return;
   }
 
+  const onlyTags = new Set(['set', 'json', 'toml']);
   const importData: Record<string, any> = {};
   const allFunctions: Record<string, any> = { set, del, json, toml };
   for (const t of ast) {
-    if (t.name === 'set' || t.name === 'json' || t.name === 'toml') {
-      await evaluateTag(t, importData, allFunctions, meta.config, {
+    await evaluateTag(
+      t,
+      allFunctions,
+      importData,
+      meta.config,
+      {
         fname,
         root: meta.root,
         config: meta.config,
-        node: meta.node,
         ctx: importData,
-      });
-    }
+      },
+      { only: onlyTags }
+    );
   }
   ast = [];
 

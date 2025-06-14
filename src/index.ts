@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import picomatch from 'picomatch';
@@ -37,7 +38,7 @@ export async function renderText(
   const ast = parse(new Lexer(cfg).lex(text), cfg);
   let final = '';
   for (const t of ast) {
-    await evaluate(t, customData, allFunctions, cfg, meta);
+    await evaluate(t, allFunctions, customData, cfg, meta);
     final += unParse(t);
   }
   return final;
@@ -87,6 +88,11 @@ export async function renderFile(
       streamHash.update(chunk);
       lexer.push(decoder.decode(chunk));
     }
+  } else {
+    // Node.js or other environments
+    const text = fs.readFileSync(fname, 'utf-8');
+    streamHash.update(text);
+    lexer.push(text);
   }
 
   ast = parse(lexer.finish(), cfg);
@@ -109,7 +115,7 @@ export async function renderFile(
   const globals: Record<string, any> = {};
 
   for (const t of ast) {
-    await evaluate(t, globals, allFunctions, cfg, meta);
+    await evaluate(t, allFunctions, globals, cfg, meta);
     const chunk = unParse(t);
     resultHash.update(chunk);
     text += chunk;
@@ -121,6 +127,9 @@ export async function renderFile(
       await Bun.write(fname, text);
     } else if (typeof Deno !== 'undefined') {
       await Deno.writeTextFile(fname, text);
+    } else {
+      // Node.js or other environments
+      fs.writeFileSync(fname, text, 'utf-8');
     }
     return { changed: true };
   }
