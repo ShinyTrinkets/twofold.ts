@@ -333,6 +333,8 @@ async function __import(_t: string, args: Record<string, any> = {}, meta: T.Eval
    * Import one or more variables from `set`, `json` or `toml` tags included in other files.
    * The import syntax is very similar to the JavaScript import,
    * and you can import anywhere in your code, not only at the beginning.
+   * This is actually not a real import, but an evaluation of the specified file
+   * in the current context.
    *
    * Example:
    * <import "name, age, job" from="path/to/file"/>
@@ -352,7 +354,6 @@ async function __import(_t: string, args: Record<string, any> = {}, meta: T.Eval
   }
 
   // TODO :: import name as alias
-  // TODO :: check circular imports !!
 
   let ast: ParseToken[] = [];
   try {
@@ -369,10 +370,24 @@ async function __import(_t: string, args: Record<string, any> = {}, meta: T.Eval
     return;
   }
 
-  const onlyTags = new Set(['set', 'json', 'toml']);
-  const importData: Record<string, any> = {};
-  const allFunctions: Record<string, any> = { set, del, json, toml };
+  const onlyTags = new Set(['set', 'json', 'toml', 'import']);
+  const importData: Record<string, any> = {}; // The Global Context
+  const allFunctions: Record<string, any> = { set, del, json, toml, import: _import };
   for (const t of ast) {
+    // Track the imported imports
+    if (t.name === 'import') {
+      if (!importData.__track_imports) {
+        importData.__track_imports = meta.ctx.__track_imports || [];
+      }
+      // Avoid circular imports
+      if (importData.__track_imports.includes(fname)) {
+        log.warn(`Circular import detected: "${importData.__track_imports.join(' > ')}"!`);
+        delete importData.__track_imports;
+        delete meta.ctx.__track_imports;
+        return;
+      }
+      importData.__track_imports.push(fname);
+    }
     await evaluateTag(
       t,
       allFunctions,
@@ -390,7 +405,8 @@ async function __import(_t: string, args: Record<string, any> = {}, meta: T.Eval
   ast = [];
 
   if (what.length === 1 && what[0] === '*') {
-    // Import *all* variables
+    // Import *all* variables in the global context
+    // There is no namespace, the vars will overwrite the existing ones
     for (const key of Object.keys(importData)) {
       meta.ctx[key] = importData[key];
     }

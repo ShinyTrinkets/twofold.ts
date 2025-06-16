@@ -766,8 +766,6 @@ test('importing files', async () => {
   expect(tmp).toBe(txt);
   expect(vars).toEqual({ name: 'John', debug: true });
 
-  // TODO :: import from import from import
-
   vars = {};
   txt =
     '<import "SomeConfig.db_name, SshCfg.User" from="test/fixtures/variables1.md"/>' +
@@ -792,6 +790,13 @@ test('importing files', async () => {
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({ fullName: 'John Smith', phone: '212 555-1234' });
+
+  vars = {};
+  txt = '<import "*" from="test/fixtures/import1.md"/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  delete vars.__track_imports;
+  expect(vars).toEqual({ x: 1, y: 2, z: 3 });
 
   // errors: importing nothing
   vars = {};

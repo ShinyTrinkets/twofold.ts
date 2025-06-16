@@ -8,6 +8,7 @@ import twofold from '../src/index.ts';
 import { isDoubleTag, isRawText, isSingleTag } from '../src/tags.ts';
 
 const DIR = import.meta.dirname;
+const FILES = fs.readdirSync(DIR + '/fixtures');
 //
 // General testing of the render file/folder function
 //
@@ -81,7 +82,7 @@ test('render The Big List of Naughty Strings', async () => {
 test('render fixtures/', async () => {
   const folder = DIR + '/fixtures/';
   let result = await twofold.renderFolder(folder);
-  expect(result).toEqual({ found: 12, rendered: 0 });
+  expect(result).toEqual({ found: FILES.length, rendered: 0 });
   result = await twofold.renderFolder(folder, {}, { glob: '*.js' });
   expect(result).toEqual({ found: 1, rendered: 0 });
 });

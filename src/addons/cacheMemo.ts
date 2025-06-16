@@ -71,11 +71,13 @@ const addon: Z.TwoFoldAddon = {
 
     // Make sure that the user REALLY wants to use the cache
     if (tag.params?.cache && (localCtx.cacheKey || localCtx.cacheTTL)) {
-      // TODO :: tag.name is NOT a good cache key, it should be something unique!
-      const cacheKey = localCtx.cacheKey || tag.name;
+      // TODO :: tag.name+index is NOT a good cache key, it should be something unique!
+      const cacheKey = localCtx.cacheKey || `${tag.name}:${tag.index}`;
       const cachedValue = getCache(cacheKey, localCtx.cacheTTL || DEFAULT_TTL);
       if (cachedValue) {
         log.info(`Cache hit for: "${cacheKey}". Returning cached value.`);
+        // Return a copy of the cached value to avoid mutation?
+        // return structuredClone(cachedValue);
         return cachedValue;
       }
     }
@@ -92,7 +94,7 @@ const addon: Z.TwoFoldAddon = {
 
     // Make sure that the user REALLY wants to use the cache
     if (tag.params?.cache && (localCtx.cacheKey || localCtx.cacheTTL)) {
-      const cacheKey = localCtx.cacheKey || tag.name;
+      const cacheKey = localCtx.cacheKey || `${tag.name}:${tag.index}`;
       const cacheTTL = localCtx.cacheTTL || DEFAULT_TTL;
       setCache(cacheKey, result, cacheTTL);
     }
