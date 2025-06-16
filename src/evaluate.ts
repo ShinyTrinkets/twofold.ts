@@ -132,14 +132,20 @@ export function interpolate(body: string, args: Record<string, any>, cfg: T.Conf
   return fn(...Object.values(args));
 }
 
-function _prepareMeta(meta: T.EvalMeta, tag: T.ParseToken, cfg: Readonly<T.Config>, ctx: Record<string, any>) {
-  // Inject stuff inside Meta to prepare
-  // for evaluating the parent tag
+async function _executeWithHooks(
+  tag: T.ParseToken,
+  func: T.TwoFoldTag,
+  localCtx: Record<string, any>,
+  globalCtx: Record<string, any>,
+  meta: T.EvalMeta,
+  cfg: Readonly<T.ConfigFull>
+) {
+  // Inject stuff inside Meta to prepare for evaluating the tag
   meta.node = structuredClone(tag);
   if (!tag.params) meta.node.params = {};
 
   meta.config = cfg;
-  meta.ctx = ctx;
+  meta.ctx = globalCtx;
 
   // Inject the parsed parent into meta
   if (tag.parent) {
@@ -149,15 +155,56 @@ function _prepareMeta(meta: T.EvalMeta, tag: T.ParseToken, cfg: Readonly<T.Confi
   } else {
     meta.node.parent = {};
   }
+
+  let result: any = undefined;
+  // Hook interrupt callback
+  for (const h of hooks.HOOKS1) {
+    try {
+      result = await h(func, tag, localCtx, globalCtx, meta);
+    } catch (err: any) {
+      log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
+      return; // Return undefined explicitly or handle as needed
+    }
+    if (result !== undefined && result !== null) {
+      // If the hook returned a value, it is used as a result
+      // and the tag is not evaluated
+      log.info(`Hook preEval returned value for tag "${tag.name}".`);
+      if (isDoubleTag(tag)) {
+        tag.children = [{ index: -1, rawText: result.toString() }];
+      } else if (isSingleTag(tag)) {
+        tag.rawText = result.toString();
+      }
+      return; // Return undefined explicitly or handle as needed
+    }
+  }
+
+  // Prevent new properties from being added to Meta
+  const sealedMeta = Object.seal(meta); // Use a new variable for the sealed meta
+  // Call the specialized evaluate function
+  if (isDoubleTag(tag)) {
+    result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, sealedMeta);
+  } else if (isSingleTag(tag)) {
+    result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, sealedMeta);
+  }
+
+  // Hook interrupt callback
+  for (const h of hooks.HOOKS2) {
+    try {
+      await h(result, tag, localCtx, globalCtx, sealedMeta);
+    } catch (err: any) {
+      log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
+      return; // Return undefined explicitly or handle as needed
+    }
+  }
 }
 
 export default async function evaluateTag(
   tag: T.ParseToken,
-  allFunctions: Record<string, any>,
+  allFunctions: Readonly<Record<string, any>>,
   globalContext: Record<string, any> = {},
   cfg: Readonly<T.ConfigFull> = defaultCfg,
   meta: T.EvalMeta = {},
-  filter: { only?: Set<string>; skip?: Set<string> } = {}
+  filter: Readonly<{ only?: Set<string>; skip?: Set<string> }> = {}
 ) {
   if (!tag.name) {
     return;
@@ -215,47 +262,7 @@ export default async function evaluateTag(
 
   // BFS evaluation order
   if (evalOrder === 0 && isFunction(func)) {
-    _prepareMeta(meta, tag, cfg, globalContext);
-    let result: any = undefined;
-    // Hook interrupt callback
-    for (const h of hooks.HOOKS1) {
-      try {
-        result = await h(func, tag, localCtx, globalContext, meta);
-      } catch (err: any) {
-        log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
-        return;
-      }
-      if (result !== undefined && result !== null) {
-        // If the hook returned a value, it is used as a result
-        // and the tag is not evaluated
-        log.info(`Hook preEval returned value for tag "${tag.name}".`);
-        if (isDoubleTag(tag)) {
-          tag.children = [{ index: -1, rawText: result.toString() }];
-        } else if (isSingleTag(tag)) {
-          tag.rawText = result.toString();
-        }
-        return;
-      }
-    }
-
-    // Prevent new properties from being added to Meta
-    meta = Object.seal(meta);
-    // Call the specialized evaluate function, in order (BFS)
-    if (isDoubleTag(tag)) {
-      result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, meta);
-    } else if (isSingleTag(tag)) {
-      result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, meta);
-    }
-
-    // Hook interrupt callback
-    for (const h of hooks.HOOKS2) {
-      try {
-        await h(result, tag, localCtx, globalContext, meta);
-      } catch (err: any) {
-        log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
-        return;
-      }
-    }
+    await _executeWithHooks(tag, func as T.TwoFoldTag, localCtx, globalContext, meta, cfg);
   }
 
   // Deep evaluate all children, including invalid TwoFold tags
@@ -302,46 +309,6 @@ export default async function evaluateTag(
 
   // DFS evaluation order
   if (evalOrder !== 0 && isFunction(func)) {
-    _prepareMeta(meta, tag, cfg, globalContext);
-    let result: any = undefined;
-    // Hook interrupt callback
-    for (const h of hooks.HOOKS1) {
-      try {
-        result = await h(func, tag, localCtx, globalContext, meta);
-      } catch (err: any) {
-        log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
-        return;
-      }
-      if (result !== undefined && result !== null) {
-        // If the hook returned a value, it is used as a result
-        // and the tag is not evaluated
-        log.info(`Hook preEval returned value for tag "${tag.name}".`);
-        if (isDoubleTag(tag)) {
-          tag.children = [{ index: -1, rawText: result.toString() }];
-        } else if (isSingleTag(tag)) {
-          tag.rawText = result.toString();
-        }
-        return;
-      }
-    }
-
-    // Prevent new properties from being added to Meta
-    meta = Object.seal(meta);
-    // Call the specialized evaluate function, depth-first order
-    if (isDoubleTag(tag)) {
-      result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, meta);
-    } else if (isSingleTag(tag)) {
-      result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, meta);
-    }
-
-    // Hook interrupt callback
-    for (const h of hooks.HOOKS2) {
-      try {
-        await h(result, tag, localCtx, globalContext, meta);
-      } catch (err: any) {
-        log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
-        return;
-      }
-    }
+    await _executeWithHooks(tag, func as T.TwoFoldTag, localCtx, globalContext, meta, cfg);
   }
 }

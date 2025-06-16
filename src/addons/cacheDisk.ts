@@ -141,7 +141,7 @@ export function delCache(fname: string, key: string): void {
   try {
     const dataStr = fs.readFileSync(filePath, 'utf8');
     const fileContent: CacheFileContent = JSON.parse(dataStr);
-    if (fileContent.hasOwnProperty(key)) {
+    if (key in fileContent) {
       delete fileContent[key];
       // If the file content is now empty, delete the file
       if (Object.keys(fileContent).length === 0) {

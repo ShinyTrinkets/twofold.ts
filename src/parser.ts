@@ -1,6 +1,7 @@
-import { LexToken, ParseToken } from './types.ts';
+import * as T from './types.ts';
+import { ParseToken } from './types.ts';
+import { defaultCfg } from './config.ts';
 import { isDoubleTag, isFullDoubleTag, isRawText, isSingleTag } from './tags.ts';
-import * as config from './config.ts';
 
 function addChild(parent: ParseToken, child: ParseToken): void {
   if (!parent.children) {
@@ -40,8 +41,8 @@ function addPaths(nodes: ParseToken[], currentPath = ''): void {
  * Because the Lexer cannot peek, there may be double tags that don't match,
  * so they will be fixed in here.
  */
-export default function parse(tokens: LexToken[], cfg: config.Config = {}): ParseToken[] {
-  const { openTag, lastStopper } = { ...config.defaultCfg, ...cfg };
+export default function parse(tokens: T.LexToken[], cfg: T.Config = {}): ParseToken[] {
+  const { openTag, lastStopper } = { ...defaultCfg, ...cfg };
   const RE_FIRST_START = new RegExp(
     `^[${openTag as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
   );
@@ -139,7 +140,7 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     }
   }
 
-  const finalCommit = function (token: LexToken): void {
+  const finalCommit = function (token: T.LexToken): void {
     const topAst = getTopAst();
     if (isRawText(topAst) && isRawText(token)) {
       topAst.rawText += token.rawText;

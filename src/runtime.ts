@@ -47,7 +47,7 @@ export default class Runtime {
 
   constructor(
     fname: string | null,
-    text: string | null = null,
+    text: string | null,
     cfg: T.ConfigFull = config.defaultCfg,
     globalCtx: Record<string, any> = {},
     customTags: Record<string, Function> = {}
