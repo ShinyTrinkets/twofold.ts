@@ -8,6 +8,7 @@ interface FunctionDoc {
 
 export function extractFunctions(fname: string): FunctionDoc[] {
   /**
+   * Utility function.
    * Extracts function declarations from a TypeScript file.
    */
   const content = fs.readFileSync(fname, 'utf8');

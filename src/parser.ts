@@ -1,7 +1,6 @@
 import { LexToken, ParseToken } from './types.ts';
 import { isDoubleTag, isFullDoubleTag, isRawText, isSingleTag } from './tags.ts';
 import * as config from './config.ts';
-// import { log } from './logger.ts';
 
 function addChild(parent: ParseToken, child: ParseToken): void {
   if (!parent.children) {
@@ -99,7 +98,6 @@ export default function parse(tokens: LexToken[], cfg: config.Config = {}): Pars
     if (!token || !token.rawText) {
       continue;
     }
-    // log.info('TOKEN ::', token);
 
     if (isDoubleTag(token)) {
       // Is this the start of a double tag?

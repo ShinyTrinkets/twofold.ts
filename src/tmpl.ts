@@ -1,5 +1,5 @@
 /*
- * This is a minimal template engine implementation in TypeScript,
+ * μTE is a minimal template engine implementation in TypeScript,
  * inspired by Jinja2, Django and Nunjucks template engines.
  * It renders templates with variables, conditionals, and loops.
  */
