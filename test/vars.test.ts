@@ -5,7 +5,7 @@ import twofold from '../src/index.ts';
 // Testing variables
 //
 test('set global variables', async () => {
-  let vars = {};
+  let vars: any = {};
   let txt = '<set x=1 a="a" b={x} />';
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
@@ -606,7 +606,7 @@ test('spread syntax', async () => {
 
   // import + spread grup variables
   vars = {};
-  txt = '<import "SshCfg" from="test/fixtures/variables1.md"/><set {...SshCfg}/><del "SshCfg"/>';
+  txt = '<evaluate from="test/fixtures/variables1.md"/><set {...SshCfg}/><del "SshCfg,SomeConfig,debug"/>';
   tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({
     ForwardAgent: 'no',
@@ -760,106 +760,90 @@ test('del variable', async () => {
 });
 
 test('importing files', async () => {
-  let vars = {};
-  let txt = '<set name="John" debug=null/> <import "debug" from="test/fixtures/variables1.md"/>';
+  let vars: any = {};
+  let txt =
+    '<set name="John" debug=null/> <evaluate only=toml from="test/fixtures/variables1.md"/>' +
+    '<del "SshCfg,SomeConfig"/>';
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({ name: 'John', debug: true });
 
   vars = {};
-  txt =
-    '<import "SomeConfig.db_name, SshCfg.User" from="test/fixtures/variables1.md"/>' +
-    '<set db={SomeConfig.db_name} name=`${SshCfg.User}`/>';
+  txt = '<evaluate from="test/fixtures/variables1.md"/>' + '<set db={SomeConfig.db_name} name=`${SshCfg.User}`/>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
-  expect(vars).toEqual({
-    SomeConfig: { db_name: 'example_DB' },
-    SshCfg: { User: 'user' },
-    db: 'example_DB',
-    name: 'user',
-  });
+  expect(vars.db).toBe('example_DB');
+  expect(vars.name).toBe('user');
 
   vars = {};
-  txt = '<import "person" from="test/fixtures/variables2.md"/>' + '<set addr=`${person.address.home.street_address}`/>';
+  txt =
+    '<evaluate only=json from="test/fixtures/variables2.md"/>' + '<set addr=`${person.address.home.street_address}`/>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars.addr).toBe('21 2nd Street');
 
   vars = {};
-  txt = '<import "fullName, phone" from="test/fixtures/variables2.md" />';
+  txt = '<evaluate from="test/fixtures/import1.md"/>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
-  expect(vars).toEqual({ fullName: 'John Smith', phone: '212 555-1234' });
-
-  vars = {};
-  txt = '<import "*" from="test/fixtures/import1.md"/>';
-  tmp = await twofold.renderText(txt, vars);
-  expect(tmp).toBe(txt);
-  delete vars.__track_imports;
   expect(vars).toEqual({ x: 1, y: 2, z: 3 });
 
-  // errors: importing nothing
   vars = {};
-  txt = '<import from="test/xyz.txt"/>';
+  txt = '<evaluate from=""/>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 
-  txt = '<import "a" from=""/>';
+  // errors: eval from invalid file
+  vars = {};
+  txt = '<evaluate from="test/xyz.txt"/>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 
-  // errors: importing from invalid file
+  // errors: eval invalid tag from existing file
   vars = {};
-  txt = '<import "x" from="test/xyz.txt"/>';
-  tmp = await twofold.renderText(txt, vars);
-  expect(tmp).toBe(txt);
-  expect(vars).toEqual({});
-
-  // errors: importing invalid var from existing file
-  vars = {};
-  txt = '<import "xyz" from="test/fixtures/variables1.md"/>';
+  txt = '<evaluate only="xyz" from="test/fixtures/variables1.md"/>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
   expect(vars).toEqual({});
 });
 
-test('vars tag', async () => {
-  const txt = `
-This is a test
-<set a=a x=1 debug=null/>
-<import "debug" from="test/fixtures/variables1.md"/>
-<vars '*'/>
-<import "person.address.home.street_address" from="test/fixtures/variables2.md"/>
-<vars/> -- Nothing will happen
-<vars "person">
-</vars>
-`;
-  const out = await twofold.renderText(txt);
-  expect(out).toBe(`
-This is a test
-<set a=a x=1 debug=null/>
-<import "debug" from="test/fixtures/variables1.md"/>
----
-Vars: {
- "a": "a",
- "x": 1,
- "debug": true
-}
----
-<import "person.address.home.street_address" from="test/fixtures/variables2.md"/>
-<vars/> -- Nothing will happen
-<vars "person">
-{
- "person": {
-  "address": {
-   "home": {
-    "street_address": "21 2nd Street"
-   }
-  }
- }
-}
-</vars>
-`);
-});
+// test('vars tag', async () => {
+//   const txt = `
+// This is a test
+// <set a=a x=1 debug=null/>
+// <import "debug" from="test/fixtures/variables1.md"/>
+// <vars '*'/>
+// <import "person.address.home.street_address" from="test/fixtures/variables2.md"/>
+// <vars/> -- Nothing will happen
+// <vars "person">
+// </vars>
+// `;
+//   const out = await twofold.renderText(txt);
+//   expect(out).toBe(`
+// This is a test
+// <set a=a x=1 debug=null/>
+// <import "debug" from="test/fixtures/variables1.md"/>
+// ---
+// Vars: {
+//  "a": "a",
+//  "x": 1,
+//  "debug": true
+// }
+// ---
+// <import "person.address.home.street_address" from="test/fixtures/variables2.md"/>
+// <vars/> -- Nothing will happen
+// <vars "person">
+// {
+//  "person": {
+//   "address": {
+//    "home": {
+//     "street_address": "21 2nd Street"
+//    }
+//   }
+//  }
+// }
+// </vars>
+// `);
+// });

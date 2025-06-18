@@ -48,10 +48,15 @@ export const defaultCliCfg: T.CliConfigFull = Object.freeze({
   ...defaultCfg,
 
   // walk-dir scan depth
-  depth: 3,
+  depth: 1,
 
   // walk-dir scan files
   glob: '*.*',
+
+  // A strict list/set of tags to include
+  onlyTags: new Set<string>(),
+  // A strict list/set of tags to exclude
+  skipTags: new Set<string>(),
 });
 
 export async function userCfg(path = undefined): Promise<T.ConfigFull> {

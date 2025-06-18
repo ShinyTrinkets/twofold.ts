@@ -1,52 +1,7 @@
 import * as Z from './types.ts';
 import * as T from '../types.ts';
 import { log } from '../logger.ts';
-
-type Any = unknown;
-type Timer = ReturnType<typeof setTimeout>;
-
-interface Entry {
-  value: Any;
-  born: number; // epoch ms at insertion
-  ttl: number; // original TTL (ms)
-  timer: Timer; // auto-deletion handle
-}
-
-const bucket = new Map<string, Entry>();
-
-export function setCache(key: string, value: Any, ttl: number): void {
-  if (ttl <= 0) throw new RangeError('ttl must be > 0 ms');
-
-  // If key already exists, clear old timer
-  const old = bucket.get(key);
-  if (old) clearTimeout(old.timer);
-
-  const born = Date.now();
-  const timer = setTimeout(() => bucket.delete(key), ttl);
-  bucket.set(key, { value, born, ttl, timer });
-}
-
-function alive(e: Entry, ttlOverride: number): boolean {
-  const ttl = ttlOverride >= 0 ? ttlOverride : e.ttl;
-  return Date.now() - e.born < ttl;
-}
-
-export function hasCache(key: string, ttlOverride = -1): boolean {
-  const e = bucket.get(key);
-  if (!e) return false;
-  if (alive(e, ttlOverride)) return true;
-  clearTimeout(e.timer);
-  bucket.delete(key);
-  return false;
-}
-
-export function getCache<T = Any>(key: string, ttlOverride = -1): T | undefined {
-  const e = bucket.get(key);
-  if (!e) return;
-  if (alive(e, ttlOverride)) return e.value as T;
-  clearTimeout(e.timer);
-  bucket.delete(key);
-}
+import { getCache, setCache } from '../cache.ts';
 
 const DEFAULT_TTL = 1000 * 60; // 1 minute
 
@@ -64,7 +19,7 @@ const addon: Z.TwoFoldAddon = {
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
-    meta: T.EvalMetaFull
+    meta: T.Runtime
   ): any => {
     // This is a pre-evaluation hook,
     // called before evaluating the tag itself.
@@ -88,7 +43,7 @@ const addon: Z.TwoFoldAddon = {
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
-    meta: T.EvalMetaFull
+    meta: T.Runtime
   ): void => {
     // Called after evaluating the tag.
 

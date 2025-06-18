@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-import crypto from 'node:crypto';
 import picomatch from 'picomatch';
 
 import * as config from './config.ts';
@@ -7,46 +5,32 @@ import * as T from './types.ts';
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import Runtime from './runtime.ts';
-import evaluate from './evaluate.ts';
-import functions from './builtin/index.ts';
 import { syncTag, unParse } from './tags.ts';
 import { deepGet, deepSet, listTree } from './util.ts';
 
 /**
- * Render a text string. Used for rendering STDIN, and for tests.
- * For rendering a file, it's more efficient to use renderFile.
+ * Render a string. Used for rendering STDIN, and for tests.
  */
 export async function renderText(
   text: string,
   customData: Record<string, any> = {},
   customTags: Record<string, Function> = {},
-  cfg: T.ConfigFull = config.defaultCfg,
-  meta: T.EvalMeta = {}
+  cfg: T.ConfigFull = config.defaultCfg
 ): Promise<string> {
-  const engine = new Runtime(null, text, cfg, customData, customTags);
-  const allFunctions: Record<string, any> = {
-    ...functions,
-    ...customTags,
-  };
-  let final = '';
-  for (const t of engine.ast) {
-    await evaluate(t, allFunctions, customData, cfg, meta);
-    final += unParse(t);
-  }
-  return final;
+  const engine = Runtime.fromText(text, customTags, cfg as T.CliConfigFull);
+  return await engine.evaluateAll(customData);
 }
 
 /**
  * Render a single file. By default, the result is not written on disk, unless write=true.
  */
 export async function renderFile(
-  fname: string,
+  file: string | T.RuntimeFile,
   customTags: Record<string, Function> = {},
-  cfg: T.ConfigFull = config.defaultCfg,
-  meta: Record<string, any> = {}
+  cfg: T.CliConfigFull = config.defaultCliCfg,
+  persist = false
 ): Promise<{ changed: boolean; text?: string }> {
-  const globals: Record<string, any> = {};
-  const engine = await Runtime.fromFile(fname, cfg, globals, customTags);
+  const engine = await Runtime.fromFile(file, customTags, cfg);
 
   // Save time and IO if the file doesn't have TwoFold tags
   if (engine.ast.length === 1 && typeof engine.ast[0].rawText === 'string') {
@@ -56,66 +40,34 @@ export async function renderFile(
     };
   }
 
-  engine.file.write = meta.write;
-  delete meta.write;
-
-  let text = '';
-  const resultHash = crypto.createHash('sha224');
-  const allFunctions: Record<string, any> = {
-    ...functions,
-    ...customTags,
-  };
-  for (const t of engine.ast) {
-    await evaluate(t, allFunctions, globals, cfg, meta);
-    const chunk = unParse(t);
-    resultHash.update(chunk);
-    text += chunk;
+  const initialHash = engine.file.hash;
+  const text = await engine.evaluateAll();
+  if (persist) {
+    const changed = await engine.write(null, text);
+    return { changed, text };
+  } else {
+    return { changed: initialHash !== engine.file.hash, text };
   }
-
-  const changed = engine.file.hash !== resultHash.digest('hex');
-  if (engine.file.write && changed) {
-    if (typeof Bun !== 'undefined') {
-      await Bun.write(fname, text);
-    } else if (typeof Deno !== 'undefined') {
-      await Deno.writeTextFile(fname, text);
-    } else {
-      // Node.js or other environments
-      fs.writeFileSync(fname, text, 'utf-8');
-    }
-    return { changed: true };
-  }
-
-  return { changed: false, text };
 }
 
 /**
  * This is the most high level function, so it needs extra safety checks.
  */
 export async function renderFolder(
-  dir: string,
+  dname: string,
   customTags = {},
   cfg: T.CliConfigFull = config.defaultCliCfg,
-  meta: Record<string, any> = {}
+  persist = true
 ): Promise<{ found: number; rendered: number }> {
-  if (meta.write === undefined) {
-    meta.write = true;
-  }
-
   const stats = { found: 0, rendered: 0 };
   const isMatch = cfg.glob ? picomatch('**/' + cfg.glob) : null;
-  const files = listTree(dir, cfg.depth || 1);
-  for (const fname of files) {
+  for (const fname of listTree(dname, cfg.depth || 1)) {
     if (isMatch && !isMatch(fname, { basename: true }).isMatch) {
       continue;
     }
     stats.found++;
-    const { changed } = await renderFile(fname, customTags || {}, cfg as T.ConfigFull, {
-      ...meta,
-      root: dir,
-    });
-    if (changed) {
-      stats.rendered++;
-    }
+    const { changed } = await renderFile({ fname, dname, size: 0 }, customTags || {}, cfg, persist);
+    if (changed) stats.rendered++;
   }
   return stats;
 }

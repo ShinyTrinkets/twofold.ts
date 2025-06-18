@@ -2,21 +2,20 @@ import { testing } from './wrap.ts';
 const { test, expect } = await testing;
 
 import twofold from '../src/index.ts';
-import parse from '../src/parser.ts';
-import Lexer from '../src/lexer.ts';
+import Runtime from '../src/runtime.ts';
 import builtin from '../src/builtin/index.ts';
-import evaluate from '../src/evaluate.ts';
 import { unParse } from '../src/tags.ts';
 
 test('simple evaluate', async () => {
   const txt = ' <main><increment "8" /></main>';
-  const ast = parse(new Lexer().lex(txt));
+  const run = Runtime.fromText(txt);
+  const ast = run.ast;
 
-  await evaluate(ast[0], builtin);
+  await run.evaluateTag(ast[0]);
   expect(ast.length).toBe(2);
   expect(ast[0]).toEqual({ index: 0, rawText: ' ' });
 
-  await evaluate(ast[1], builtin);
+  await run.evaluateTag(ast[1]);
   expect(ast[1]).toEqual({
     index: 1,
     double: true,
@@ -34,28 +33,28 @@ test('simple evaluate', async () => {
 
 test('evaluate countDown tag', async () => {
   let txt = '<main><countDown "9" /></main>';
-  let ast = parse(new Lexer().lex(txt));
-  await evaluate(ast[0], builtin);
+  let run = Runtime.fromText(txt);
+  let ast: any = run.ast;
+  await run.evaluateTag(ast[0]);
   expect(ast[0].children[0].rawText).toBe('<countDown "8" />');
 
   txt = '<main><countDown "9">.</countDown></main>';
-  ast = parse(new Lexer().lex(txt));
-  await evaluate(ast[0], builtin);
+  run = Runtime.fromText(txt);
+  ast = run.ast;
+  await run.evaluateTag(ast[0]);
   expect(ast[0].children[0].firstTagText).toBe('<countDown "8">');
   expect(ast[0].children[0].secondTagText).toBe('</countDown>');
 });
 
 test('evaluate custom tags', async () => {
   // ALL functions here return the node
-  let txt = `<t1>
+  const txt = `<t1>
     <t2>
       <t3 "a" b=1 />
     </t2>
     <t4 "c" d=false />
   </t1>`;
-  let ast = parse(new Lexer().lex(txt));
-  expect(ast.length).toBe(1);
-  await evaluate(ast[0], {
+  const run = Runtime.fromText(txt, {
     t1: (_s, _a, meta) => {
       expect(meta.node.children.length).toBe(5);
       expect(meta.node.parent).toEqual({});
@@ -83,7 +82,9 @@ test('evaluate custom tags', async () => {
       return meta.node;
     },
   });
-  expect(unParse(ast[0])).toBe(`<t1 x="x">
+  expect(run.ast.length).toBe(1);
+  await run.evaluateTag(run.ast[0]);
+  expect(unParse(run.ast[0])).toBe(`<t1 x="x">
     <t2 z="z">
       <t3 "a" b=2 />
     </t2>
@@ -92,14 +93,12 @@ test('evaluate custom tags', async () => {
 });
 
 test('evaluate consumable custom tags', async () => {
-  let txt = `<t1><t2 cut=1>
+  const txt = `<t1><t2 cut=1>
       <t3 />
     </t2>
     <t4 cut=1 />
   </t1>`;
-  let ast = parse(new Lexer().lex(txt));
-  expect(ast.length).toBe(1);
-  await evaluate(ast[0], {
+  const run = Runtime.fromText(txt, {
     t1: (_s, _a, meta) => {
       return meta.node;
     },
@@ -116,21 +115,20 @@ test('evaluate consumable custom tags', async () => {
       return meta.node;
     },
   });
-  expect(unParse(ast[0])).toBe('<t1>\n      <t3 />\n    \n    <t4 cut=1 />\n  </t1>');
+  expect(run.ast.length).toBe(1);
+  await run.evaluateAll();
+  expect(unParse(run.ast[0])).toBe('<t1>\n      <t3 />\n    \n    <t4 cut=1 />\n  </t1>');
 });
 
 test('evaluate frozen custom tags', async () => {
-  // CUT doesn't work for functions that return the node
   // ALL functions here return the node
-  let txt = `<t1>
+  const txt = `<t1>
     <t2 freeze=true>
       <t3 />
       <t4> </t4>
     </t2>
   </t1>`;
-  let ast = parse(new Lexer().lex(txt));
-  expect(ast.length).toBe(1);
-  await evaluate(ast[0], {
+  const run = Runtime.fromText(txt, {
     t1: (_s, _a, meta) => {
       // console.log('T1');
       meta.node.params.x = 'x';
@@ -153,7 +151,9 @@ test('evaluate frozen custom tags', async () => {
       return meta.node;
     },
   });
-  expect(unParse(ast[0])).toBe(`<t1 x="x">
+  expect(run.ast.length).toBe(1);
+  await run.evaluateAll();
+  expect(unParse(run.ast[0])).toBe(`<t1 x="x">
     <t2 freeze=true>
       <t3 />
       <t4> </t4>
@@ -162,14 +162,12 @@ test('evaluate frozen custom tags', async () => {
 });
 
 test('destroy ☠️ custom tags', async () => {
-  let txt = `<t1><t2>
+  const txt = `<t1><t2>
       <t3 />
     </t2>
     <t4 />
   </t1>`;
-  let ast = parse(new Lexer().lex(txt));
-  expect(ast.length).toBe(1);
-  await evaluate(ast[0], {
+  const run = Runtime.fromText(txt, {
     t1: (_s, _a, meta) => {
       meta.node.firstTagText = '<hack1>';
       meta.node.secondTagText = '</hack1>';
@@ -190,7 +188,9 @@ test('destroy ☠️ custom tags', async () => {
       return meta.node;
     },
   });
-  expect(unParse(ast[0])).toBe(`<t1><t2>
+  expect(run.ast.length).toBe(1);
+  await run.evaluateAll();
+  expect(unParse(run.ast[0])).toBe(`<t1><t2>
       <t3 />
     </t2>
     <t4 />

@@ -79,34 +79,61 @@ export interface ConfigFull {
 export interface CliConfig extends Config {
   depth?: number;
   glob?: string;
+  onlyTags?: Set<string>;
+  skipTags?: Set<string>;
 }
 
-export interface CliConfigFull extends Config {
+export interface CliConfigFull extends ConfigFull {
   depth: number;
   glob: string;
+  onlyTags: Set<string>;
+  skipTags: Set<string>;
 }
 
-export interface EvalMeta {
-  root?: string;
+export interface RuntimeFile {
+  // the file name
   fname?: string;
-  config?: Config;
-  node?: ParseToken;
-  ctx?: Record<string, any>;
+  // directory name
+  dname?: string;
+  size: number;
+  hash?: string;
+  ctime?: Date;
+  mtime?: Date;
+  // Is this file locked?
+  locked?: boolean;
 }
 
-export interface EvalMetaFull {
-  root: string;
-  fname: string;
-  config: ConfigFull;
+export interface RuntimeState {
+  running: boolean;
+  started?: Date;
+  stopped?: Date;
+}
+
+type Function = (...args: any[]) => any;
+
+export interface Runtime {
+  file: RuntimeFile;
+  ast: ParseToken[];
+  // The current Node being processed
   node: ParseToken;
-  ctx: Record<string, any>;
+  state: RuntimeState;
+  config: CliConfigFull;
+  globalCtx: Record<string, any>;
+  customTags: Readonly<Record<string, Function>>;
+  allFunctions: Readonly<Record<string, any>>;
+  // Functions
+  write: Function;
+  evaluateAll: Function;
+  evaluateTag: Function;
+  // Allow any number of additional function properties
+  [key: string]: Function | any;
 }
 
 // Type signature for TwoFold tag functions
 export type TwoFoldTag = (
   text: string,
   args: Record<string, any>,
-  meta: EvalMetaFull
+  meta: Runtime
 ) => void | string | Promise<void> | Promise<string>;
 
 // Type signature for TwoFold function wrappers

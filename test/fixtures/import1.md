@@ -1,4 +1,4 @@
 
-<import '*' from='test/fixtures/import2.md'/>
+<evaluate file='./import2.md'/>
 
 <set x=1 />

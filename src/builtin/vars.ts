@@ -6,13 +6,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import picomatch from 'picomatch';
 
-import parse from '../parser.ts';
-import Lexer from '../lexer.ts';
-import evaluateTag from '../evaluate.ts';
 import * as T from '../types.ts';
-import { ParseToken } from '../types.ts';
+import Runtime from '../runtime.ts';
+import { MemoCache } from '../cache.ts';
 import { log } from '../logger.ts';
 import { interpolate, shouldInterpolate } from '../evaluate.ts';
+import { only } from 'node:test';
 
 let parseToml: (content: string) => Record<string, any>;
 
@@ -27,7 +26,7 @@ let parseToml: (content: string) => Record<string, any>;
   }
 })();
 
-function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): void {
+function __set(_t: string, args: Record<string, any>, meta: T.Runtime): void {
   /**
    * Set (define) one or more variables, either static,
    * or composed of other transformed variables.
@@ -55,8 +54,8 @@ function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
       return;
     }
     // Create the group if it doesn't exist
-    if (!meta.ctx[group]) {
-      meta.ctx[group] = {};
+    if (!meta.globalCtx[group]) {
+      meta.globalCtx[group] = {};
     }
     // Set (define) one or more variaßles inside the group
     for (const k of Object.keys(meta.node.params || {})) {
@@ -67,12 +66,12 @@ function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
       const rawValue = meta.node.rawParams?.[k];
       if (shouldInterpolate(rawValue, meta.config)) {
         try {
-          v = interpolate(rawValue, meta.ctx, meta.config);
+          v = interpolate(rawValue, meta.globalCtx, meta.config);
         } catch (err: any) {
           log.warn(`Cannot interpolate ${k}=${rawValue}!`, err.message);
         }
       }
-      meta.ctx[group][k] = v;
+      meta.globalCtx[group][k] = v;
     }
   } else {
     const cfg = meta.config;
@@ -90,12 +89,12 @@ function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
       const rawValue = meta.node.rawParams?.[k];
       if (shouldInterpolate(rawValue, meta.config)) {
         try {
-          v = interpolate(rawValue, meta.ctx, meta.config);
+          v = interpolate(rawValue, meta.globalCtx, meta.config);
         } catch (err: any) {
           log.warn(`Cannot interpolate ${k}=${rawValue}!`, err.message);
         }
       }
-      meta.ctx[k] = v;
+      meta.globalCtx[k] = v;
     }
   }
   // Return undefined to avoid consuming the tag
@@ -103,14 +102,14 @@ function __set(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
 
 export const set: T.TwoFoldWrap = {
   fn: __set,
-  // This param tells the Evaluator to
+  // This param tells the Runtime to
   // run this function before the children,
   // in breadth-first order
   evalOrder: 0,
   description: 'Set (define) one or more variables.',
 };
 
-function __del(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): void {
+function __del(_t: string, args: Record<string, any> = {}, meta: T.Runtime): void {
   /**
    * Del (delete/ remove) one or more variables.
    * You can also Set a variable to undefined, it's almost the same.
@@ -138,9 +137,9 @@ function __del(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
   if (!vars.length) return;
 
   for (const v of vars) {
-    if (meta.ctx[v]) {
+    if (meta.globalCtx[v]) {
       // Delete the specified variable
-      delete meta.ctx[v];
+      delete meta.globalCtx[v];
       log.debug(`Deleted var "${v}"!`);
     }
   }
@@ -148,14 +147,14 @@ function __del(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
 
 export const del: T.TwoFoldWrap = {
   fn: __del,
-  // This param tells the Evaluator to
+  // This param tells the Runtime to
   // run this function before the children,
   // in breadth-first order
   evalOrder: 0,
   description: 'Del (delete/ remove) one or more variables.',
 };
 
-export function json(text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): void {
+export function json(text: string, args: Record<string, any> = {}, meta: T.Runtime): void {
   /**
    * Set (define) variables from a JSON object.
    *
@@ -185,13 +184,13 @@ export function json(text: string, args: Record<string, any> = {}, meta: T.EvalM
       const data = JSON.parse(args.innerText || text);
       if (typeof data !== 'object' || Array.isArray(data)) {
         // Not an object, group data is overwritten
-        meta.ctx[group] = data;
+        meta.globalCtx[group] = data;
       } else {
-        if (!meta.ctx[group]) {
-          meta.ctx[group] = {};
+        if (!meta.globalCtx[group]) {
+          meta.globalCtx[group] = {};
         }
         // Object, new variables are merged with the group
-        meta.ctx[group] = Object.assign(meta.ctx[group], data);
+        meta.globalCtx[group] = Object.assign(meta.globalCtx[group], data);
       }
     } catch (err: any) {
       log.warn(`Cannot parse JSON group tag!`, err.message);
@@ -204,7 +203,7 @@ export function json(text: string, args: Record<string, any> = {}, meta: T.EvalM
         log.warn('Cannot use JSON tag! ERROR: Not an object!');
       } else {
         for (const [k, v] of Object.entries(data)) {
-          meta.ctx[k] = v;
+          meta.globalCtx[k] = v;
         }
       }
     } catch (err: any) {
@@ -213,7 +212,7 @@ export function json(text: string, args: Record<string, any> = {}, meta: T.EvalM
   }
 }
 
-export function toml(text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): void {
+export function toml(text: string, args: Record<string, any> = {}, meta: T.Runtime): void {
   /**
    * Set (define) variables from a TOML object.
    *
@@ -239,11 +238,11 @@ export function toml(text: string, args: Record<string, any> = {}, meta: T.EvalM
   if (group) {
     try {
       const data = parseToml!(args.innerText || text);
-      if (!meta.ctx[group]) {
-        meta.ctx[group] = {};
+      if (!meta.globalCtx[group]) {
+        meta.globalCtx[group] = {};
       }
       // Object, new variables are merged with the group
-      meta.ctx[group] = Object.assign(meta.ctx[group], data);
+      meta.globalCtx[group] = Object.assign(meta.globalCtx[group], data);
     } catch (err: any) {
       log.warn(`Cannot parse TOML group tag!`, err.message);
     }
@@ -252,7 +251,7 @@ export function toml(text: string, args: Record<string, any> = {}, meta: T.EvalM
     try {
       const data = parseToml!(text);
       for (const [k, v] of Object.entries(data)) {
-        meta.ctx[k] = v;
+        meta.globalCtx[k] = v;
       }
     } catch (err: any) {
       log.warn(`Cannot parse TOML glob tag!`, err.message);
@@ -260,7 +259,7 @@ export function toml(text: string, args: Record<string, any> = {}, meta: T.EvalM
   }
 }
 
-export async function loadAll(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): Promise<void> {
+export async function loadAll(_t: string, args: Record<string, any> = {}, meta: T.Runtime): Promise<void> {
   /**
    * Load all variables from all the files matched by the glob pattern.
    * This is a special tag that is used to load JSON or TOML files.
@@ -271,7 +270,7 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
    */
   let patt = args['0'] || args.src || args.from || args.path;
   if (!patt) return;
-  const root = path.join(meta.root || '.', path.dirname(patt));
+  const root = path.join(meta.file.dname || '.', path.dirname(patt));
   patt = path.basename(patt);
 
   for (const fname of fs.readdirSync(root)) {
@@ -302,9 +301,9 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
           if (typeof data !== 'object' || Array.isArray(data)) {
             log.warn(`Cannot use JSON file "${fname}"! ERROR: Not an object!`);
           } else {
-            meta.ctx[key] = meta.ctx[key] || {};
+            meta.globalCtx[key] = meta.globalCtx[key] || {};
             for (const [k, v] of Object.entries(data)) {
-              meta.ctx[key][k] = v;
+              meta.globalCtx[key][k] = v;
             }
           }
         } catch (err: any) {
@@ -314,9 +313,9 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
         // Load TOML file
         try {
           const data = parseToml!(text);
-          meta.ctx[key] = meta.ctx[key] || {};
+          meta.globalCtx[key] = meta.globalCtx[key] || {};
           for (const [k, v] of Object.entries(data)) {
-            meta.ctx[key][k] = v;
+            meta.globalCtx[key][k] = v;
           }
         } catch (err: any) {
           log.warn(`Cannot parse TOML file "${fname}"!`, err.message);
@@ -328,138 +327,68 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
   }
 }
 
-async function __import(_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull): Promise<undefined> {
+const trackImports = new MemoCache();
+
+async function __evaluate(_t: string, args: Record<string, any> = {}, meta: T.Runtime): Promise<undefined> {
   /**
-   * Import one or more variables from `set`, `json` or `toml` tags included in other files.
-   * The import syntax is very similar to the JavaScript import,
-   * and you can import anywhere in your code, not only at the beginning.
-   * This is actually not a real import, but an evaluation of the specified file
-   * in the current context.
+   * Evaluate tags from from another file, in the current context.
+   * You can selectively evaluate only some tags from another file.
+   * In case of files deeply evaluating other files, they are run in order,
+   * and the files already evaluated are not evaluated for some time.
    *
    * Example:
-   * <import "name, age, job" from="path/to/file"/>
+   * <evaluate file="path/to/file"/>
+   * <evaluate only="set,del" from="path/to/another"/>
+   * <evaluate skip="weather,ai" from="path/to/another"/>
    */
-  if (!args?.['0']) return;
-  // Import X from Y
-  const what = args?.['0']
-    .split(/[, ]/)
-    .map((w: string) => w.trim())
-    .filter((w: string) => w.length > 0); // The variables to import
-  if (what.length === 0) return;
 
-  let fname = args.from; // The file to import from
+  let fname = args.from || args.file || args.path || args.src;
   if (!fname) return;
-  if (meta.root) {
-    fname = path.resolve(meta.root, fname);
+  if (meta.file.dname) {
+    fname = path.resolve(meta.file.dname, fname);
   }
 
-  // TODO :: import name as alias
+  // Evaluate only=A,b,c from=File
+  // A set of tags to run, separated by commas or spaces
+  const onlyTags: Set<string> = new Set(
+    (args.only || '')
+      .split(/[, ]/)
+      .map((w: string) => w.trim())
+      .filter((w: string) => w.length > 0)
+  );
+  // Evaluate skip=B,c,d from=File
+  // A set of tags to skip, separated by commas or spaces
+  const skipTags: Set<string> = new Set(
+    (args.skip || '')
+      .split(/[, ]/)
+      .map((w: string) => w.trim())
+      .filter((w: string) => w.length > 0)
+  );
 
-  let ast: ParseToken[] = [];
-  try {
-    let text = '';
-    if (typeof Bun !== 'undefined') {
-      const file = Bun.file(fname);
-      text = await file.text();
-    } else if (typeof Deno !== 'undefined') {
-      text = await Deno.readTextFile(fname);
-    }
-    ast = parse(new Lexer(meta.config).lex(text), meta.config);
-  } catch {
-    log.warn(`Cannot import from "${fname}"!`);
-    return;
-  }
-
-  const onlyTags = new Set(['set', 'json', 'toml', 'import']);
-  const importData: Record<string, any> = {}; // The Global Context
-  const allFunctions: Record<string, any> = { set, del, json, toml, import: _import };
-  for (const t of ast) {
-    // Track the imported imports
-    if (t.name === 'import') {
-      if (!importData.__track_imports) {
-        importData.__track_imports = meta.ctx.__track_imports || [];
-      }
-      // Avoid circular imports
-      if (importData.__track_imports.includes(fname)) {
-        log.warn(`Circular import detected: "${importData.__track_imports.join(' > ')}"!`);
-        delete importData.__track_imports;
-        delete meta.ctx.__track_imports;
+  const cfg = { ...meta.config, onlyTags, skipTags };
+  const engine = await Runtime.fromFile(fname, meta.customTags, cfg);
+  for (const t of engine.ast) {
+    // Track eval inside eval inside eval
+    if (t.name === 'evaluate') {
+      if (trackImports.hasCache(fname)) {
+        log.warn(`File was already evaluated: "${fname}"! Skipping.`);
         return;
       }
-      importData.__track_imports.push(fname);
+      // Cache the file name to avoid running it again for a few seconds
+      trackImports.setCache(fname, true, 5000);
     }
-    await evaluateTag(
-      t,
-      allFunctions,
-      importData,
-      meta.config,
-      {
-        fname,
-        root: meta.root,
-        config: meta.config,
-        ctx: importData,
-      },
-      { only: onlyTags }
-    );
-  }
-  ast = [];
-
-  if (what.length === 1 && what[0] === '*') {
-    // Import *all* variables in the global context
-    // There is no namespace, the vars will overwrite the existing ones
-    for (const key of Object.keys(importData)) {
-      meta.ctx[key] = importData[key];
-    }
-    return;
-  }
-
-  // Create a new tree only with the selected paths.
-  // This is a bit unusual, compared to Node.js imports,
-  // but it allows to import only the needed variables,
-  // at any depth, not just the top level
-  const selectedData: Record<string, any> = {};
-  for (const path of what) {
-    const keys = path.split('.');
-    let currentObj = importData;
-    let currentResult = selectedData;
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      if (currentObj && typeof currentObj === 'object' && key in currentObj) {
-        if (i === keys.length - 1) {
-          // Last key in the path, assign the value
-          if (!currentResult[key]) {
-            currentResult[key] = currentObj[key];
-          }
-        } else {
-          // Not the last key, create nested object if it doesn't exist
-          if (!currentResult[key]) {
-            currentResult[key] = {};
-          }
-          currentResult = currentResult[key];
-          currentObj = currentObj[key];
-        }
-      } else {
-        // Path doesn't exist in the original object
-        log.warn(`Cannot find "${key}" in "${fname}"!`);
-        break;
-      }
-    }
-  }
-
-  // Merge the selected/ imported data with current context
-  for (const key of Object.keys(selectedData)) {
-    meta.ctx[key] = selectedData[key];
+    await engine.evaluateTag(t, meta.globalCtx);
   }
 }
 
-export const _import: T.TwoFoldWrap = {
-  fn: __import,
-  // This param tells the Evaluator to run this
+export const evaluate: T.TwoFoldWrap = {
+  fn: __evaluate,
+  // This param tells the Runtime to run this
   // before the children, in breadth-first order
   evalOrder: 0,
 };
 
-export function vars(names: string, args: any, meta: T.EvalMetaFull): string | undefined {
+export function vars(names: string, args: any, meta: T.Runtime): string | undefined {
   /**
    * A tag used for DEV, to echo one or more variables.
    * It is similar to the debug tag, but it only shows
@@ -482,36 +411,37 @@ export function vars(names: string, args: any, meta: T.EvalMetaFull): string | u
     }
   }
   let text = JSON.stringify(selected, null, ' ');
-  const isDouble = meta.node.double || meta.node.parent?.double;
+  const isDouble = meta.node!.double || meta.node!.parent?.double;
   if (isDouble) text = '\n' + text + '\n';
   else text = `---\nVars: ${text}\n---`;
   return text;
 }
 
-export function debug(_: string, args: any, meta: T.EvalMetaFull): string {
+export function debug(_: string, args: any, meta: T.Runtime): string {
   /**
    * A tag used for DEV, to echo the parsed tag args and metadata.
    * It is similar to the vars tag, but it also shows the raw text
    * of the tag, and the arguments.
    */
-  if (meta.node.rawText) {
+  const node = meta.node!;
+  if (node.rawText) {
     // trim the < and > to disable the live tag
-    meta.node.rawText = meta.node.rawText.slice(1, -1);
+    node.rawText = node.rawText.slice(1, -1);
   }
-  if (meta.node.firstTagText) {
+  if (node.firstTagText) {
     // disable the double tag
-    meta.node.firstTagText = meta.node.firstTagText.slice(1, -1);
+    node.firstTagText = node.firstTagText.slice(1, -1);
   }
-  if (meta.node.secondTagText) {
+  if (node.secondTagText) {
     // disable the double tag
-    meta.node.secondTagText = meta.node.secondTagText.slice(1, -1);
+    node.secondTagText = node.secondTagText.slice(1, -1);
   }
-  if (meta.node.parent?.secondTagText) {
+  if (node.parent?.secondTagText) {
     // disable the double tag
-    meta.node.parent.secondTagText = meta.node.parent.secondTagText.slice(1, -1);
+    node.parent.secondTagText = node.parent.secondTagText.slice(1, -1);
   }
 
-  const isDouble = meta.node.double || meta.node.parent?.double;
+  const isDouble = node.double || node.parent?.double;
   let text = `---\nArgs: ${JSON.stringify(args, null, ' ')}\nMeta: ${JSON.stringify(meta, null, ' ')}\n---`;
   if (isDouble) text = '\n' + text + '\n';
   return text;

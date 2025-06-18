@@ -1,26 +1,21 @@
 import * as T from './types.ts';
-import * as hooks from './addons/hooks.ts';
-import * as A from './addons/types.ts';
 import { log } from './logger.ts';
-import { defaultCfg } from './config.ts';
-import { deepClone, isFunction } from './util.ts';
-import { consumeTag, getText, isDoubleTag, isSingleTag, syncTag } from './tags.ts';
-import './addons/index.ts'; // Trigger all addons
+import { consumeTag, getText, syncTag } from './tags.ts';
 
 /**
  * Evaluate a single tag, by calling the tag function.
  */
-async function evaluateSingleTag(
+export async function evaluateSingleTag(
   tag: T.SingleTag,
   params: Record<string, any>,
   func: Function,
-  meta: T.EvalMeta = {}
+  meta: T.Runtime
 ): Promise<any> {
   // Zero param text from the single tag &
   // A prop: built-in option that allows single tags to receive text, just like double tags
   // For single tags, zero params have higher priority
   const firstParam = params!['0'] || '';
-  let result = tag.rawText;
+  let result: any = tag.rawText;
   try {
     //
     // Execute the tag function with params
@@ -57,21 +52,21 @@ async function evaluateSingleTag(
 }
 
 /*
- * Shallow evaluate a double tag; Only the direct children are processed.
- * If the double tag has param freeze=true, it will not be evaluated.
+ * Evaluate a double tag, by calling the tag function.
+ * The children are not processed here.
  */
-async function evaluateDoubleTag(
+export async function evaluateDoubleTag(
   tag: T.DoubleTag,
   params: Record<string, any>,
   func: Function,
-  meta: T.EvalMeta = {}
+  meta: T.Runtime
 ): Promise<any> {
   const firstParam = params!['0'] || '';
-  // The input text for the double tag is
-  // a flat text of all children combined
-  // Probably not ideal ...
+  // The input text for the double tag is a flat text of all children combined
+  // Probably not ideal ... but the tag function can always access the children
+  // and the tag itself, so it can do whatever it wants
   const innerText = getText(tag);
-  let result = innerText;
+  let result: any = innerText;
   try {
     //
     // Execute the tag function with params
@@ -105,7 +100,12 @@ async function evaluateDoubleTag(
   }
 }
 
-export function shouldInterpolate(v: string, cfg: T.ConfigFull): boolean {
+interface MiniConfig {
+  openExpr: string;
+  closeExpr: string;
+}
+
+export function shouldInterpolate(v: string, cfg: MiniConfig): boolean {
   if (!v) return false;
   // Check if the string could be a backtick expression
   if (v.length > 4 && v[0] === '`' && v[v.length - 1] === '`' && v.includes('${') && v.includes('}')) {
@@ -118,7 +118,7 @@ export function shouldInterpolate(v: string, cfg: T.ConfigFull): boolean {
   return false;
 }
 
-export function interpolate(body: string, args: Record<string, any>, cfg: T.ConfigFull): any {
+export function interpolate(body: string, args: Record<string, any>, cfg: MiniConfig): any {
   // Raw property value is always trimmed
   if (body[0] === cfg.openExpr && body[body.length - 1] === cfg.closeExpr) {
     body = body.slice(1, -1);
@@ -130,185 +130,4 @@ export function interpolate(body: string, args: Record<string, any>, cfg: T.Conf
   // console.log('INTERPOLATE:', args, 'BODY:', body);
   const fn = new Function(...Object.keys(args), `{ return ${body} }`);
   return fn(...Object.values(args));
-}
-
-async function _executeWithHooks(
-  tag: T.ParseToken,
-  func: T.TwoFoldTag,
-  localCtx: Record<string, any>,
-  globalCtx: Record<string, any>,
-  meta: T.EvalMeta,
-  cfg: Readonly<T.ConfigFull>
-) {
-  // Inject stuff inside Meta to prepare for evaluating the tag
-  meta.node = structuredClone(tag);
-  if (!tag.params) meta.node.params = {};
-
-  meta.config = cfg;
-  meta.ctx = globalCtx;
-
-  // Inject the parsed parent into meta
-  if (tag.parent) {
-    meta.node.parent = tag.parent;
-    delete meta.node.parent.children;
-    delete meta.node.parent.parent;
-  } else {
-    meta.node.parent = {};
-  }
-
-  let result: any = undefined;
-  // Hook interrupt callback
-  for (const h of hooks.HOOKS1) {
-    try {
-      result = await h(func, tag, localCtx, globalCtx, meta);
-    } catch (err: any) {
-      log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
-      return; // Return undefined explicitly or handle as needed
-    }
-    if (result !== undefined && result !== null) {
-      // If the hook returned a value, it is used as a result
-      // and the tag is not evaluated
-      log.info(`Hook preEval returned value for tag "${tag.name}".`);
-      if (isDoubleTag(tag)) {
-        tag.children = [{ index: -1, rawText: result.toString() }];
-      } else if (isSingleTag(tag)) {
-        tag.rawText = result.toString();
-      }
-      return; // Return undefined explicitly or handle as needed
-    }
-  }
-
-  // Prevent new properties from being added to Meta
-  const sealedMeta = Object.seal(meta); // Use a new variable for the sealed meta
-  // Call the specialized evaluate function
-  if (isDoubleTag(tag)) {
-    result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, sealedMeta);
-  } else if (isSingleTag(tag)) {
-    result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, sealedMeta);
-  }
-
-  // Hook interrupt callback
-  for (const h of hooks.HOOKS2) {
-    try {
-      await h(result, tag, localCtx, globalCtx, sealedMeta);
-    } catch (err: any) {
-      log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
-      return; // Return undefined explicitly or handle as needed
-    }
-  }
-}
-
-export default async function evaluateTag(
-  tag: T.ParseToken,
-  allFunctions: Readonly<Record<string, any>>,
-  globalContext: Record<string, any> = {},
-  cfg: Readonly<T.ConfigFull> = defaultCfg,
-  meta: T.EvalMeta = {},
-  filter: Readonly<{ only?: Set<string>; skip?: Set<string> }> = {}
-) {
-  if (!tag.name) {
-    return;
-  }
-  if (filter.only && !filter.only.has(tag.name)) {
-    log.debug(`Skipping tag "${tag.name}" evaluation! Not in filter.only!`);
-    return;
-  }
-  if (filter.skip && filter.skip.has(tag.name)) {
-    log.debug(`Skipping tag "${tag.name}" evaluation! Already in filter.skip!`);
-    return;
-  }
-
-  let evalOrder = 1;
-  let func = allFunctions[tag.name];
-  if (func && isFunction(func.fn)) {
-    if (typeof func.evalOrder === 'number') {
-      evalOrder = func.evalOrder as number;
-    }
-    func = func.fn as T.TwoFoldTag;
-  }
-
-  const localCtx = { ...globalContext, ...tag.params };
-  if (tag.params && tag.rawParams) {
-    for (const [k, v] of Object.entries(tag.rawParams)) {
-      if (shouldInterpolate(v, cfg)) {
-        const interCtx = { ...tag.params, ...globalContext };
-        if (interCtx['0']) {
-          // interpolate crashes with param called '0'
-          delete interCtx['0'];
-        }
-        try {
-          const spread = interpolate(v, interCtx, cfg);
-          if (k === '0') {
-            // Special logic for the ZERO props with interpolation
-            if (spread && typeof spread === 'object') {
-              delete localCtx['0'];
-              // Zero-prop was a spread like {...props}
-              for (const [kk, vv] of Object.entries(spread)) {
-                localCtx[kk] = vv;
-              }
-            } else {
-              // Zero-prop was a backtick like `${...}`
-              localCtx['0'] = spread;
-            }
-          } else {
-            localCtx[k] = spread;
-          }
-        } catch (err: any) {
-          log.warn(`Cannot interpolate string for ${k}=${v}!`, err.message);
-        }
-      }
-    }
-  }
-
-  // BFS evaluation order
-  if (evalOrder === 0 && isFunction(func)) {
-    await _executeWithHooks(tag, func as T.TwoFoldTag, localCtx, globalContext, meta, cfg);
-  }
-
-  // Deep evaluate all children, including invalid TwoFold tags
-  let evalChildren = true;
-  if (tag.children) {
-    // Hook interrupt callback
-    for (const h of hooks.HOOKS3) {
-      try {
-        await h(tag, localCtx, globalContext, meta);
-      } catch (err: any) {
-        if (err instanceof A.IgnoreNext) {
-          log.warn(`Hook preChild ignore for tag "${tag.name}"!`, err.message);
-          evalChildren = false;
-        } else {
-          log.warn(`Hook preChild raised for tag "${tag.name}"!`, err.message);
-          return;
-        }
-      }
-    }
-    // Make a deep copy of the local context, to create
-    // a separate variable scope for the children
-    // At this point, the parent props are interpolated
-    if (evalChildren) {
-      const childrenMeta: T.EvalMeta = {
-        root: meta.root,
-        fname: meta.fname,
-        ctx: deepClone(globalContext),
-        config: cfg,
-      };
-      for (const c of tag.children) {
-        if (c.name && (c.single || c.double)) {
-          c.parent = { name: tag.name, index: tag.index, params: tag.params };
-          if (tag.single) c.parent.single = true;
-          else if (tag.double) c.parent.double = true;
-          c.parent.params = { ...tag.params };
-          if (tag.rawParams) c.parent.rawParams = tag.rawParams;
-          // Inject the parsed tag into the child meta
-          childrenMeta.node = c;
-        }
-        await evaluateTag(c, allFunctions, childrenMeta.ctx!, cfg, childrenMeta);
-      }
-    }
-  }
-
-  // DFS evaluation order
-  if (evalOrder !== 0 && isFunction(func)) {
-    await _executeWithHooks(tag, func as T.TwoFoldTag, localCtx, globalContext, meta, cfg);
-  }
 }
