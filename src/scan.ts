@@ -2,7 +2,7 @@ import picomatch from 'picomatch';
 
 import { DoubleTag, ParseToken, ScanToken, SingleTag } from './types.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
-import { CliConfig, defaultCfg } from './config.ts';
+import { defaultCfg } from './config.ts';
 import { listTree } from './util.ts';
 import functions from './builtin/index.ts';
 import Lexer from '../src/lexer.ts';

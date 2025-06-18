@@ -19,7 +19,7 @@ const addon: Z.TwoFoldAddon = {
     // globalCtx: Record<string, any>,
     // meta: T.EvalMetaFull
   ): void => {
-    // Called after evaluating the tag.
+    // HOOKS2. Called after evaluating the tag.
 
     if (tag.params && (tag.params.cut === 1 || tag.params.cut === true)) {
       // @ts-ignore It's safe to assume that `tag` is a `T.ParseToken`

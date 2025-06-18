@@ -30,7 +30,7 @@ const addon: Z.TwoFoldAddon = {
     globCtx: Record<string, any>,
     meta: T.EvalMetaFull
   ): Promise<any> => {
-    // This is a pre-evaluation hook,
+    // HOOKS1. This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
     // Local context is made of globalContext +
@@ -114,7 +114,7 @@ const addon: Z.TwoFoldAddon = {
     // globCtx: Record<string, any>,
     // meta: T.EvalMetaFull
   ): void => {
-    // Called after evaluating the tag.
+    // HOOKS2. Called after evaluating the tag.
     // If the tag function wants to freeze the tag,
     // it can set args.freeze=true.
     if (localCtx.freeze || localCtx.protect) {
@@ -128,7 +128,7 @@ const addon: Z.TwoFoldAddon = {
     // globCtx: Record<string, any>,
     // meta: T.EvalMetaFull
   ): void => {
-    // Called before evaluating children.
+    // HOOKS3. Called before evaluating children.
     if (localCtx.freeze || localCtx.protect) {
       throw new Error('Frozen tag pre-children!');
     } else if (localCtx.freezeChildren) {
