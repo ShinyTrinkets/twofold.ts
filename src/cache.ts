@@ -69,11 +69,13 @@ interface DiskEntry {
 }
 
 export class DiskCache {
-  fname: string;
-  fpath: string;
+  folder: string;
 
-  constructor(fname: string) {
-    this.fname = fname;
+  constructor(folder: string) {
+    this.folder = path.resolve(folder);
+  }
+
+  getCacheFilePath(fname: string): string {
     // Basic name sanitization to prevent issues with special chars
     // Folder names can be specified, but the folder must exist,
     // because it won't be created automatically.
@@ -81,22 +83,23 @@ export class DiskCache {
       .replace(/[<>~]/g, ' ')
       .trim()
       .replace(/[:\.\*\?\!"\| ]/g, '_');
-    this.fpath = path.resolve(`${saneName}.json`);
+    return path.resolve(this.folder, `${saneName}.json`);
   }
 
   /**
    * Save a cache entry for a specific key within a cache file.
    */
-  setCache(key: string, value: any, ttl: number): void {
+  setCache(fname: string, key: string, value: any, ttl: number): void {
+    const filePath = this.getCacheFilePath(fname);
     let fileContent: Record<string, DiskEntry> = {};
     try {
-      if (fs.existsSync(this.fpath)) {
-        const dataStr = fs.readFileSync(this.fpath, 'utf8');
+      if (fs.existsSync(filePath)) {
+        const dataStr = fs.readFileSync(filePath, 'utf8');
         fileContent = JSON.parse(dataStr) as Record<string, DiskEntry>;
       }
     } catch (error) {
       // If file is corrupt or not valid JSON, start fresh
-      log.warn(`Cannot read cache file ${this.fname}, initializing new cache. ERR: ${error}`);
+      log.warn(`Cannot read cache file ${filePath}, initializing new cache. ERR: ${error}`);
       fileContent = {};
     }
     fileContent[key] = {
@@ -104,19 +107,20 @@ export class DiskCache {
       date: Date.now(),
       ttl,
     };
-    fs.writeFileSync(this.fpath, JSON.stringify(fileContent), 'utf8');
+    fs.writeFileSync(filePath, JSON.stringify(fileContent), 'utf8');
   }
 
   /**
    * Check if a valid (non-expired) cache entry exists for a specific key.
    * This operation does not modify the cache.
    */
-  hasCache(key: string, ttlOvr: number = -1): boolean {
-    if (!fs.existsSync(this.fpath)) {
+  hasCache(fname: string, key: string, ttlOvr: number = -1): boolean {
+    const filePath = this.getCacheFilePath(fname);
+    if (!fs.existsSync(filePath)) {
       return false;
     }
     try {
-      const dataStr = fs.readFileSync(this.fpath, 'utf8');
+      const dataStr = fs.readFileSync(filePath, 'utf8');
       const fileContent: Record<string, DiskEntry> = JSON.parse(dataStr);
       const entry = fileContent[key];
       if (!entry) {
@@ -138,12 +142,13 @@ export class DiskCache {
    * Uses the stored TTL for the key to check if the entry is expired.
    * If expired, it deletes the specific key from the cache file and returns undefined.
    */
-  getCache(key: string, ttlOvr: number = -1): any {
-    if (!fs.existsSync(this.fpath)) {
+  getCache(fname: string, key: string, ttlOvr: number = -1): any {
+    const filePath = this.getCacheFilePath(fname);
+    if (!fs.existsSync(filePath)) {
       return;
     }
     try {
-      const dataStr = fs.readFileSync(this.fpath, 'utf8');
+      const dataStr = fs.readFileSync(filePath, 'utf8');
       const fileContent: Record<string, DiskEntry> = JSON.parse(dataStr);
       const entry = fileContent[key];
       if (!entry) {
@@ -161,7 +166,7 @@ export class DiskCache {
       return entry.value;
     } catch (error) {
       // If error parsing, or other issues, treat as cache miss.
-      log.warn(`Error reading cache entry ${this.fname}::${key}. ERR: ${error}`);
+      log.warn(`Error reading cache entry ${filePath}::${key}. ERR: ${error}`);
       return;
     }
   }
@@ -169,26 +174,27 @@ export class DiskCache {
   /**
    * Delete a specific cache key from a file.
    */
-  delCache(key: string): void {
-    if (!fs.existsSync(this.fpath)) {
+  delCache(fname: string, key: string): void {
+    const filePath = this.getCacheFilePath(fname);
+    if (!fs.existsSync(filePath)) {
       return;
     }
     try {
-      const dataStr = fs.readFileSync(this.fpath, 'utf8');
+      const dataStr = fs.readFileSync(filePath, 'utf8');
       const fileContent: Record<string, DiskEntry> = JSON.parse(dataStr);
       if (key in fileContent) {
         delete fileContent[key];
         // If the file content is now empty, delete the file
         if (Object.keys(fileContent).length === 0) {
-          fs.unlinkSync(this.fpath);
+          fs.unlinkSync(filePath);
         } else {
-          fs.writeFileSync(this.fpath, JSON.stringify(fileContent), 'utf8');
+          fs.writeFileSync(filePath, JSON.stringify(fileContent), 'utf8');
         }
       }
     } catch (error) {
       // If error reading/parsing, might be safer to delete the whole file
-      log.warn(`Error processing cache file ${this.fname} for key deletion. Deleting file. ERR: ${error}`);
-      fs.unlinkSync(this.fpath);
+      log.warn(`Error processing cache file ${filePath} for key deletion. Deleting file. ERR: ${error}`);
+      fs.unlinkSync(filePath);
     }
   }
 
@@ -196,12 +202,13 @@ export class DiskCache {
    * Clean up expired cache entries in a specific cache file.
    * This function should be called periodically to remove stale data.
    */
-  cleanupCache(): void {
-    if (!fs.existsSync(this.fpath)) {
+  cleanupCache(fname: string): void {
+    const filePath = this.getCacheFilePath(fname);
+    if (!fs.existsSync(filePath)) {
       return;
     }
     try {
-      const dataStr = fs.readFileSync(this.fpath, 'utf8');
+      const dataStr = fs.readFileSync(filePath, 'utf8');
       const fileContent: Record<string, DiskEntry> = JSON.parse(dataStr);
       const now = Date.now();
       for (const key in fileContent) {
@@ -212,14 +219,14 @@ export class DiskCache {
       }
       // If the file content is now empty, delete the file
       if (Object.keys(fileContent).length === 0) {
-        fs.unlinkSync(this.fpath);
+        fs.unlinkSync(filePath);
       } else {
-        fs.writeFileSync(this.fpath, JSON.stringify(fileContent), 'utf8');
+        fs.writeFileSync(filePath, JSON.stringify(fileContent), 'utf8');
       }
     } catch (error) {
-      log.warn(`Error cleaning up cache file ${this.fname}. Deleting file. ERR: ${error}`);
+      log.warn(`Error cleaning up cache file ${filePath}. Deleting file. ERR: ${error}`);
       // If error reading/parsing, might be safer to delete the whole file
-      fs.unlinkSync(this.fpath);
+      fs.unlinkSync(filePath);
     }
   }
 }

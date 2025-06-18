@@ -28,7 +28,7 @@ const addon: Z.TwoFoldAddon = {
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
-    meta: T.EvalMetaFull
+    meta: T.Runtime
   ): Promise<any> => {
     // HOOKS1. This is a pre-evaluation hook,
     // called before evaluating the tag itself.
@@ -112,7 +112,7 @@ const addon: Z.TwoFoldAddon = {
     tag: T.ParseToken,
     localCtx: Record<string, any>
     // globCtx: Record<string, any>,
-    // meta: T.EvalMetaFull
+    // meta: T.Runtime
   ): void => {
     // HOOKS2. Called after evaluating the tag.
     // If the tag function wants to freeze the tag,
@@ -126,7 +126,7 @@ const addon: Z.TwoFoldAddon = {
     tag: T.ParseToken,
     localCtx: Record<string, any>
     // globCtx: Record<string, any>,
-    // meta: T.EvalMetaFull
+    // meta: T.Runtime
   ): void => {
     // HOOKS3. Called before evaluating children.
     if (localCtx.freeze || localCtx.protect) {

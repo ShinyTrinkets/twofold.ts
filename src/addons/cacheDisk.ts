@@ -1,11 +1,9 @@
 import * as fs from 'node:fs';
 import * as Z from './types.ts';
 import * as T from '../types.ts';
-import * as path from 'node:path';
 import { log } from '../logger.ts';
+import { DiskCache } from '../cache.ts';
 import { doTildify, unTildify } from '../util.ts';
-
-export const CACHE_DIR = unTildify('~/.cache/twofold');
 
 const DEFAULT_TTL = 1000 * 60 * 60 * 6; // 6 hours
 
@@ -15,19 +13,13 @@ const DEFAULT_TTL = 1000 * 60 * 60 * 6; // 6 hours
 // delete any entries that are older than their TTL.
 //
 
+export const CACHE_DIR = unTildify('~/.cache/twofold');
+
 if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
 
-// Helper function to obtain the file path for a given cache key
-function getCacheFilePath(name: string): string {
-  // Basic name sanitization to prevent issues with special chars
-  const saneName = name
-    .replace(/[<>~\/]/g, ' ')
-    .trim()
-    .replace(/[:\.\*\?\!"\| ]/g, '_');
-  return path.join(CACHE_DIR, `${saneName}.json`);
-}
+const defaultCache = new DiskCache(CACHE_DIR);
 
 /*
  * TwoFold Addon: Disk Cache
@@ -47,9 +39,9 @@ const addon: Z.TwoFoldAddon = {
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
-    meta: T.EvalMetaFull
+    meta: T.Runtime
   ): any => {
-    // This is a pre-evaluation hook,
+    // HOOKS1. This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
     // Make sure that the user REALLY wants to use the cache
@@ -59,7 +51,7 @@ const addon: Z.TwoFoldAddon = {
       // TODO :: tag.name is NOT a good cache key, it should be something unique!
       const cacheKey = localCtx.cacheKey || tag.name;
       // The cacheTTL is the least important parameter
-      const cachedValue = getCache(cacheName, cacheKey, localCtx.cacheTTL || DEFAULT_TTL);
+      const cachedValue = defaultCache.getCache(cacheName, cacheKey, localCtx.cacheTTL || DEFAULT_TTL);
       if (cachedValue) {
         log.info(`Cache hit for "${cacheName}::${cacheKey}". Returning cached value.`);
         return cachedValue;
@@ -72,16 +64,16 @@ const addon: Z.TwoFoldAddon = {
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
-    meta: T.EvalMetaFull
+    meta: T.Runtime
   ): void => {
-    // Called after evaluating the tag.
+    // HOOKS2. Called after evaluating the tag.
 
     // Make sure that the user REALLY wants to use the cache
     if (tag.params?.persist && localCtx.cache) {
       const cacheName = doTildify(localCtx.cacheName || meta.fname) || 'default';
       const cacheKey = localCtx.cacheKey || tag.name;
       const cacheTTL = localCtx.cacheTTL || DEFAULT_TTL;
-      setCache(cacheName, cacheKey, result, cacheTTL);
+      defaultCache.setCache(cacheName, cacheKey, result, cacheTTL);
     }
   },
 };

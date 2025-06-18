@@ -217,7 +217,7 @@ export async function _fetchOpenMeteo(
   };
 }
 
-export async function weather(t: string, args: Record<string, any>, meta: T.EvalMetaFull): Promise<any> {
+export async function weather(t: string, args: Record<string, any>, meta: T.Runtime): Promise<any> {
   // Allow props like keyName=MY_API_KEY to be used
   if (args.keyName && process.env[args.keyName]) {
     args.apiKey = process.env[args.keyName];
@@ -282,7 +282,7 @@ export async function weather(t: string, args: Record<string, any>, meta: T.Eval
       if (meta.node.double) return `\n${text.trim()}\n`;
       return text.trim();
     }
-  } catch (error) {
+  } catch (error: any) {
     log.warn(`Weather API error: ${error.message}`);
   }
 }

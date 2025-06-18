@@ -1,9 +1,11 @@
 import * as Z from './types.ts';
 import * as T from '../types.ts';
 import { log } from '../logger.ts';
-import { getCache, setCache } from '../cache.ts';
+import { MemoCache } from '../cache.ts';
 
 const DEFAULT_TTL = 1000 * 60; // 1 minute
+
+const defaultCache = new MemoCache();
 
 /*
  * TwoFold Addon: Memory Cache
@@ -17,18 +19,18 @@ const addon: Z.TwoFoldAddon = {
   preEval: (
     fn: T.TwoFoldTag,
     tag: T.ParseToken,
-    localCtx: Record<string, any>,
-    globCtx: Record<string, any>,
-    meta: T.Runtime
+    localCtx: Record<string, any>
+    // globCtx: Record<string, any>,
+    // meta: T.Runtime
   ): any => {
-    // This is a pre-evaluation hook,
+    // HOOKS1. This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
     // Make sure that the user REALLY wants to use the cache
     if (tag.params?.cache && (localCtx.cacheKey || localCtx.cacheTTL)) {
       // TODO :: tag.name+index is NOT a good cache key, it should be something unique!
       const cacheKey = localCtx.cacheKey || `${tag.name}:${tag.index}`;
-      const cachedValue = getCache(cacheKey, localCtx.cacheTTL || DEFAULT_TTL);
+      const cachedValue = defaultCache.getCache(cacheKey, localCtx.cacheTTL || DEFAULT_TTL);
       if (cachedValue) {
         log.info(`Cache hit for: "${cacheKey}". Returning cached value.`);
         // Return a copy of the cached value to avoid mutation?
@@ -41,17 +43,17 @@ const addon: Z.TwoFoldAddon = {
   postEval: (
     result: any,
     tag: T.ParseToken,
-    localCtx: Record<string, any>,
-    globCtx: Record<string, any>,
-    meta: T.Runtime
+    localCtx: Record<string, any>
+    // globCtx: Record<string, any>,
+    // meta: T.Runtime
   ): void => {
-    // Called after evaluating the tag.
+    // HOOKS2. Called after evaluating the tag.
 
     // Make sure that the user REALLY wants to use the cache
     if (tag.params?.cache && (localCtx.cacheKey || localCtx.cacheTTL)) {
       const cacheKey = localCtx.cacheKey || `${tag.name}:${tag.index}`;
       const cacheTTL = localCtx.cacheTTL || DEFAULT_TTL;
-      setCache(cacheKey, result, cacheTTL);
+      defaultCache.setCache(cacheKey, result, cacheTTL);
     }
   },
 };

@@ -5,7 +5,7 @@
 export async function fmtYapf(
   pyTxt: string,
   { based_on_style = 'pep8', column_limit = 120 },
-  meta = {}
+  meta: any = {}
 ): Promise<string | undefined> {
   /**
    * Format Python code with YAPF. Of course, YAPF needs to be installed.
@@ -41,7 +41,7 @@ async function fmtBlackOrBlue(
   exec: string,
   text: string,
   { line_length = 100 },
-  meta = {}
+  meta: any = {}
 ): Promise<string | undefined> {
   text = text.trim();
   if (!text) return;
@@ -56,7 +56,7 @@ async function fmtBlackOrBlue(
   return text;
 }
 
-export async function fmtPrettier(text: string, { print_width = 120 }, meta = {}): Promise<string | undefined> {
+export async function fmtPrettier(text: string, { print_width = 120 }, meta: any = {}): Promise<string | undefined> {
   /**
    * Format Javascript code with Prettier. Of course, Prettier needs to be installed.
    * Prettier is called within a Shell to allow it to read local config files.

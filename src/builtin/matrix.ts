@@ -6,7 +6,7 @@ function getRandomDialog() {
   return dialog[randomIndex];
 }
 
-export function smith(_s: any, _a: any, meta: T.EvalMetaFull) {
+export function smith(_s: any, _a: any, meta: T.Runtime) {
   /**
    * Agent Smith tag, that creates clones if itself.
    * Demonstrates how to create a tag with animations,
@@ -44,7 +44,7 @@ export function smith(_s: any, _a: any, meta: T.EvalMetaFull) {
   }
 }
 
-export function neo(_s: any, _a: any, meta: T.EvalMetaFull) {
+export function neo(_s: any, _a: any, meta: T.Runtime) {
   /**
    * Matrix Neo tag, that destroys Smith agents inside it.
    * Demonstrates how to create a tag with animations,

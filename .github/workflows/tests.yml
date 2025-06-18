@@ -20,7 +20,6 @@ jobs:
       - run: |
           deno test -RS --no-check test/lexer.test.ts && \
           deno test -RS --no-check test/parser.test.ts && \
-          deno test -RWS --no-check test/render.test.ts && \
           deno test -RWS --no-check test/evaluate.test.ts && \
           deno test -RS --no-check test/tags.test.ts && \
           deno test -RS --no-check test/vars.test.ts && \

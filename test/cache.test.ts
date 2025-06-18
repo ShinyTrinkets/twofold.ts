@@ -43,70 +43,77 @@ test('MemoCache getCache with TTL override', async () => {
 
 // Utility to generate a unique cache file name for tests
 function tempCacheName(suffix: string) {
-  return `test/cache_${suffix}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  return `fixtures/cache_${suffix}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 }
 
 // Test DiskCache class
 //
 test('DiskCache basic set/get/has', () => {
+  const cache = new DiskCache('test');
+  const key = 'foo';
+  const val = 123;
   const fname = tempCacheName('basic');
-  const cache = new DiskCache(fname);
-  console.log(`Testing DiskCache with name: ${fname} and path: ${cache.fpath}`);
-  cache.setCache('foo', 123, 100);
-  expect(cache.hasCache('foo')).toBe(true);
-  expect(cache.getCache('foo')).toBe(123);
-  expect(cache.hasCache('foo')).toBe(true); // still alive
-  cache.delCache('foo');
-  // Clean up file if exists
-  if (fs.existsSync(cache.fpath)) fs.unlinkSync(cache.fpath);
+  cache.setCache(fname, key, val, 100);
+  console.log(`Testing DiskCache with name: ${fname} and path: ${cache.getCacheFilePath(fname)}`);
+  expect(cache.hasCache(fname, key)).toBe(true);
+  expect(cache.getCache(fname, key)).toBe(val);
+  expect(cache.hasCache(fname, key)).toBe(true); // still alive
+  cache.delCache(fname, key);
+  // File should be deleted after delCache
+  const fpath = cache.getCacheFilePath(fname);
+  expect(fs.existsSync(fpath)).toBe(false);
 });
 
 test('DiskCache TTL expiration', async () => {
+  const cache = new DiskCache('test');
   const fname = tempCacheName('ttl');
-  const cache = new DiskCache(fname);
-  cache.setCache('bar', 'baz', 10);
-  expect(cache.hasCache('bar')).toBe(true);
+  cache.setCache(fname, 'bar', 'baz', 10);
+  expect(cache.hasCache(fname, 'bar')).toBe(true);
   await sleep(15); // wait for expiration
-  expect(cache.hasCache('bar')).toBe(false);
-  expect(cache.getCache('bar')).toBeUndefined();
+  expect(cache.hasCache(fname, 'bar')).toBe(false);
+  expect(cache.getCache(fname, 'bar')).toBeUndefined();
   // Clean up file if exists
-  if (fs.existsSync(cache.fpath)) fs.unlinkSync(cache.fpath);
+  const fpath = cache.getCacheFilePath(fname);
+  if (fs.existsSync(fpath)) fs.unlinkSync(fpath);
 });
 
 test('DiskCache delCache', () => {
+  const cache = new DiskCache('test');
   const fname = tempCacheName('del');
-  const cache = new DiskCache(fname);
-  cache.setCache('x', 1, 1000);
-  expect(cache.hasCache('x')).toBe(true);
-  cache.delCache('x');
-  expect(cache.hasCache('x')).toBe(false);
-  expect(cache.getCache('x')).toBeUndefined();
+  cache.setCache(fname, 'x', 1, 1000);
+  expect(cache.hasCache(fname, 'x')).toBe(true);
+  cache.delCache(fname, 'x');
+  expect(cache.hasCache(fname, 'x')).toBe(false);
+  expect(cache.getCache(fname, 'x')).toBeUndefined();
   // Clean up file if exists
-  if (fs.existsSync(cache.fpath)) fs.unlinkSync(cache.fpath);
+  const fpath = cache.getCacheFilePath(fname);
+  if (fs.existsSync(fpath)) fs.unlinkSync(fpath);
 });
 
 test('DiskCache getCache with TTL override', async () => {
+  const cache = new DiskCache('test');
   const fname = tempCacheName('ttlOvr');
-  const cache = new DiskCache(fname);
-  cache.setCache('y', 42, 100);
-  expect(cache.getCache('y', 1)).toBe(42);
+  cache.setCache(fname, 'y', 42, 100);
+  expect(cache.getCache(fname, 'y', 1)).toBe(42);
   await sleep(10); // wait without expiration
-  expect(cache.hasCache('y', 1)).toBe(false);
-  expect(cache.getCache('y', 1)).toBeUndefined();
+  expect(cache.hasCache(fname, 'y', 1)).toBe(false);
+  expect(cache.getCache(fname, 'y', 1)).toBeUndefined();
   // Clean up file if exists
-  if (fs.existsSync(cache.fpath)) fs.unlinkSync(cache.fpath);
+  const fpath = cache.getCacheFilePath(fname);
+  if (fs.existsSync(fpath)) fs.unlinkSync(fpath);
 });
 
 test('DiskCache cleanupCache removes expired entries and file', async () => {
+  const cache = new DiskCache('test');
   const fname = tempCacheName('cleanup');
-  const cache = new DiskCache(fname);
-  cache.setCache('a', 1, 5);
-  cache.setCache('b', 2, 100);
+  cache.setCache(fname, 'a', 1, 5);
+  cache.setCache(fname, 'b', 2, 100);
   await sleep(10); // let 'a' expire
-  cache.cleanupCache();
-  expect(cache.hasCache('a')).toBe(false);
-  expect(cache.hasCache('b')).toBe(true);
-  cache.delCache('b');
+  cache.cleanupCache(fname);
+  expect(cache.hasCache(fname, 'a')).toBe(false);
+  expect(cache.hasCache(fname, 'b')).toBe(true);
+  cache.delCache(fname, 'b');
   // File should be deleted after all entries removed
-  expect(fs.existsSync(cache.fpath)).toBe(false);
+  const fpath = cache.getCacheFilePath(fname);
+  expect(fs.existsSync(fpath)).toBe(false);
 });

@@ -17,7 +17,7 @@ const addon: Z.TwoFoldAddon = {
     tag: T.SingleTag | T.DoubleTag
     // localCtx: Record<string, any>,
     // globalCtx: Record<string, any>,
-    // meta: T.EvalMetaFull
+    // meta: T.Runtime
   ): void => {
     // HOOKS2. Called after evaluating the tag.
 
