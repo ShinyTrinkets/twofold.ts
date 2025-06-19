@@ -23,7 +23,6 @@ const defaultCache = new DiskCache(CACHE_DIR);
 
 /*
  * TwoFold Addon: Disk Cache
- * It is considered EXPERIMENTAL for now.
  *
  * This addon provides a disk-based caching mechanism for TwoFold tags.
  * It allows caching the results of tags and reusing them later.

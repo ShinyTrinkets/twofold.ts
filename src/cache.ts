@@ -15,6 +15,13 @@ interface MemoEntry {
 export class MemoCache {
   private bucket = new Map<string, MemoEntry>();
 
+  // constructor() {
+  //   globalThis.addEventListener('unload', () => {
+  //     console.log('MemoCache: cleaning up on unload');
+  //     this.empty();
+  //   });
+  // }
+
   setCache(key: string, value: Any, ttl: number): void {
     if (ttl <= 0) throw new RangeError('TTL must be > 0 ms');
     // If key already exists, clear old timer
@@ -55,6 +62,14 @@ export class MemoCache {
     if (this.alive(e, ttlOvr)) return e.value as T;
     clearTimeout(e.timer);
     this.bucket.delete(key);
+  }
+
+  empty(): void {
+    // Clear all entries and cancel the timers
+    for (const entry of this.bucket.values()) {
+      clearTimeout(entry.timer);
+    }
+    this.bucket.clear();
   }
 }
 
@@ -159,7 +174,7 @@ export class DiskCache {
         // If ttlOvr caused expiration, don't delete.
         // Only delete if expired based on its own TTL and no override was given.
         if (ttlOvr <= 0) {
-          this.delCache(key);
+          this.delCache(fname, key);
         }
         return; // Expired
       }
@@ -227,6 +242,33 @@ export class DiskCache {
       log.warn(`Error cleaning up cache file ${filePath}. Deleting file. ERR: ${error}`);
       // If error reading/parsing, might be safer to delete the whole file
       fs.unlinkSync(filePath);
+    }
+  }
+
+  empty(fname: string): void {
+    const filePath = this.getCacheFilePath(fname);
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (error) {
+        log.warn(`Error deleting cache file ${filePath}. ERR: ${error}`);
+      }
+    }
+  }
+
+  emptyAll(): void {
+    if (!fs.existsSync(this.folder)) {
+      return; // Folder doesn't exist, nothing to clear
+    }
+    for (const file of fs.readdirSync(this.folder)) {
+      const filePath = path.join(this.folder, file);
+      if (fs.statSync(filePath).isFile()) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (error) {
+          log.warn(`Error deleting cache file ${filePath}. ERR: ${error}`);
+        }
+      }
     }
   }
 }

@@ -58,8 +58,8 @@ where "myFolder" will be a local folder with TypeScript/ JavaScript files.<br/> 
 
 ## Running for the first time
 
-TwoFold is not published on NPM, because it's not working with Node.js. Therefore, you have to
-download it and launch it with [Bun](https://bun.sh), or [Deno](https://deno.com)).
+TwoFold is not published on NPM and it's not tested with Node.js. Therefore, you have to download it
+and launch it with [Bun](https://bun.sh), or [Deno](https://deno.com)).
 
 Running with Bunx (similar to Npx):
 
@@ -148,10 +148,10 @@ The output will look something like this:
 2✂f [INFO] :: example.md
 Txt length :: 166
 [8.01ms] scan:example.md
-✓ emojiSunMoon
-✓ emojiClock
-✓ yesOrNo
-✓ line
+✓ <emojiSunMoon/>
+✓ <emojiClock/>
+✓ <yesOrNo> </yesOrNo>
+✓ <line/>
 Valid tags :: 4
 ```
 

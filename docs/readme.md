@@ -322,17 +322,14 @@ It will count down from 5 to 0, and then stop.
 
 ## spinner (_: string, args: any, meta: any)
 
-Experimental: animation spinner.
-It will animate forever, until tfold is closed.
+Experimental: animation spinner. It will animate forever, until tfold is closed.
 
 ---
 
 ## slowSave (s: string, args: any, meta: any)
 
-IT'S HACKY: demonstrates how to save intermediate results,
-while the tag function is still running.
-For a better impementation, look at the streaming implementation
-from the LLM/AI tag.
+IT'S HACKY: demonstrates how to save intermediate results, while the tag function is still running.
+For a better impementation, look at the streaming implementation from the LLM/AI tag.
 
 ---
 
@@ -345,32 +342,29 @@ for the TwoFold functions.
 
 ## freeze (_t: string, args: any, _m: any)
 
-When it's a double tag, all tags inside it are frozen.
-This is identical to the freeze=true prop.
+When it's a double tag, all tags inside it are frozen. This is identical to the freeze=true prop.
 Example:
-<freeze> <randomInt></randomInt> </freeze>
-will not evaluate the randomInt tag.
+<freeze> <randomInt></randomInt> </freeze> will not evaluate the randomInt tag.
 
 ---
 
 ## protect (_t: string, args: any, _m: any)
 
-When it's a double tag, all tags inside it are protected.
-This is identical to the protect=true prop.
+When it's a double tag, all tags inside it are protected. This is identical to the protect=true
+prop.
 
 ---
 
 ## jsEval (expr: string, args: Record<string, string> = {})
 
-Eval JavaScript and return the result.
-This uses the builtin eval function from Bun.
+Eval JavaScript and return the result. This uses the builtin eval function from Bun.
 
 ---
 
 ## pyEval (expr: string, args: Record<string, any> = {})
 
-Eval Python and return the result. Useful for Math.
-Python is installed in most Linux distributions and on MacOS.
+Eval Python and return the result. Useful for Math. Python is installed in most Linux distributions
+and on MacOS.
 
 ---
 
@@ -579,7 +573,7 @@ Example:
 
 ---
 
-## fmtYapf (pyTxt: string, { based_on_style = 'pep8', column_limit = 120 }, meta = {})
+## fmtYapf (pyTxt: string, { based_on_style = 'pep8', column_limit = 120 }, meta: any = {})
 
 Format Python code with YAPF. Of course, YAPF needs to be installed. YAPF is called within a Shell
 to allow it to read local config files, ENV options, etc.
@@ -600,37 +594,35 @@ to allow it to read local config files, ENV options, etc.
 
 ---
 
-## fmtPrettier (text: string, { print_width = 120 }, meta = {})
+## fmtPrettier (text: string, { print_width = 120 }, meta: any = {})
 
 Format Javascript code with Prettier. Of course, Prettier needs to be installed. Prettier is called
 within a Shell to allow it to read local config files.
 
 ---
 
-## set (_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
+## set (_t: string, args: Record<string, any>, meta: T.Runtime)
 
-Set (define) one or more variables, either static,
-or composed of other transformed variables.
-The Set tag is usually a single-tag, but you can chain set
-inside set double-tags, to maintain a separate inner context.
+Set (define) one or more variables, either static, or composed of other transformed variables. The
+Set tag is usually a single-tag, but you can chain set inside set double-tags, to maintain a
+separate inner context.
 
 Example:
-<set name="John" age="30" job="engineer"/>
-<set greet=`My name is ${name} and I am ${age} years old.`/>
+<set name="John" age="30" job="engineer"/> <set
+greet=`My name is ${name} and I am ${age} years old.`/>
 
 ---
 
-## del (_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
+## del (_t: string, args: Record<string, any> = {}, meta: T.Runtime)
 
-Del (delete/ remove) one or more variables.
-You can also Set a variable to undefined, it's almost the same.
+Del (delete/ remove) one or more variables. You can also Set a variable to undefined, it's almost
+the same. It makese sense to be a single tag.
 
-Example:
-<del "name"/>
+Example: <del "name"/>
 
 ---
 
-## json (text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
+## json (text: string, args: Record<string, any> = {}, meta: T.Runtime)
 
 Set (define) variables from a JSON object.
 
@@ -645,7 +637,7 @@ Example:
 
 ---
 
-## toml (text: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
+## toml (text: string, args: Record<string, any> = {}, meta: T.Runtime)
 
 Set (define) variables from a TOML object.
 
@@ -658,14 +650,26 @@ job = "engineer"
 
 ---
 
-## import (_t: string, args: Record<string, any> = {}, meta: T.EvalMetaFull)
+## loadAll (_t: string, args: Record<string, any> = {}, meta: T.Runtime)
 
-Import one or more variables from `set`, `json` or `toml` tags included in other files.
-The import syntax is very similar to the JavaScript import,
-and you can import anywhere in your code, not only at the beginning.
+Load all variables from all the files matched by the glob pattern. This is a special tag that is
+used to load JSON or TOML files. It makese sense to be a single tag.
 
 Example:
-<import "name, age, job" from="path/to/file"/>
+<loadAll from="path/to/files/*.json"/>
+
+---
+
+## evaluate (_t: string, args: Record<string, any> = {}, meta: T.Runtime)
+
+Evaluate tags from from another file, in the current context. You can selectively evaluate only some
+tags from another file. In case of files deeply evaluating other files, they are run in order, and
+the files already evaluated are not evaluated for some time.
+
+Example:
+<evaluate file="path/to/file"/>
+<evaluate only="set,del" from="path/to/another"/>
+<evaluate skip="weather,ai" from="path/to/another"/>
 
 ---
 
@@ -679,21 +683,21 @@ To show all variables, use <vars "*"/>
 
 ---
 
-## debug (_: string, args: any, meta: T.EvalMetaFull)
+## debug (_: string, args: any, meta: T.Runtime)
 
 A tag used for DEV, to echo the parsed tag args and metadata. It is similar to the vars tag, but it
 also shows the raw text of the tag, and the arguments.
 
 ---
 
-## smith (_s: any, _a: any, meta: T.EvalMetaFull)
+## smith (_s: any, _a: any, meta: T.Runtime)
 
 Agent Smith tag, that creates clones if itself. Demonstrates how to create a tag with animations,
 and how to use the meta object to modify the tree.
 
 ---
 
-## neo (_s: any, _a: any, meta: T.EvalMetaFull)
+## neo (_s: any, _a: any, meta: T.Runtime)
 
 Matrix Neo tag, that destroys Smith agents inside it. Demonstrates how to create a tag with
 animations, and how to use the meta object to modify the tree.

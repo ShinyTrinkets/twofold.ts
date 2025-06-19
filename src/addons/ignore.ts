@@ -8,7 +8,7 @@ function isProtected(tag: T.ParseToken): boolean {
 }
 
 /**
- * TwoFold Addon: Freeze/ Protect
+ * TwoFold Addon: Freeze/ Protect Tag
  *
  * This addon allows you to freeze or protect sub-tags in TwoFold templates.
  * It is useful when you want to prevent certain tags from being evaluated.

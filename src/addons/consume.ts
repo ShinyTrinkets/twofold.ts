@@ -3,7 +3,7 @@ import * as T from '../types.ts';
 import { consumeTag, getText } from '../tags.ts';
 
 /**
- * TwoFold Addon: Consume
+ * TwoFold Addon: Consume Tag
  *
  * This addon allows flattening the content of a double tag,
  * effectively removing the tag from the output.
