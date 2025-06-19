@@ -673,7 +673,7 @@ Example:
 
 ---
 
-## vars (names: string, args: any, meta: T.EvalMetaFull)
+## vars (names: string, args: any, meta: T.Runtime)
 
 A tag used for DEV, to echo one or more variables.
 It is similar to the debug tag, but it only shows

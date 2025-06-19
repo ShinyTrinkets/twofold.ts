@@ -55,9 +55,9 @@ specifying "start=-1" and "limit=-1".
 Check the comments in the code below to understand how this works.
 
 ```ts
-import { DoubleTag, EvalMeta, SingleTag } from "../types.ts";
+import { DoubleTag, SingleTag, Runtime } from "../types.ts";
 
-export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: EvalMeta) {
+export async function cat(fname: string, { start = 0, limit = 0 } = {}, meta: Runtime) {
   /**
    * Read a file with limit. Similar to the "cat" command from Linux.
    * Specify start=-1 and limit=-1 to read the whole file.

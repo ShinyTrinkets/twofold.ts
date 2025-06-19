@@ -8,10 +8,8 @@ import picomatch from 'picomatch';
 
 import * as T from '../types.ts';
 import Runtime from '../runtime.ts';
-import { MemoCache } from '../cache.ts';
 import { log } from '../logger.ts';
 import { interpolate, shouldInterpolate } from '../evaluate.ts';
-import { only } from 'node:test';
 
 let parseToml: (content: string) => Record<string, any>;
 
@@ -274,7 +272,7 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
   patt = path.basename(patt);
 
   for (const fname of fs.readdirSync(root)) {
-    if (picomatch.isMatch(fname, patt, { contains: true })) {
+    if (picomatch.isMatch(fname, patt)) {
       const fullPath = path.resolve(root, fname);
       let text = '';
       try {
@@ -327,8 +325,6 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
   }
 }
 
-const trackImports = new MemoCache();
-
 async function __evaluate(_t: string, args: Record<string, any> = {}, meta: T.Runtime): Promise<undefined> {
   /**
    * Evaluate tags from from another file, in the current context.
@@ -341,8 +337,7 @@ async function __evaluate(_t: string, args: Record<string, any> = {}, meta: T.Ru
    * <evaluate only="set,del" from="path/to/another"/>
    * <evaluate skip="weather,ai" from="path/to/another"/>
    */
-
-  let fname = args.from || args.file || args.path || args.src;
+  let fname = args.src || args.from || args.file || args.path;
   if (!fname) return;
   if (meta.file.dname) {
     fname = path.resolve(meta.file.dname, fname);
@@ -364,18 +359,23 @@ async function __evaluate(_t: string, args: Record<string, any> = {}, meta: T.Ru
       .map((w: string) => w.trim())
       .filter((w: string) => w.length > 0)
   );
+  const ttl = args.cacheTTL || 5000; // 5 seconds
 
   const cfg = { ...meta.config, onlyTags, skipTags };
   const engine = await Runtime.fromFile(fname, meta.customTags, cfg);
+  // Very important!! Reuse the same memoCache
+  // to avoid running the same file multiple times
+  engine.memoCache = meta.memoCache;
+
   for (const t of engine.ast) {
     // Track eval inside eval inside eval
     if (t.name === 'evaluate') {
-      if (trackImports.hasCache(fname)) {
+      if (meta.memoCache.hasCache(fname)) {
         log.warn(`File was already evaluated: "${fname}"! Skipping.`);
         return;
       }
       // Cache the file name to avoid running it again for a few seconds
-      trackImports.setCache(fname, true, 5000);
+      meta.memoCache.setCache(fname, true, ttl);
     }
     await engine.evaluateTag(t, meta.globalCtx);
   }
@@ -383,6 +383,36 @@ async function __evaluate(_t: string, args: Record<string, any> = {}, meta: T.Ru
 
 export const evaluate: T.TwoFoldWrap = {
   fn: __evaluate,
+  // This param tells the Runtime to run this
+  // before the children, in breadth-first order
+  evalOrder: 0,
+};
+
+async function __evaluateAll(t: string, args: Record<string, any> = {}, meta: T.Runtime): Promise<undefined> {
+  /**
+   * Evaluate tags of more files, in the current context.
+   * You can selectively evaluate only some tags.
+   *
+   * Example:
+   * <evaluateAll only="set,del" from="path/to/*.md"/>
+   */
+  const patt = args['0'] || args.src || args.from || args.path;
+  if (!patt) return;
+  const root = path.join(meta.file.dname || '.', path.dirname(patt));
+  for (let fname of fs.readdirSync(root)) {
+    if (picomatch.isMatch(fname, path.basename(patt))) {
+      fname = path.resolve(root, fname);
+      if (args.src) args.src = fname;
+      else if (args.from) args.from = fname;
+      else if (args.path) args.path = fname;
+      log.info(`Evaluating "${patt}" file "${path.relative(root, fname)}"...`);
+      await __evaluate(t, args, meta);
+    }
+  }
+}
+
+export const evaluateAll: T.TwoFoldWrap = {
+  fn: __evaluateAll,
   // This param tells the Runtime to run this
   // before the children, in breadth-first order
   evalOrder: 0,

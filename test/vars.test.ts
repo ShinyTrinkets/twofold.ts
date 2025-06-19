@@ -759,7 +759,21 @@ test('del variable', async () => {
   expect(tmp).toBe(txt);
 });
 
-test('importing files', async () => {
+test('evaluating all *.md', async () => {
+  let vars = {};
+  let txt = '<set x=0/><evaluateAll cacheTTL=100 src="test/fixtures/i*.md"/>';
+  let tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ x: 1, y: 2, z: 3 });
+
+  vars = {};
+  txt = '<set x=0/><evaluateAll cacheTTL=100 src="test/fixtures/*riab*.md"/>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(Object.keys(vars)).toEqual(['x', 'debug', 'SomeConfig', 'SshCfg', 'person', 'fullName', 'phone']);
+});
+
+test('evaluating files', async () => {
   let vars: any = {};
   let txt =
     '<set name="John" debug=null/> <evaluate only=toml from="test/fixtures/variables1.md"/>' +
@@ -809,41 +823,44 @@ test('importing files', async () => {
   expect(vars).toEqual({});
 });
 
-// test('vars tag', async () => {
-//   const txt = `
-// This is a test
-// <set a=a x=1 debug=null/>
-// <import "debug" from="test/fixtures/variables1.md"/>
-// <vars '*'/>
-// <import "person.address.home.street_address" from="test/fixtures/variables2.md"/>
-// <vars/> -- Nothing will happen
-// <vars "person">
-// </vars>
-// `;
-//   const out = await twofold.renderText(txt);
-//   expect(out).toBe(`
-// This is a test
-// <set a=a x=1 debug=null/>
-// <import "debug" from="test/fixtures/variables1.md"/>
-// ---
-// Vars: {
-//  "a": "a",
-//  "x": 1,
-//  "debug": true
-// }
-// ---
-// <import "person.address.home.street_address" from="test/fixtures/variables2.md"/>
-// <vars/> -- Nothing will happen
-// <vars "person">
-// {
-//  "person": {
-//   "address": {
-//    "home": {
-//     "street_address": "21 2nd Street"
-//    }
-//   }
-//  }
-// }
-// </vars>
-// `);
-// });
+test('vars tag', async () => {
+  const txt = `
+This is a test
+<set a=a x=-1/>
+<vars '*'/>
+<evaluate only=set from="test/fixtures/import3.md"/>
+<evaluate only=set from="test/fixtures/import2.md"/>
+<evaluate only=set from="test/fixtures/import1.md"/>
+<set g={{x,y,z}}/>
+<del "x,y,z"/>
+<vars/> -- Nothing will happen
+<vars "g">
+</vars>
+`;
+  const out = await twofold.renderText(txt);
+  expect(out).toBe(`
+This is a test
+<set a=a x=-1/>
+---
+Vars: {
+ "a": "a",
+ "x": -1
+}
+---
+<evaluate only=set from="test/fixtures/import3.md"/>
+<evaluate only=set from="test/fixtures/import2.md"/>
+<evaluate only=set from="test/fixtures/import1.md"/>
+<set g={{x,y,z}}/>
+<del "x,y,z"/>
+<vars/> -- Nothing will happen
+<vars "g">
+{
+ "g": {
+  "x": 1,
+  "y": 2,
+  "z": 3
+ }
+}
+</vars>
+`);
+});

@@ -14,6 +14,7 @@ import * as hooks from './addons/hooks.ts';
 import * as config from './config.ts';
 import * as A from './addons/types.ts';
 import { unParse } from './tags.ts';
+import { MemoCache } from './cache.ts';
 import { log } from './logger.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
 import { interpolate, shouldInterpolate } from './evaluate.ts';
@@ -30,12 +31,13 @@ export default class Runtime {
   ast: T.ParseToken[] = [];
   node: T.ParseToken = { index: -1, rawText: '' };
   state: T.RuntimeState;
-  config: T.CliConfigFull = config.defaultCliCfg;
+  config: T.ConfigFull = config.defaultCfg;
   globalCtx: Record<string, any> = {};
+  memoCache: MemoCache = new MemoCache();
   customTags: Readonly<Record<string, Function>>;
   allFunctions: Readonly<Record<string, any>>;
 
-  constructor(customTags: Record<string, Function> = {}, cfg: T.CliConfigFull = config.defaultCliCfg) {
+  constructor(customTags: Record<string, Function> = {}, cfg: T.ConfigFull = config.defaultCfg) {
     this.file = { size: 0, hash: '' };
     this.state = { running: false };
     this.config = Object.freeze(cfg);
@@ -52,7 +54,7 @@ export default class Runtime {
   static fromText(
     text: string,
     customTags: Record<string, Function> = {},
-    cfg: T.CliConfigFull = config.defaultCliCfg
+    cfg: T.ConfigFull = config.defaultCfg
   ): Runtime {
     const runtime = new Runtime(customTags, cfg);
     runtime.file = {
@@ -70,7 +72,7 @@ export default class Runtime {
   static async fromFile(
     file: string | T.RuntimeFile,
     customTags: Record<string, Function> = {},
-    cfg: T.CliConfigFull = config.defaultCliCfg
+    cfg: T.ConfigFull = config.defaultCfg
   ): Promise<Runtime> {
     const runtime = new Runtime(customTags, cfg);
     const fname: string = typeof file === 'string' ? path.resolve(file) : file.fname!;
@@ -124,14 +126,14 @@ export default class Runtime {
     return runtime;
   }
 
-  async write(output: string | null, text: string | null): Promise<boolean> {
+  async write(output: string | null, text: string | null, force: boolean = false): Promise<boolean> {
     if (!output && this.file.locked) {
       throw new Error(`File "${this.file.fname}" is locked!`);
     }
 
     if (!text) text = this.ast.map(unParse).join('');
     const resultHash = crypto.createHash('sha224').update(text).digest('hex');
-    if (resultHash === this.file.hash) {
+    if (!force && resultHash === this.file.hash) {
       return false; // No changes, nothing to write
     }
 
@@ -158,6 +160,7 @@ export default class Runtime {
     }
     this.state.running = true;
     this.state.started = new Date();
+    this.memoCache = new MemoCache();
     this.globalCtx = customCtx;
 
     const chunks = [];
@@ -173,6 +176,8 @@ export default class Runtime {
     this.node = { index: -1, rawText: '' };
     this.state.stopped = new Date();
     this.state.running = false;
+    this.memoCache.empty();
+    this.globalCtx = {};
     return text;
   }
 

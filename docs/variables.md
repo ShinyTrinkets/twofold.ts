@@ -122,7 +122,7 @@ In this example, all the tags following this `set` will receive the `users` arra
 The **json** tag must be a double-tag. Unlike the `set` and `toml` tags, the JSON tag must have a
 group name, because they can have a top-level array which cannot be merged with the context object.
 
-JSON data will be merged with any other `set`, `toml` or `import` data declared before.
+JSON data will be merged with any other `set`, `toml` or `evaluate` data declared before.
 
 ## TOML data
 
@@ -149,30 +149,25 @@ In this example, all the following tags will receive the "servers" object and `i
 The **toml** tag must be a double-tag. You can load the TOML into a group name just like the `set`
 and `json` tags, by specifying the group name as a zero prop.
 
-TOML data will be merged with any other `set`, `json` or `import` data declared before.
+TOML data will be merged with any other `set`, `json` or `evaluate` data declared before.
 
 ## Import variables
 
-NOTE: The Import functionality is still experimental.
+You can import variables from `set`, `json`, `toml`, or custom set tags by evaluating other files.
+Deep evaluation is also possible.
 
-You can import variables from `set`, `json` or `toml` tags included in other files. You cannot
-import anything from other tags (currently).
+You can optionally specify only some tags to be evaluated from a file, or skip some tags.
 
-The import syntax is very similar to the JavaScript import, and you can import anywhere in your
-code, not only at the beginning.
-
-All tags are public, you don't have to "export" them like in JavaScript.
-
-The **import** tag only makes sense as a single-tag.
+The **evaluate** tag only makes sense as a single-tag.
 
 Examples:
 
 ```md
 Importing two variables from a file called "variables1.md" :
 
-<import "fullName, phone" from="variables1.md" />
+<evaluate src="variables1.md" />
 
-All the tags following this import will now have access to "fullName" and "phone".
+All the tags following this evaluate will now have access to "person", "fullName" and "phone".
 
 Here you can have more "set" tags, or whatever, and they'll all have access to "fullName" and
 "phone".
@@ -205,20 +200,14 @@ This is a person. It looks like one.
 
 More text, more text.
 
-( this is the data being imported )
 <set fullName=`${person.first_name} ${person.last_name}` phone={person.phone_numbers[0].number} />
 ```
 
-Unlike JavaScript, you can import very deep objects defined in a `json` or `toml` tag, example:
+To evaluate specific tags, or skip tags, use either "only", or the "skip" props.
 
 ```
-... continued
-
-<import "person.address.home" from="variables1.md" />
-
-<text>The address is "{{person.address.home.street_address}}, {{person.address.home.city}}".</text>
-
-( the text will become: The address is "21 2nd Street, New York". )
+<evaluate only=set from="variables1.md" />
+<evaluate skip=json from="variables1.md" />
 ```
 
 The imported variables will be merged with the local variables, just like a `set`, `json` or `toml`
@@ -293,7 +282,7 @@ My name is {{ name }} and I like {{ fruits }}.
 </text>
 ```
 
-Obviously, you can use it to display any variable, from any source (set, json, toml, import).
+Obviously, you can use it to display any variable, from any source (set, json, toml, evaluate).
 
 The text tag doesn't use any fancy templating library, but you're free to create a different tag
 based on this, and use something like Mustache or EJS or whatever, to expand the variables into

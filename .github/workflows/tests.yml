@@ -20,6 +20,7 @@ jobs:
       - run: |
           deno test -RS --no-check test/lexer.test.ts && \
           deno test -RS --no-check test/parser.test.ts && \
+          deno test -RWS --no-check test/render.test.ts && \
           deno test -RWS --no-check test/evaluate.test.ts && \
           deno test -RS --no-check test/tags.test.ts && \
           deno test -RS --no-check test/vars.test.ts && \
@@ -28,4 +29,5 @@ jobs:
           deno test -RS --no-check test/tags-os.test.ts && \
           deno test -RS --no-check test/tags-table.test.ts && \
           deno test -RS --no-check test/tags-time.test.ts && \
-          deno test -RWS --no-check test/config.test.ts || exit 1
+          deno test -RWS --no-check test/config.test.ts && \
+          deno lint src/ || exit 1

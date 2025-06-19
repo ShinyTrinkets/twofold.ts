@@ -3,6 +3,7 @@
 ## v0.12 WIP
 
 - completely rewritten tag evaluation. This gives tag functions even more power.
+- created "evaluateAll" tag to run more TwoFold files in the same context.
 - BREAKING change: the experimental "import" tag is now called "evaluate". It can
   now evaluate all known tags from a file, in the local context, and eval inside
   eval inside eval is supported.
