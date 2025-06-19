@@ -17,7 +17,7 @@ export async function renderText(
   customTags: Record<string, Function> = {},
   cfg: T.ConfigFull = config.defaultCfg
 ): Promise<string> {
-  const engine = Runtime.fromText(text, customTags, cfg as T.CliConfigFull);
+  const engine = Runtime.fromText(text, customTags, cfg as T.ConfigFull);
   return await engine.evaluateAll(customData);
 }
 
@@ -27,8 +27,8 @@ export async function renderText(
 export async function renderFile(
   file: string | T.RuntimeFile,
   customTags: Record<string, Function> = {},
-  cfg: T.CliConfigFull = config.defaultCliCfg,
-  persist = false
+  cfg: T.ConfigFull = config.defaultCfg,
+  persist: boolean = false
 ): Promise<{ changed: boolean; text?: string }> {
   const engine = await Runtime.fromFile(file, customTags, cfg);
 
@@ -42,11 +42,13 @@ export async function renderFile(
 
   const initialHash = engine.file.hash;
   const text = await engine.evaluateAll();
-  if (persist) {
-    const changed = await engine.write(null, text);
+  const changed = initialHash !== engine.file.hash;
+
+  if (persist && changed) {
+    await engine.write(null, text, persist);
     return { changed, text };
   } else {
-    return { changed: initialHash !== engine.file.hash, text };
+    return { changed, text };
   }
 }
 
@@ -56,7 +58,7 @@ export async function renderFile(
 export async function renderFolder(
   dname: string,
   customTags = {},
-  cfg: T.CliConfigFull = config.defaultCliCfg,
+  cfg: T.ConfigFull = config.defaultCfg,
   persist = true
 ): Promise<{ found: number; rendered: number }> {
   const stats = { found: 0, rendered: 0 };

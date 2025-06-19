@@ -18,7 +18,7 @@ let loadToml: (fpath: string, content: string) => Record<string, any>;
   }
 })();
 
-export const defaultCfg: T.ConfigFull = Object.freeze({
+const defaultBaseCfg = Object.freeze({
   // openTag, closeTag and lastStopper must be
   // strings of length 1. At least for now.
 
@@ -44,8 +44,8 @@ export const defaultCfg: T.ConfigFull = Object.freeze({
   closeExpr: '}',
 });
 
-export const defaultCliCfg: T.CliConfigFull = Object.freeze({
-  ...defaultCfg,
+export const defaultCfg: T.ConfigFull = Object.freeze({
+  ...defaultBaseCfg,
 
   // walk-dir scan depth
   depth: 1,
@@ -85,7 +85,7 @@ export async function userCfg(path = undefined): Promise<T.ConfigFull> {
 
 const ALLOWED_LAST_STOPPER = /^[\/\?\!\.#]$/;
 
-export function validateCfg(cfg: T.CliConfig) {
+export function validateCfg(cfg: T.Config) {
   if (cfg.openTag && cfg.openTag.length !== 1) {
     throw new ConfigError('Open tag validation error');
   }

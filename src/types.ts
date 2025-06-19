@@ -60,12 +60,19 @@ export interface ScanToken {
   double?: boolean;
 }
 
-export interface Config {
+interface BaseConfig {
   openTag?: string;
   closeTag?: string;
   openExpr?: string;
   closeExpr?: string;
   lastStopper?: string;
+}
+
+export interface Config extends BaseConfig {
+  depth?: number;
+  glob?: string;
+  onlyTags?: Set<string>;
+  skipTags?: Set<string>;
 }
 
 export interface ConfigFull {
@@ -74,16 +81,6 @@ export interface ConfigFull {
   openExpr: string;
   closeExpr: string;
   lastStopper: string;
-}
-
-export interface CliConfig extends Config {
-  depth?: number;
-  glob?: string;
-  onlyTags?: Set<string>;
-  skipTags?: Set<string>;
-}
-
-export interface CliConfigFull extends ConfigFull {
   depth: number;
   glob: string;
   onlyTags: Set<string>;
@@ -117,7 +114,7 @@ export interface Runtime {
   // The current Node being processed
   node: ParseToken;
   state: RuntimeState;
-  config: CliConfigFull;
+  config: ConfigFull;
   globalCtx: Record<string, any>;
   customTags: Readonly<Record<string, Function>>;
   allFunctions: Readonly<Record<string, any>>;

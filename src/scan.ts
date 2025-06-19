@@ -1,39 +1,39 @@
+import fs from 'node:fs';
 import picomatch from 'picomatch';
 
-import { DoubleTag, ParseToken, ScanToken, SingleTag } from './types.ts';
-import { isDoubleTag, isSingleTag } from './tags.ts';
-import { defaultCfg } from './config.ts';
-import { listTree } from './util.ts';
-import functions from './builtin/index.ts';
-import Lexer from '../src/lexer.ts';
+import * as T from './types.ts';
 import parse from '../src/parser.ts';
+import Lexer from '../src/lexer.ts';
+import functions from './builtin/index.ts';
+import { listTree } from './util.ts';
+import { isDoubleTag, isSingleTag } from './tags.ts';
+import { DoubleTag, ParseToken, ScanToken, SingleTag } from './types.ts';
+import { defaultCfg } from './config.ts';
 
 /**
  * Scan files and return info about them.
  */
 export async function scanFile(
   fname: string,
-  customFunctions = {},
-  cfg: Readonly<CliConfig> = {}
+  customTags: Record<string, Function> = {},
+  cfg: T.ConfigFull = defaultCfg
 ): Promise<{ validTags: number; invalidTags: number }> {
-  const allFunctions: Record<string, Function> = {
-    ...functions,
-    ...customFunctions,
-  };
   const nodes: ScanToken[] = [];
-
   const walk = (tag: ParseToken) => {
     // Deep walk into tag and list all tags
     if (isDoubleTag(tag)) {
       const dtag = tag as DoubleTag;
+      if (dtag.firstTagText.includes(' ')) {
+        dtag.firstTagText = dtag.firstTagText.split(' ', 1) + '>';
+      }
       nodes.push({
         double: true,
         name: dtag.name,
-        tag: dtag.firstTagText + dtag.secondTagText,
+        tag: dtag.firstTagText + ' ' + dtag.secondTagText,
       });
     } else if (isSingleTag(tag)) {
       const stag = tag as SingleTag;
-      nodes.push({ single: true, name: stag.name, tag: stag.rawText });
+      nodes.push({ single: true, name: stag.name, tag: stag.rawText.split(' ', 1) + '/>' });
     }
     if (tag.children) {
       for (const c of tag.children) {
@@ -41,7 +41,7 @@ export async function scanFile(
           walk(c);
         } else if (isSingleTag(c)) {
           const stag = c as SingleTag;
-          nodes.push({ single: true, name: stag.name, tag: stag.rawText });
+          nodes.push({ single: true, name: stag.name, tag: stag.rawText.split(' ', 1) + '/>' });
         }
       }
     }
@@ -67,47 +67,63 @@ export async function scanFile(
       len += chunk.length;
       lexer.push(decoder.decode(chunk));
     }
+  } else {
+    // Node.js environment
+    const text = fs.readFileSync(fname, 'utf-8');
+    len = text.length;
+    lexer.push(text);
   }
 
   console.log('Txt length ::', len.toLocaleString('en-GB'));
   const ast = parse(lexer.finish(), cfg);
-  lexer.reset();
-
-  for (const tag of ast) {
-    walk(tag);
-  }
+  lexer.reset(); // Reset lexer to force free memory
+  ast.map(walk);
+  ast.length = 0; // Clear the AST to free memory
   console.timeEnd(label);
 
+  const known = new Set<string>();
   let validTags = 0;
-  for (const tag of nodes) {
-    if (allFunctions[tag.name]) {
-      console.debug('✓', tag.name);
+  const allFunctions: Record<string, Function> = {
+    ...functions,
+    ...customTags,
+  };
+  for (const t of nodes) {
+    if (allFunctions[t.name]) {
       validTags += 1;
-    } else console.debug('✗', tag.name);
+      if (!known.has(t.tag)) console.debug('✓', t.tag);
+    } else if (!known.has(t.tag)) console.debug('✗', t.tag);
+    known.add(t.tag);
   }
-  const invalidTags = nodes.length - validTags;
   console.log('Valid tags ::', validTags);
+  const invalidTags = nodes.length - validTags;
   if (invalidTags) {
     console.error(`Invalid tags :: ${invalidTags}`);
   }
-  console.log('-------');
+  console.log('--------');
   return { validTags, invalidTags };
 }
 
-export async function scanFolder(dir: string, customFunctions = {}, cfg: Readonly<CliConfig> = defaultCfg) {
+export async function scanFolder(
+  dir: string,
+  customTags: Record<string, Function> = {},
+  cfg: T.ConfigFull = defaultCfg
+): Promise<{ validN: number; inValidN: number; filesN: number }> {
   const label = 'scan:' + dir;
   console.time(label);
 
+  let filesN = 0;
   let validN = 0;
   let inValidN = 0;
   const isMatch = cfg.glob ? picomatch('**/' + cfg.glob) : null;
   const files = listTree(dir, cfg.depth || 1);
   for (const fname of files) {
+    filesN += 1;
+    // @ts-ignore It's fine
     if (isMatch && !isMatch(fname, { basename: true }).isMatch) {
       continue;
     }
     try {
-      const { validTags, invalidTags } = await scanFile(fname, customFunctions, cfg);
+      const { validTags, invalidTags } = await scanFile(fname, customTags, cfg);
       validN += validTags;
       inValidN += invalidTags;
     } catch (err) {
@@ -122,5 +138,5 @@ export async function scanFolder(dir: string, customFunctions = {}, cfg: Readonl
   console.log('-------');
   console.timeEnd(label);
 
-  return { validN, inValidN };
+  return { validN, inValidN, filesN };
 }
