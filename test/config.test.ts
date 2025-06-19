@@ -16,6 +16,10 @@ test('config validation', async () => {
       openExpr: '{',
       closeExpr: '}',
       lastStopper: '.',
+      depth: 1,
+      glob: '*.*',
+      onlyTags: new Set(),
+      skipTags: new Set(),
     })
   ).toBeUndefined();
 });
@@ -60,8 +64,9 @@ describe('cfg loading', () => {
   }
 
   test('JSON config', async () => {
+    const CONFIG_FILE = `${CONFIG}/twofold.config.json`;
     fs.writeFileSync(
-      `${CONFIG}/twofold.config.json`,
+      CONFIG_FILE,
       JSON.stringify({
         openTag: '[',
         closeTag: ']',
@@ -76,10 +81,14 @@ describe('cfg loading', () => {
       openExpr: '{',
       closeExpr: '}',
       lastStopper: '.',
+      depth: 1,
+      glob: '*.*',
+      onlyTags: new Set(),
+      skipTags: new Set(),
     });
 
     fs.writeFileSync(
-      `${CONFIG}/twofold.config.json`,
+      CONFIG_FILE,
       JSON.stringify({
         openTag: '{',
         closeTag: '}',
@@ -97,9 +106,13 @@ describe('cfg loading', () => {
       openExpr: '[',
       closeExpr: ']',
       lastStopper: '?',
+      depth: 1,
+      glob: '*.*',
+      onlyTags: new Set(),
+      skipTags: new Set(),
     });
 
-    fs.rmSync(`${CONFIG}/twofold.config.json`);
+    fs.rmSync(CONFIG_FILE);
   });
 
   test('TOML config', async () => {
@@ -121,6 +134,10 @@ lastStopper = "."
       openExpr: '{',
       closeExpr: '}',
       lastStopper: '.',
+      depth: 1,
+      glob: '*.*',
+      onlyTags: new Set(),
+      skipTags: new Set(),
     });
 
     fs.rmSync(`${CONFIG}/twofold.config.toml`);
