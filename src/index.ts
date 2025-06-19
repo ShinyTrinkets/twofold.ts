@@ -78,7 +78,7 @@ export async function renderFolder(
  * Edit a file, and save the changes.
  * This works by editing the AST in place.
  */
-export async function editSave(meta: Record<string, any>): Promise<T.ParseToken> {
+export async function editSave(meta: Runtime): Promise<T.ParseToken> {
   const { node } = meta;
   // Reform/ restructure de-synced tag, in place
   syncTag(node);
@@ -89,27 +89,27 @@ export async function editSave(meta: Record<string, any>): Promise<T.ParseToken>
   if (typeof Bun !== 'undefined') {
     // Tag meta contains the file name
     // and the path to the node in the AST
-    const file = Bun.file(meta.fname);
+    const file = Bun.file(meta.file.fname!);
     let text = await file.text();
     ast = parse(lexer.lex(text));
     lexer.reset();
     // Keep a copy of the original text
-    oldNode = structuredClone(deepGet(ast, node.path));
+    oldNode = structuredClone(deepGet(ast, node.path!));
     // Apply the changes to the AST, in place
-    deepSet(ast, node.path, node);
+    deepSet(ast, node.path!, node);
     text = ast.map(unParse).join('');
     // Write the new text to the same file
     file.write(text);
   } else if (typeof Deno !== 'undefined') {
-    let text = await Deno.readTextFile(meta.fname);
+    let text = await Deno.readTextFile(meta.file.fname!);
     ast = parse(lexer.lex(text));
     lexer.reset();
     // Keep a copy of the original text
-    oldNode = structuredClone(deepGet(ast, node.path));
+    oldNode = structuredClone(deepGet(ast, node.path!));
     // Apply the changes to the AST, in place
-    deepSet(ast, node.path, node);
+    deepSet(ast, node.path!, node);
     text = ast.map(unParse).join('');
-    await Deno.writeTextFile(meta.fname, text);
+    await Deno.writeTextFile(meta.file.fname!, text);
   }
 
   ast.length = 0;
