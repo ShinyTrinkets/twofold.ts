@@ -104,6 +104,7 @@ export async function dirList(txtDir: string, { d = null, li = '*', space = ' ' 
   } else {
     result = fs.readdirSync(dname);
   }
+  result.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   return result.map(f => `${li}${space}${f}`).join('\n');
 }
