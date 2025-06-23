@@ -12,6 +12,7 @@ function isProtected(tag: T.ParseToken): boolean {
  *
  * This addon allows you to freeze or protect sub-tags in TwoFold templates.
  * It is useful when you want to prevent certain tags from being evaluated.
+ * Freeze and Protect are available as both tags and params.
  *
  * Level 0 protection: freezeChildren=true, will not evaluate children,
  * but the tag itself will be evaluated.

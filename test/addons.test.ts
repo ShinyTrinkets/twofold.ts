@@ -114,8 +114,8 @@ test('freeze tag', async () => {
 });
 
 test('freeze children, omnious', async () => {
-  let txt = '<main freezeChildren=true> <aside/> </main>';
-  let tmp = await twofold.renderText(
+  const txt = '<main freezeChildren=true> <aside/> </main>';
+  const tmp = await twofold.renderText(
     txt,
     {},
     {
@@ -130,4 +130,12 @@ test('freeze children, omnious', async () => {
     }
   );
   expect(tmp).toBe(txt);
+});
+
+test('into variable addon', async () => {
+  const vars = {};
+  const txt = '<dirList "img/" intoVar="myVar"></dirList>';
+  const tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars['myVar']).toBe('* logo1.jpg\n* logo2.jpg');
 });

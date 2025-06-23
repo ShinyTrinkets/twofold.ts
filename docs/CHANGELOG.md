@@ -4,9 +4,11 @@
 
 - completely rewritten tag evaluation. This gives tag functions even more power.
 - created "evaluateAll" tag to run more TwoFold files in the same context.
+- new addon "intoVar" to store the inner text of a tag into a global variable
 - BREAKING change: the experimental "import" tag is now called "evaluate". It can
   now evaluate all known tags from a file, in the local context, and eval inside
   eval inside eval is supported.
+- BREAKING change: the "dir" tag is renamed to "dirList"
 
 ## v0.11
 

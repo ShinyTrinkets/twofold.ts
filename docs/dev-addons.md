@@ -8,7 +8,16 @@ Addons are a new feature in TwoFold v0.11 and they are hooks that get executed a
 the tag function. They allow intercepting the tag node, tag function and the context, or hacking the
 function results, in order to modify the normal behaviour of the tags.
 
-There are 3 hooks:
+The builtin addons are:
+
+- freeze/ protect/ freezeChildren -- are used for freezing or protecting tags, or their children
+- consume - is used for consuming double tags and even single tags that are normally not destroyed
+- cache memory & disk -- used to store the content of a tag for some time and skip the execution of
+  the tag until the cache expires
+- into variable -- store the inner text of the tag into a global variable, esentially converting it
+  into a "set variable" tag
+
+There are 3 addon hooks:
 
 - pre-eval
 - post-eval
@@ -39,5 +48,5 @@ I wanted to do "plugins" at least since 2019, see the
 [old Roadmap Document](https://github.com/ShinyTrinkets/twofold.js/blob/master/docs/ROADMAP.md), but
 it wasn't the rigt time, and I didn't know where they would fit. The old usecase was to cache JSON
 responses to avoid rate-limiting/ too-many-requests, but addons/ plugins/ middlewares as they are
-now, are more flexible than that, and probably the most interesting example is the "protect" tag
-that actually implements a custom evaluation function.
+now, are more flexible than that, and probably the most powerful example is the "protect" tag that
+actually implements a custom evaluation function.

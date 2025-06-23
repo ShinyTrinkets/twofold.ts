@@ -64,7 +64,7 @@ const addon: Z.TwoFoldAddon = {
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
     meta: T.Runtime
-  ): void => {
+  ): any => {
     // HOOKS2. Called after evaluating the tag.
 
     // Make sure that the user REALLY wants to use the cache

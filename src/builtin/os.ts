@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import * as fsPromises from 'node:fs/promises';
 import { resolveDirName, resolveFileName } from './common.ts';
 
 async function _resolvFname(f1: string, f2: string) {
@@ -54,7 +53,7 @@ export async function cat(txtFile: string, { f = null, start = 0, limit = 0 } = 
   return text;
 }
 
-export async function head(txtFile: string, { f = null, lines = 10 } = {}, meta = {}) {
+export async function head(txtFile: string, { f = null, lines = 10 } = {}, meta: any) {
   /**
    * Read a number of lines from file. Similar to "head" command from Linux.
    * Specify lines=-1 to read the whole file.
@@ -68,7 +67,7 @@ export async function head(txtFile: string, { f = null, lines = 10 } = {}, meta 
   return text;
 }
 
-export async function tail(txtFile: string, { f = null, lines = 10 } = {}, meta = {}) {
+export async function tail(txtFile: string, { f = null, lines = 10 } = {}, meta: any) {
   /**
    * Read a number of lines from the end of file. Similar to "tail" command from Linux.
    * Specify lines=-1 to read the whole file.
@@ -88,19 +87,23 @@ export async function tail(txtFile: string, { f = null, lines = 10 } = {}, meta 
   return text;
 }
 
-export async function dir(txtDir: string, { d = null, li = '*', space = ' ' } = {}) {
+export async function dirList(txtDir: string, { d = null, li = '*', space = ' ' } = {}) {
   /**
-   * List files in a directory. Similar to "ls" command from Linux,
+   * List files, or folders in a directory. Similar to "ls" command from Linux,
    * or "dir" command from Windows.
    */
   let dname = await resolveDirName(d);
   if (!dname) dname = await resolveDirName(txtDir);
   if (!dname) return;
 
-  let result = '';
-  const files = await fsPromises.readdir(dname);
-  for (const f of files) {
-    result += `${li}${space}${f}\n`;
+  let result: string[] = [];
+  if (typeof Deno !== 'undefined') {
+    for (const f of Deno.readDirSync(dname)) {
+      result.push(f.name);
+    }
+  } else {
+    result = fs.readdirSync(dname);
   }
-  return result.trim();
+
+  return result.map(f => `${li}${space}${f}`).join('\n');
 }

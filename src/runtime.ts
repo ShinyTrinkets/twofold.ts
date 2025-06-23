@@ -41,7 +41,7 @@ export default class Runtime {
     this.file = { size: 0, hash: '' };
     this.state = { running: false };
     this.config = Object.freeze(cfg);
-    this.customTags = Object.freeze(customTags);
+    this.customTags = Object.seal(customTags);
     this.allFunctions = Object.freeze({
       ...builtins,
       ...customTags,
@@ -311,7 +311,7 @@ export default class Runtime {
         result = await h(func, tag, localCtx, globalCtx, this);
       } catch (err: any) {
         log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
-        return; // Return undefined explicitly or handle as needed
+        return; // Exit early
       }
       if (result !== undefined && result !== null) {
         // If the hook returned a value, it is used as a result
@@ -322,7 +322,7 @@ export default class Runtime {
         } else if (isSingleTag(tag)) {
           tag.rawText = result.toString();
         }
-        return; // Return undefined explicitly or handle as needed
+        return; // Exit early
       }
     }
 
@@ -335,13 +335,24 @@ export default class Runtime {
       result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, sealedMeta);
     }
 
+    let result2: any = undefined;
     // Hook interrupt callback
     for (const h of hooks.HOOKS2) {
       try {
-        await h(result, tag, localCtx, globalCtx, sealedMeta);
+        result2 = await h(result, tag, localCtx, globalCtx, sealedMeta);
       } catch (err: any) {
         log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
-        return; // Return undefined explicitly or handle as needed
+        return; // Exit early
+      }
+      if (result2 !== undefined && result2 !== null) {
+        // If the hook returned a value, it is used to replace
+        // the tag's rawText or children
+        log.info(`Hook postEval returned value for tag "${tag.name}".`);
+        if (isDoubleTag(tag)) {
+          tag.children = [{ index: -1, rawText: result2.toString() }];
+        } else if (isSingleTag(tag)) {
+          tag.rawText = result2.toString();
+        }
       }
     }
   }
