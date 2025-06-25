@@ -25,7 +25,7 @@ import * as skeleton from './skeleton.ts';
 const filterPublicExports = (moduleExports: Record<string, any>): Record<string, any> => {
   const publicExports: Record<string, any> = {};
   for (const key in moduleExports) {
-    if (Object.prototype.hasOwnProperty.call(moduleExports, key) && /^[a-z]/.test(key)) {
+    if (Object.hasOwn(moduleExports, key) && /^[a-z]/.test(key)) {
       publicExports[key] = moduleExports[key];
     }
   }

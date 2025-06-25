@@ -1,13 +1,12 @@
-import * as T from './types.ts';
-import { ParseToken } from './types.ts';
+import type * as T from './types.ts';
+import { type ParseToken } from './types.ts';
 import { defaultCfg } from './config.ts';
 import { isDoubleTag, isFullDoubleTag, isRawText, isSingleTag } from './tags.ts';
 
 function addChild(parent: ParseToken, child: ParseToken): void {
-  if (!parent.children) {
-    parent.children = [];
-  }
-  const topChild = parent.children[parent.children.length - 1];
+  parent.children ||= [];
+
+  const topChild = parent.children.at(-1);
   if (isRawText(topChild) && isRawText(child)) {
     topChild.rawText += child.rawText;
   } else {
@@ -20,7 +19,7 @@ function addChild(parent: ParseToken, child: ParseToken): void {
  * Raw text nodes are ignored.
  */
 function addPaths(nodes: ParseToken[], currentPath = ''): void {
-  nodes.forEach((node, index) => {
+  for (const [index, node] of nodes.entries()) {
     // Only add paths to single or double tags, not raw text
     if (node.name && (node.single || node.double)) {
       // Calculate the path based on whether it's a root node or a child node
@@ -30,7 +29,7 @@ function addPaths(nodes: ParseToken[], currentPath = ''): void {
         addPaths(node.children, node.path);
       }
     }
-  });
+  }
 }
 
 /**
@@ -80,8 +79,11 @@ export default function parse(tokens: T.LexToken[], cfg: T.Config = {}): ParseTo
   };
 
   const dropFakeDouble = function (): void {
-    if (stack.length === 0) return;
-    const topStack = stack.pop() as ParseToken;
+    if (stack.length === 0) {
+      return;
+    }
+
+    const topStack = stack.pop()!;
     // Non-matching double tags are converted to raw text here
     // Remove the tag from the stack and prepare to cleanup
     commitToken({
@@ -96,7 +98,7 @@ export default function parse(tokens: T.LexToken[], cfg: T.Config = {}): ParseTo
   };
 
   for (const token of tokens) {
-    if (!token || !token.rawText) {
+    if (!token?.rawText) {
       continue;
     }
 
@@ -124,10 +126,12 @@ export default function parse(tokens: T.LexToken[], cfg: T.Config = {}): ParseTo
               break;
             }
           }
+
           if (unwindNo >= 0) {
             for (let i = stack.length - 1; i > unwindNo; i--) {
               dropFakeDouble();
             }
+
             commitDouble(token);
           } else {
             commitToken({ index: token.index, rawText: token.rawText });
@@ -162,6 +166,7 @@ export default function parse(tokens: T.LexToken[], cfg: T.Config = {}): ParseTo
       for (const child of token.children) {
         finalCommit(child);
       }
+
       continue;
     } else {
       finalCommit(token);

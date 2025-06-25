@@ -2,19 +2,19 @@
  * Functions for fetching weather data from various APIs.
  */
 
-import * as T from '../types.ts';
+import type * as T from '../types.ts';
 import { log } from '../logger.ts';
 
 type Params = Record<string, any>;
 
-interface WeatherApiResponse {
+type WeatherApiResponse = {
   location: string;
   temperature: number;
   condition: string;
   humidity?: number;
   windSpeed?: number;
   time: string;
-}
+};
 
 // Utility for building URL with query parameters
 function buildUrl(baseUrl: string, params: Params): string {

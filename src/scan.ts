@@ -1,13 +1,13 @@
 import fs from 'node:fs';
 import picomatch from 'picomatch';
 
-import * as T from './types.ts';
-import parse from '../src/parser.ts';
-import Lexer from '../src/lexer.ts';
+import type * as T from './types.ts';
+import { type DoubleTag, type ParseToken, type ScanToken, type SingleTag } from './types.ts';
+import parse from './parser.ts';
+import Lexer from './lexer.ts';
 import functions from './builtin/index.ts';
 import { listTree } from './util.ts';
 import { isDoubleTag, isSingleTag } from './tags.ts';
-import { DoubleTag, ParseToken, ScanToken, SingleTag } from './types.ts';
 import { defaultCfg } from './config.ts';
 
 /**
@@ -33,7 +33,11 @@ export async function scanFile(
       });
     } else if (isSingleTag(tag)) {
       const stag = tag as SingleTag;
-      nodes.push({ single: true, name: stag.name, tag: stag.rawText.split(' ', 1) + '/>' });
+      nodes.push({
+        single: true,
+        name: stag.name,
+        tag: stag.rawText.split(' ', 1) + '/>',
+      });
     }
     if (tag.children) {
       for (const c of tag.children) {
@@ -41,7 +45,11 @@ export async function scanFile(
           walk(c);
         } else if (isSingleTag(c)) {
           const stag = c as SingleTag;
-          nodes.push({ single: true, name: stag.name, tag: stag.rawText.split(' ', 1) + '/>' });
+          nodes.push({
+            single: true,
+            name: stag.name,
+            tag: stag.rawText.split(' ', 1) + '/>',
+          });
         }
       }
     }
@@ -90,8 +98,13 @@ export async function scanFile(
   for (const t of nodes) {
     if (allFunctions[t.name]) {
       validTags += 1;
-      if (!known.has(t.tag)) console.debug('✓', t.tag);
-    } else if (!known.has(t.tag)) console.debug('✗', t.tag);
+      if (!known.has(t.tag)) {
+        console.debug('✓', t.tag);
+      }
+    } else if (!known.has(t.tag)) {
+      console.debug('✗', t.tag);
+    }
+
     known.add(t.tag);
   }
   console.log('Valid tags ::', validTags);
@@ -126,8 +139,8 @@ export async function scanFolder(
       const { validTags, invalidTags } = await scanFile(fname, customTags, cfg);
       validN += validTags;
       inValidN += invalidTags;
-    } catch (err) {
-      console.error('Scan dir ERR:', err);
+    } catch (error) {
+      console.error('Scan dir ERR:', error);
     }
   }
 

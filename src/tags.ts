@@ -1,4 +1,4 @@
-import { DoubleTag, LexToken, ParseToken, SingleTag } from './types.ts';
+import { type DoubleTag, type LexToken, type ParseToken, type SingleTag } from './types.ts';
 
 export const isDoubleTag = (t: LexToken | ParseToken): boolean => !!(t && t.name && t.double);
 export const isSingleTag = (t: LexToken | ParseToken): boolean => !!(t && t.name && t.single && t.rawText);
@@ -9,7 +9,10 @@ export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagTe
 
 export function consumeTag(tag: SingleTag | DoubleTag) {
   for (const k of Object.keys(tag)) {
-    if (k === 'rawText') continue;
+    if (k === 'rawText') {
+      continue;
+    }
+
     // @ts-ignore Delete is OK
     delete tag[k];
   }
@@ -23,18 +26,16 @@ export function getText(node: SingleTag | DoubleTag): string {
   if (!(node as ParseToken).children) {
     if (isRawText(node as ParseToken)) {
       return (node as ParseToken).rawText;
-    } else {
-      return '';
     }
+
+    return '';
   }
+
   // @ts-ignore It's fine
   for (const c of node.children) {
-    if (isDoubleTag(c)) {
-      text += getText(c);
-    } else {
-      text += c.rawText;
-    }
+    text += isDoubleTag(c) ? getText(c) : c.rawText;
   }
+
   return text;
 }
 
@@ -46,22 +47,18 @@ export function unParse(node: ParseToken): string {
   if (node.children) {
     text = (node as DoubleTag).firstTagText;
     for (const c of node.children) {
-      if (isDoubleTag(c)) {
-        text += unParse(c);
-      } else {
-        text += c.rawText;
-      }
+      text += isDoubleTag(c) ? unParse(c) : c.rawText;
     }
+
     text += node.secondTagText;
   } // Empty double tag, single tag, or raw text
-  else {
-    if (isDoubleTag(node)) {
-      text = (node as DoubleTag).firstTagText;
-      text += (node as DoubleTag).secondTagText;
-    } else {
-      text = node.rawText;
-    }
+  else if (isDoubleTag(node)) {
+    text = (node as DoubleTag).firstTagText;
+    text += (node as DoubleTag).secondTagText;
+  } else {
+    text = node.rawText;
   }
+
   return text;
 }
 

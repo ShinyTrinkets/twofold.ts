@@ -2,10 +2,16 @@ import fs from 'node:fs';
 import { resolveDirName, resolveFileName } from './common.ts';
 
 async function _resolvFname(f1: string, f2: string) {
-  if (!(f1 || f2)) return;
+  if (!(f1 || f2)) {
+    return;
+  }
+
   let fname = await resolveFileName(f1);
-  if (!fname) fname = await resolveFileName(f2);
-  if (!fname) return;
+  fname ||= await resolveFileName(f2);
+  if (!fname) {
+    return;
+  }
+
   return fname;
 }
 
@@ -16,7 +22,10 @@ export async function cat(txtFile: string, { f = null, start = 0, limit = 0 } = 
    * Example: <cat 'file.txt' start=0 limit=100></cat>
    */
   const fname = await _resolvFname(f, txtFile);
-  if (!fname) return;
+  if (!fname) {
+    return;
+  }
+
   let text = '';
 
   if (typeof Bun !== 'undefined') {
@@ -49,7 +58,10 @@ export async function cat(txtFile: string, { f = null, start = 0, limit = 0 } = 
   }
 
   text = text.trim();
-  if (meta.node.double) return `\n${text}\n`;
+  if (meta.node.double) {
+    return `\n${text}\n`;
+  }
+
   return text;
 }
 

@@ -1,4 +1,4 @@
-import * as T from './types.ts';
+import type * as T from './types.ts';
 import { log } from './logger.ts';
 import { consumeTag, getText, syncTag } from './tags.ts';
 
@@ -28,7 +28,10 @@ export async function evaluateSingleTag(
   }
 
   // If the single tag doesn't have a result, DON'T change the tag
-  if (result === undefined || result === null) return;
+  if (result === undefined || result === null) {
+    return;
+  }
+
   // Broken, hacked tag, ignore it
   // @ts-ignore It's fine, this is a valid single tag
   if (typeof result === 'object' && (!result.single || result.name !== tag.name || result.index !== tag.index)) {
@@ -78,7 +81,10 @@ export async function evaluateDoubleTag(
   }
 
   // If the single tag doesn't have a result, DON'T change the tag
-  if (result === undefined || result === null) return;
+  if (result === undefined || result === null) {
+    return;
+  }
+
   // Broken, hacked tag, ignore it
   // @ts-ignore It's fine, this is a valid double tag
   if (typeof result === 'object' && (!result.double || result.name !== tag.name || result.index !== tag.index)) {
@@ -100,10 +106,10 @@ export async function evaluateDoubleTag(
   }
 }
 
-interface MiniConfig {
+type MiniConfig = {
   openExpr: string;
   closeExpr: string;
-}
+};
 
 export function shouldInterpolate(v: string, cfg: MiniConfig): boolean {
   if (!v) return false;

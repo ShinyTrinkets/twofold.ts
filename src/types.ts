@@ -1,5 +1,5 @@
 // The result of lexing a text string
-export interface LexToken {
+export type LexToken = {
   index: number;
   rawText: string;
   name?: string;
@@ -9,10 +9,10 @@ export interface LexToken {
   rawParams?: Record<string, string>;
   param_key?: string;
   param_value?: string;
-}
+};
 
 // The result of parsing a text string
-export interface ParseToken {
+export type ParseToken = {
   index: number;
   path?: string;
   name?: string;
@@ -25,10 +25,10 @@ export interface ParseToken {
   secondTagText?: string;
   children?: ParseToken[];
   parent?: Record<string, any>;
-}
+};
 
 // A valid single tag
-export interface SingleTag {
+export type SingleTag = {
   index: number;
   path: string;
   single: boolean;
@@ -37,10 +37,10 @@ export interface SingleTag {
   params?: Record<string, any>;
   rawParams?: Record<string, string>;
   parent?: Record<string, any>;
-}
+};
 
 // A valid double tag
-export interface DoubleTag {
+export type DoubleTag = {
   index: number;
   path: string;
   double: boolean;
@@ -51,31 +51,31 @@ export interface DoubleTag {
   params?: Record<string, any>;
   rawParams?: Record<string, string>;
   parent?: Record<string, any>;
-}
+};
 
-export interface ScanToken {
+export type ScanToken = {
   name: string;
   tag: string;
   single?: boolean;
   double?: boolean;
-}
+};
 
-interface BaseConfig {
+type BaseConfig = {
   openTag?: string;
   closeTag?: string;
   openExpr?: string;
   closeExpr?: string;
   lastStopper?: string;
-}
+};
 
-export interface Config extends BaseConfig {
+export type Config = {
   depth?: number;
   glob?: string;
   onlyTags?: Set<string>;
   skipTags?: Set<string>;
-}
+} & BaseConfig;
 
-export interface ConfigFull {
+export type ConfigFull = {
   openTag: string;
   closeTag: string;
   openExpr: string;
@@ -85,12 +85,12 @@ export interface ConfigFull {
   glob: string;
   onlyTags: Set<string>;
   skipTags: Set<string>;
-}
+};
 
-export interface RuntimeFile {
-  // the file name
+export type RuntimeFile = {
+  // The file name
   fname?: string;
-  // directory name
+  // Directory name
   dname?: string;
   size: number;
   hash?: string;
@@ -98,17 +98,17 @@ export interface RuntimeFile {
   mtime?: Date;
   // Is this file locked?
   locked?: boolean;
-}
+};
 
-export interface RuntimeState {
+export type RuntimeState = {
   running: boolean;
   started?: Date;
   stopped?: Date;
-}
+};
 
 type Function = (...args: any[]) => any;
 
-export interface Runtime {
+export type Runtime = {
   file: RuntimeFile;
   ast: ParseToken[];
   // The current Node being processed
@@ -124,7 +124,7 @@ export interface Runtime {
   evaluateTag: Function;
   // Allow any number of additional function properties
   [key: string]: Function | any;
-}
+};
 
 // Type signature for TwoFold tag functions
 export type TwoFoldTag = (
@@ -134,8 +134,8 @@ export type TwoFoldTag = (
 ) => void | string | Promise<void> | Promise<string>;
 
 // Type signature for TwoFold function wrappers
-export interface TwoFoldWrap {
+export type TwoFoldWrap = {
   fn: TwoFoldTag;
   evalOrder?: number;
   description?: string;
-}
+};

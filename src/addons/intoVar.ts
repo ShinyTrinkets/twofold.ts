@@ -1,6 +1,6 @@
-import * as Z from './types.ts';
-import * as T from '../types.ts';
+import type * as T from '../types.ts';
 import { log } from '../logger.ts';
+import type * as Z from './types.ts';
 
 /*
  * TwoFold Addon: Save into Variable
@@ -11,13 +11,13 @@ import { log } from '../logger.ts';
 const addon: Z.TwoFoldAddon = {
   name: 'Into-Var',
 
-  postEval: (
+  postEval(
     result: any,
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>
     // meta: T.Runtime
-  ): any => {
+  ): any {
     // HOOKS2. Called after evaluating the tag.
 
     if (tag.params && typeof tag.params.intoVar === 'string') {

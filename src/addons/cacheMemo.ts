@@ -1,7 +1,7 @@
-import * as Z from './types.ts';
-import * as T from '../types.ts';
+import type * as T from '../types.ts';
 import { log } from '../logger.ts';
 import { MemoCache } from '../cache.ts';
+import type * as Z from './types.ts';
 
 const DEFAULT_TTL = 1000 * 60; // 1 minute
 
@@ -16,13 +16,13 @@ const defaultCache = new MemoCache();
 const addon: Z.TwoFoldAddon = {
   name: 'Memo-Cache',
 
-  preEval: (
+  preEval(
     fn: T.TwoFoldTag,
     tag: T.ParseToken,
     localCtx: Record<string, any>
     // globCtx: Record<string, any>,
     // meta: T.Runtime
-  ): any => {
+  ): any {
     // HOOKS1. This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
@@ -40,13 +40,13 @@ const addon: Z.TwoFoldAddon = {
     }
   },
 
-  postEval: (
+  postEval(
     result: any,
     tag: T.ParseToken,
     localCtx: Record<string, any>
     // globCtx: Record<string, any>,
     // meta: T.Runtime
-  ): any => {
+  ): any {
     // HOOKS2. Called after evaluating the tag.
 
     // Make sure that the user REALLY wants to use the cache

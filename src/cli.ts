@@ -2,19 +2,17 @@
 // #!/usr/bin/env deno
 //
 import fs from 'node:fs';
+import chokidar from 'chokidar';
+import picomatch from 'picomatch';
+import mri from 'mri';
 
+import pkg from '../package.json' with { type: 'json' };
 import twofold from './index.ts';
 import tags from './builtin/index.ts';
-
 import { userCfg } from './config.ts';
 import * as scan from './scan.ts';
 import * as util from './util.ts';
 import { log } from './logger.ts';
-
-import pkg from '../package.json' with { type: 'json' };
-import chokidar from 'chokidar';
-import picomatch from 'picomatch';
-import mri from 'mri';
 
 const options = {
   boolean: ['help', 'version', 'tags'],
@@ -75,6 +73,7 @@ export async function main(arvg = process.argv.slice(2)) {
     } catch {
       funcs = await util.importAny(args.funcs);
     }
+
     log.info('Funcs:', args.funcs, '::', Object.keys(funcs));
   }
 
@@ -88,6 +87,7 @@ export async function main(arvg = process.argv.slice(2)) {
     for (const [n, f] of Object.entries(allFunctions)) {
       console.log(n, '::', f, '\n');
     }
+
     return;
   }
 
@@ -96,24 +96,28 @@ export async function main(arvg = process.argv.slice(2)) {
   if (args.glob) {
     config.glob = args.glob;
   }
+
   if (args.depth) {
     config.depth = args.depth;
   }
+
   config = Object.freeze(config);
 
   if (args.scan) {
     let files = [args.scan];
-    if (args._ && args._.length) {
+    if (args._ && args._.length > 0) {
       files = [...files, ...args._];
     }
+
     for (const fname of files) {
       let fstat;
       try {
         fstat = fs.statSync(fname);
-      } catch (err: any) {
-        log.error(err.message);
+      } catch (error: any) {
+        log.error(error.message);
         return;
       }
+
       log.info('::', fname, config.glob || '');
       if (fstat.isFile()) {
         await scan.scanFile(fname, funcs, config);
@@ -123,11 +127,12 @@ export async function main(arvg = process.argv.slice(2)) {
         log.error('Unknown path type:', fstat);
       }
     }
+
     return;
   }
 
   if (args.watch) {
-    const ANIM_DELAY = 1000; // hardcoded for now
+    const ANIM_DELAY = 1000; // Hardcoded for now
     const locks: Record<string, boolean> = {};
     const callback = async (fname: string) => {
       // ignore files that don't match the pattern
@@ -144,7 +149,7 @@ export async function main(arvg = process.argv.slice(2)) {
       const symbol = locks[fname] ? '! 🔐' : '? 🔓';
       log.info(`changed :: ${fname} ; lock${symbol}`);
       if (locks[fname]) {
-        return; // file is locked
+        return; // File is locked
       }
 
       locks[fname] = true;
@@ -154,8 +159,10 @@ export async function main(arvg = process.argv.slice(2)) {
           log.info(`file :: ${fname} is stable`);
           break;
         }
+
         await util.sleep(ANIM_DELAY);
       }
+
       delete locks[fname];
     };
 
@@ -172,19 +179,21 @@ export async function main(arvg = process.argv.slice(2)) {
     return;
   }
 
-  // render paths from args
-  if (args._ && args._.length) {
+  // Render paths from args
+  if (args._ && args._.length > 0) {
     for (const fname of args._) {
       if (!fname) {
         continue;
       }
+
       let fstat;
       try {
         fstat = fs.statSync(fname);
-      } catch (err: any) {
-        log.error(err.message);
+      } catch (error: any) {
+        log.error(error.message);
         continue;
       }
+
       if (fstat.isFile()) {
         log.info('::', fname);
         await twofold.renderFile(fname, funcs, config, true);
@@ -195,7 +204,7 @@ export async function main(arvg = process.argv.slice(2)) {
         continue;
       }
     }
-  } // render text from STDIN
+  } // Render text from STDIN
   else {
     if (process.stdin.isTTY) {
       log.warn('Nothing to to!');

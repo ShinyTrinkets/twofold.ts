@@ -7,7 +7,7 @@ const LEVELS: Record<string, number> = {
 };
 
 // The default level is "info"
-const LEVEL = LEVELS['info'];
+const LEVEL = LEVELS.info;
 
 export class Logger {
   public name: string;
@@ -26,6 +26,7 @@ export class Logger {
     if (!level) {
       throw new Error(`Invalid log level: ${level}`);
     }
+
     if (typeof level === 'string' && LEVELS[level]) {
       this.level = LEVELS[level];
     } else if (typeof level === 'number' && level >= 10 && level <= 50) {
@@ -47,27 +48,31 @@ export class Logger {
   }
 
   trace(...args: any[]) {
-    if (this.level <= LEVELS['trace']) {
+    if (this.level <= LEVELS.trace) {
       this._log('trace', args);
     }
   }
+
   debug(...args: any[]) {
-    if (this.level <= LEVELS['debug']) {
+    if (this.level <= LEVELS.debug) {
       this._log('debug', args);
     }
   }
+
   info(...args: any[]) {
-    if (this.level <= LEVELS['info']) {
+    if (this.level <= LEVELS.info) {
       this._log('info', args);
     }
   }
+
   warn(...args: any[]) {
-    if (this.level <= LEVELS['warn']) {
+    if (this.level <= LEVELS.warn) {
       this._log('warn', args);
     }
   }
+
   error(...args: any[]) {
-    if (this.level <= LEVELS['error']) {
+    if (this.level <= LEVELS.error) {
       this._log('error', args);
     }
   }

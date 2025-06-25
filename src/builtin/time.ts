@@ -6,9 +6,12 @@
 function getDate(text: string | Date): Date {
   if (text && typeof text === 'string') {
     return new Date(text);
-  } else if (!text || typeof text !== 'object') {
+  }
+
+  if (!text || typeof text !== 'object') {
     return new Date();
   }
+
   return text;
 }
 
@@ -40,9 +43,9 @@ export function dayOrNight(txtDate: string, { date = null, splitHour = 6 } = {})
   const h = date.getHours();
   if (h > splitHour && h <= splitHour + 12) {
     return 'day';
-  } else {
-    return 'night';
   }
+
+  return 'night';
 }
 
 export function emojiSunMoon(txtDate: string, { date = null, splitHour = 6 } = {}): string {
@@ -54,9 +57,9 @@ export function emojiSunMoon(txtDate: string, { date = null, splitHour = 6 } = {
   const dn = dayOrNight(txtDate, { date, splitHour });
   if (dn === 'day') {
     return '☀️';
-  } else {
-    return '🌙';
   }
+
+  return '🌙';
 }
 
 export function emojiDayNight(txtDate: string, { date = null, splitHour = 6 } = {}): string {
@@ -68,9 +71,9 @@ export function emojiDayNight(txtDate: string, { date = null, splitHour = 6 } = 
   const dn = dayOrNight(txtDate, { date, splitHour });
   if (dn === 'day') {
     return '🏙';
-  } else {
-    return '🌃';
   }
+
+  return '🌃';
 }
 
 // Full hours
@@ -113,7 +116,9 @@ export function emojiClock(txtDate: string, { date = null, showHalf = true } = {
    */
   date = getDate(txtDate || date);
   let h = date.getHours();
-  if (h > 12) h -= 12;
+  if (h > 12) {
+    h -= 12;
+  }
 
   const m = date.getMinutes();
   let result = fixHours[h];
@@ -126,24 +131,26 @@ export function emojiClock(txtDate: string, { date = null, showHalf = true } = {
     if (h > 12) {
       h = 0;
     }
+
     result = fixHours[h];
   }
+
   return result;
 }
 
 const zodiacSigns = [
-  ['♒', 'Aquarius', 20], // aquarius starts jan
-  ['♓', 'Pisces', 19], // pisces starts feb
-  ['♈', 'Aries', 21], // aries starts mar 21
-  ['♉', 'Taurus', 20], // taurus starts apr
-  ['♊', 'Gemini', 21], // gemini starts may
-  ['♋', 'Cancer', 21], // cancer starts june 21
-  ['♌', 'Leo', 21], // leo starts july
-  ['♍', 'Virgo', 21], // virgo starts aug
-  ['♎', 'Libra', 21], // libra starts sept
-  ['♏', 'Scorpio', 21], // scorpio starts oct
-  ['♐', 'Sagittarius', 21], // sagittarius starts nov
-  ['♑', 'Capricorn', 21], // capricorn starts dec 21
+  ['♒', 'Aquarius', 20], // Aquarius starts jan
+  ['♓', 'Pisces', 19], // Pisces starts feb
+  ['♈', 'Aries', 21], // Aries starts mar 21
+  ['♉', 'Taurus', 20], // Taurus starts apr
+  ['♊', 'Gemini', 21], // Gemini starts may
+  ['♋', 'Cancer', 21], // Cancer starts june 21
+  ['♌', 'Leo', 21], // Leo starts july
+  ['♍', 'Virgo', 21], // Virgo starts aug
+  ['♎', 'Libra', 21], // Libra starts sept
+  ['♏', 'Scorpio', 21], // Scorpio starts oct
+  ['♐', 'Sagittarius', 21], // Sagittarius starts nov
+  ['♑', 'Capricorn', 21], // Capricorn starts dec 21
 ];
 
 export function zodiacSign(txtDate: string, { date = null, emoji = true } = {}): string {
@@ -157,10 +164,12 @@ export function zodiacSign(txtDate: string, { date = null, emoji = true } = {}):
   const month = date.getMonth();
 
   const [nextEmoji, nextName, nextDate] = zodiacSigns[month];
-  if (day > nextDate) return emoji ? nextEmoji : nextName;
+  if (day > nextDate) {
+    return emoji ? nextEmoji : nextName;
+  }
 
-  const [prevEmoji, prevName, _] = month ? zodiacSigns[month - 1] : zodiacSigns[12];
-  return emoji ? prevEmoji : prevName;
+  const [previousEmoji, previousName, _] = month ? zodiacSigns[month - 1] : zodiacSigns[12];
+  return emoji ? previousEmoji : previousName;
 }
 
 /**

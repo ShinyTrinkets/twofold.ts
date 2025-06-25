@@ -1,6 +1,7 @@
-import { testing } from './wrap.ts';
+import twofold from "../src/index.ts";
+import { testing } from "./wrap.ts";
+
 const { test, expect } = await testing;
-import twofold from '../src/index.ts';
 //
 // Testing variables
 //

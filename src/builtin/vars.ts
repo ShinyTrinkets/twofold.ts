@@ -5,8 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import picomatch from 'picomatch';
-
-import * as T from '../types.ts';
+import type * as T from '../types.ts';
 import Runtime from '../runtime.ts';
 import { log } from '../logger.ts';
 import { interpolate, shouldInterpolate } from '../evaluate.ts';
@@ -473,7 +472,10 @@ export function debug(_: string, args: any, meta: T.Runtime): string {
 
   const isDouble = node.double || node.parent?.double;
   let text = `---\nArgs: ${JSON.stringify(args, null, ' ')}\nMeta: ${JSON.stringify(meta, null, ' ')}\n---`;
-  if (isDouble) text = '\n' + text + '\n';
+  if (isDouble) {
+    text = '\n' + text + '\n';
+  }
+
   return text;
 }
 

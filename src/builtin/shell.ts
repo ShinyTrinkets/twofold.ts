@@ -18,8 +18,11 @@ export async function cmd(
    */
 
   cmd = txtCmd.trim() || cmd.trim();
-  if (!cmd) return;
-  const xs = args && args.length ? [cmd, ...parse(args)] : parse(cmd);
+  if (!cmd) {
+    return;
+  }
+
+  const xs = args && args.length > 0 ? [cmd, ...parse(args)] : parse(cmd);
 
   args = [];
   let proc = null;
@@ -42,7 +45,7 @@ export async function cmd(
       await launch();
       args = [];
     } else {
-      throw Error(`Shell operator NOT supported: "${x.op}"`);
+      throw new Error(`Shell operator NOT supported: "${x.op}"`);
     }
   }
   await launch();
@@ -91,8 +94,7 @@ async function spawnShell(name: string, cmd: string, args: string[], timeout = 5
   const xs = [name];
   if (cmd) {
     cmd = splitToMarker(cmd);
-    xs.push('-c');
-    xs.push(cmd);
+    xs.push('-c', cmd);
   }
   if (args && typeof args === 'string') {
     args = parse(args);

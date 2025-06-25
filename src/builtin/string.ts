@@ -23,7 +23,9 @@ export function sortLines(text: string, { caseSensitive = false } = {}): string 
    * Sort lines of text alphabetically.
    * By default, the sorting is case insensitive.
    */
-  if (!text) return;
+  if (!text) {
+    return;
+  }
 
   let sortFunc = null;
   if (!caseSensitive) {
@@ -32,10 +34,11 @@ export function sortLines(text: string, { caseSensitive = false } = {}): string 
   let m = '';
   let spaceBefore = '';
   let spaceAfter = '';
-  if ((m = text.match(/[ \r\n]+/))) {
+  if ((m = /[ \r\n]+/.exec(text))) {
     spaceBefore = m[0];
   }
-  if ((m = text.match(/[ \r\n]+$/))) {
+
+  if ((m = /[ \r\n]+$/.exec(text))) {
     spaceAfter = m[0];
   }
 
@@ -52,7 +55,8 @@ export function sortLines(text: string, { caseSensitive = false } = {}): string 
   if (lines[0] === '' && lines[1] === '') {
     lines.shift();
   }
-  if (group.length) {
+
+  if (group.length > 0) {
     group.sort();
     lines.push(group.join('\n'));
   }

@@ -1,7 +1,7 @@
 import picomatch from 'picomatch';
 
 import * as config from './config.ts';
-import * as T from './types.ts';
+import type * as T from './types.ts';
 import Lexer from './lexer.ts';
 import parse from './parser.ts';
 import Runtime from './runtime.ts';
@@ -17,7 +17,7 @@ export async function renderText(
   customTags: Record<string, Function> = {},
   cfg: T.ConfigFull = config.defaultCfg
 ): Promise<string> {
-  const engine = Runtime.fromText(text, customTags, cfg as T.ConfigFull);
+  const engine = Runtime.fromText(text, customTags, cfg);
   return await engine.evaluateAll(customData);
 }
 
@@ -28,7 +28,7 @@ export async function renderFile(
   file: string | T.RuntimeFile,
   customTags: Record<string, Function> = {},
   cfg: T.ConfigFull = config.defaultCfg,
-  persist: boolean = false
+  persist = false
 ): Promise<{ changed: boolean; text?: string }> {
   const engine = await Runtime.fromFile(file, customTags, cfg);
 
@@ -47,9 +47,9 @@ export async function renderFile(
   if (persist && changed) {
     await engine.write(null, text, persist);
     return { changed, text };
-  } else {
-    return { changed, text };
   }
+
+  return { changed, text };
 }
 
 /**
@@ -67,10 +67,14 @@ export async function renderFolder(
     if (isMatch && !isMatch(fname, { basename: true }).isMatch) {
       continue;
     }
+
     stats.found++;
     const { changed } = await renderFile({ fname, dname, size: 0 }, customTags || {}, cfg, persist);
-    if (changed) stats.rendered++;
+    if (changed) {
+      stats.rendered++;
+    }
   }
+
   return stats;
 }
 

@@ -1,6 +1,7 @@
-import { testing } from './wrap.ts';
+import { importAny, toCamelCase } from "../src/util.ts";
+import { testing } from "./wrap.ts";
+
 const { test, expect } = await testing;
-import { importAny, toCamelCase } from '../src/util.ts';
 
 test('camel case', () => {
   expect(toCamelCase('blah_blah')).toBe('blahBlah');

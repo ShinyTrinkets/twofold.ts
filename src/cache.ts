@@ -1,19 +1,20 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+
 import { log } from './logger.ts';
 
 type Any = unknown;
 type Timer = ReturnType<typeof setTimeout>;
 
-interface MemoEntry {
+type MemoEntry = {
   value: Any;
-  born: number; // epoch ms at insertion
-  ttl: number; // original TTL (ms)
-  timer: Timer; // auto-deletion handle
-}
+  born: number; // Epoch ms at insertion
+  ttl: number; // Original TTL (ms)
+  timer: Timer; // Auto-deletion handle
+};
 
 export class MemoCache {
-  private bucket = new Map<string, MemoEntry>();
+  private readonly bucket = new Map<string, MemoEntry>();
 
   // constructor() {
   //   globalThis.addEventListener('unload', () => {
@@ -23,13 +24,24 @@ export class MemoCache {
   // }
 
   setCache(key: string, value: Any, ttl: number): void {
-    if (ttl <= 0) throw new RangeError('TTL must be > 0 ms');
+    if (ttl <= 0) {
+      throw new RangeError('TTL must be > 0 ms');
+    }
+
     // If key already exists, clear old timer
     const old = this.bucket.get(key);
-    if (old) clearTimeout(old.timer);
+    if (old) {
+      clearTimeout(old.timer);
+    }
+
     const born = Date.now();
     const timer = setTimeout(() => this.bucket.delete(key), ttl);
-    this.bucket.set(key, { value, born, ttl, timer });
+    this.bucket.set(key, {
+      value,
+      born,
+      ttl,
+      timer,
+    });
   }
 
   delCache(key: string): boolean {
@@ -39,6 +51,7 @@ export class MemoCache {
       this.bucket.delete(key);
       return true;
     }
+
     return false;
   }
 
@@ -49,8 +62,14 @@ export class MemoCache {
 
   hasCache(key: string, ttlOvr = -1): boolean {
     const e = this.bucket.get(key);
-    if (!e) return false;
-    if (this.alive(e, ttlOvr)) return true;
+    if (!e) {
+      return false;
+    }
+
+    if (this.alive(e, ttlOvr)) {
+      return true;
+    }
+
     clearTimeout(e.timer);
     this.bucket.delete(key);
     return false;
@@ -58,8 +77,14 @@ export class MemoCache {
 
   getCache<T = Any>(key: string, ttlOvr = -1): T | undefined {
     const e = this.bucket.get(key);
-    if (!e) return;
-    if (this.alive(e, ttlOvr)) return e.value as T;
+    if (!e) {
+      return;
+    }
+
+    if (this.alive(e, ttlOvr)) {
+      return e.value as T;
+    }
+
     clearTimeout(e.timer);
     this.bucket.delete(key);
   }
@@ -69,6 +94,7 @@ export class MemoCache {
     for (const entry of this.bucket.values()) {
       clearTimeout(entry.timer);
     }
+
     this.bucket.clear();
   }
 }
@@ -77,11 +103,11 @@ export class MemoCache {
 // Disk-based cache implementation
 // -------------------------------------------------------------
 
-interface DiskEntry {
+type DiskEntry = {
   value: any;
-  date: number; // when the cache was set (in milliseconds)
-  ttl: number; // time-to-live value (in milliseconds)
-}
+  date: number; // When the cache was set (in milliseconds)
+  ttl: number; // Time-to-live value (in milliseconds)
+};
 
 export class DiskCache {
   folder: string;
@@ -95,9 +121,9 @@ export class DiskCache {
     // Folder names can be specified, but the folder must exist,
     // because it won't be created automatically.
     const saneName = fname
-      .replace(/[<>~]/g, ' ')
+      .replaceAll(/[<>~]/g, ' ')
       .trim()
-      .replace(/[:\.\*\?\!"\| ]/g, '_');
+      .replaceAll(/[:.*?!"| ]/g, '_');
     return path.resolve(this.folder, `${saneName}.json`);
   }
 
@@ -109,14 +135,15 @@ export class DiskCache {
     let fileContent: Record<string, DiskEntry> = {};
     try {
       if (fs.existsSync(filePath)) {
-        const dataStr = fs.readFileSync(filePath, 'utf8');
-        fileContent = JSON.parse(dataStr) as Record<string, DiskEntry>;
+        const dataString = fs.readFileSync(filePath, 'utf8');
+        fileContent = JSON.parse(dataString) as Record<string, DiskEntry>;
       }
     } catch (error) {
       // If file is corrupt or not valid JSON, start fresh
       log.warn(`Cannot read cache file ${filePath}, initializing new cache. ERR: ${error}`);
       fileContent = {};
     }
+
     fileContent[key] = {
       value,
       date: Date.now(),
@@ -129,24 +156,27 @@ export class DiskCache {
    * Check if a valid (non-expired) cache entry exists for a specific key.
    * This operation does not modify the cache.
    */
-  hasCache(fname: string, key: string, ttlOvr: number = -1): boolean {
+  hasCache(fname: string, key: string, ttlOvr = -1): boolean {
     const filePath = this.getCacheFilePath(fname);
     if (!fs.existsSync(filePath)) {
       return false;
     }
+
     try {
-      const dataStr = fs.readFileSync(filePath, 'utf8');
-      const fileContent: Record<string, DiskEntry> = JSON.parse(dataStr);
+      const dataString = fs.readFileSync(filePath, 'utf8');
+      const fileContent: Record<string, DiskEntry> = JSON.parse(dataString);
       const entry = fileContent[key];
       if (!entry) {
         return false;
       }
+
       const effectiveTTL = ttlOvr > 0 ? ttlOvr : entry.ttl;
       if (Date.now() - entry.date > effectiveTTL) {
         return false; // Expired
       }
+
       return true;
-    } catch (err) {
+    } catch {
       // Error reading/ parsing file, or key not found
       return false;
     }
@@ -157,18 +187,20 @@ export class DiskCache {
    * Uses the stored TTL for the key to check if the entry is expired.
    * If expired, it deletes the specific key from the cache file and returns undefined.
    */
-  getCache(fname: string, key: string, ttlOvr: number = -1): any {
+  getCache(fname: string, key: string, ttlOvr = -1): any {
     const filePath = this.getCacheFilePath(fname);
     if (!fs.existsSync(filePath)) {
       return;
     }
+
     try {
-      const dataStr = fs.readFileSync(filePath, 'utf8');
-      const fileContent: Record<string, DiskEntry> = JSON.parse(dataStr);
+      const dataString = fs.readFileSync(filePath, 'utf8');
+      const fileContent: Record<string, DiskEntry> = JSON.parse(dataString);
       const entry = fileContent[key];
       if (!entry) {
         return;
       }
+
       const effectiveTTL = ttlOvr > 0 ? ttlOvr : entry.ttl;
       if (Date.now() - entry.date > effectiveTTL) {
         // If ttlOvr caused expiration, don't delete.
@@ -176,13 +208,14 @@ export class DiskCache {
         if (ttlOvr <= 0) {
           this.delCache(fname, key);
         }
+
         return; // Expired
       }
+
       return entry.value;
     } catch (error) {
       // If error parsing, or other issues, treat as cache miss.
       log.warn(`Error reading cache entry ${filePath}::${key}. ERR: ${error}`);
-      return;
     }
   }
 
@@ -194,9 +227,10 @@ export class DiskCache {
     if (!fs.existsSync(filePath)) {
       return;
     }
+
     try {
-      const dataStr = fs.readFileSync(filePath, 'utf8');
-      const fileContent: Record<string, DiskEntry> = JSON.parse(dataStr);
+      const dataString = fs.readFileSync(filePath, 'utf8');
+      const fileContent: Record<string, DiskEntry> = JSON.parse(dataString);
       if (key in fileContent) {
         delete fileContent[key];
         // If the file content is now empty, delete the file
@@ -222,9 +256,10 @@ export class DiskCache {
     if (!fs.existsSync(filePath)) {
       return;
     }
+
     try {
-      const dataStr = fs.readFileSync(filePath, 'utf8');
-      const fileContent: Record<string, DiskEntry> = JSON.parse(dataStr);
+      const dataString = fs.readFileSync(filePath, 'utf8');
+      const fileContent: Record<string, DiskEntry> = JSON.parse(dataString);
       const now = Date.now();
       for (const key in fileContent) {
         const entry = fileContent[key];
@@ -232,6 +267,7 @@ export class DiskCache {
           delete fileContent[key]; // Remove expired entry
         }
       }
+
       // If the file content is now empty, delete the file
       if (Object.keys(fileContent).length === 0) {
         fs.unlinkSync(filePath);
@@ -260,6 +296,7 @@ export class DiskCache {
     if (!fs.existsSync(this.folder)) {
       return; // Folder doesn't exist, nothing to clear
     }
+
     for (const file of fs.readdirSync(this.folder)) {
       const filePath = path.join(this.folder, file);
       if (fs.statSync(filePath).isFile()) {

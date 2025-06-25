@@ -1,7 +1,7 @@
-import * as T from './types.ts';
+import type * as T from './types.ts';
+import { type LexToken } from './types.ts';
 import * as config from './config.ts';
 import { toCamelCase } from './util.ts';
-import { LexToken } from './types.ts';
 import { isRawText } from './tags.ts';
 import { log } from './logger.ts';
 
@@ -116,10 +116,10 @@ export default class Lexer {
         pending.name = toCamelCase(pending.name);
       }
       if (pending.rawText) {
-        let lastProcessed: LexToken = this._processed.length ? this._processed.at(-1)! : { index: 0, rawText: '' };
+        let lastProcessed: LexToken = this._processed.length > 0 ? this._processed.at(-1)! : { index: 0, rawText: '' };
         if (joinState && newState === STATE_RAW_TEXT && !lastProcessed.single) {
-          if (this._processed.length) {
-            lastProcessed = this._processed.pop() as LexToken;
+          if (this._processed.length > 0) {
+            lastProcessed = this._processed.pop()!;
           }
           lastProcessed.rawText += pending.rawText;
           this._pendingState = {
@@ -435,12 +435,12 @@ export default class Lexer {
       throw new Error('The lexing is finished!');
     }
 
-    if (!this._processed.length) {
+    if (this._processed.length === 0) {
       this._processed.push({ index: 0, rawText: '' });
     }
 
     if (this._pendingState.rawText) {
-      const lastProcessed = this._processed[this._processed.length - 1] as LexToken;
+      const lastProcessed = this._processed.at(-1)!;
       // If the last processed state was an unfinished Tag, create a new raw-text
       if (lastProcessed.name) {
         this._processed.push({
@@ -453,10 +453,10 @@ export default class Lexer {
       }
     }
 
-    // compact all raw text tags
+    // Compact all raw text tags
     const final: LexToken[] = [];
     for (const tok of this._processed) {
-      const lastProcessed = final[final.length - 1] as LexToken;
+      const lastProcessed = final.at(-1)!;
       if (lastProcessed && isRawText(tok) && isRawText(lastProcessed)) {
         lastProcessed.rawText += tok.rawText;
       } else {

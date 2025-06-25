@@ -136,17 +136,25 @@ export function globe(_s: string, args: any, meta: any) {
    * Example:
    * <globe n=99></globe>
    */
-  if (args.n === undefined || args.n === null) return;
+  if (args.n === undefined || args.n === null) {
+    return;
+  }
+
   args.n = parseNumber(args.n);
-  if (isNaN(args.n) || args.n < 1) return;
+  if (isNaN(args.n) || args.n < 1) {
+    return;
+  }
+
   if (args.n > GLOBE.length) {
     args.n = GLOBE.length;
   }
+
   args.n--;
   meta.node.params.n = args.n;
   if (!meta.node.children) {
     meta.node.children = [{}];
   }
+
   meta.node.children[0].rawText = `\n${GLOBE[args.n]}\n`;
   return meta.node;
 }

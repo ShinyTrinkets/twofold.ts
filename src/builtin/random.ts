@@ -14,9 +14,9 @@ export function randomFloat(_: string, args: Record<string, any>): string {
    * Returns a pseudo-random float in the range min–max (inclusive of min, but not max).
    * Example: <randomFloat '10'></randomFloat> will return a number between 1.0 and 9.99.
    */
-  const precision = parseInt(args.decimals || 2);
-  const min = Math.ceil(parseInt(args.min || 1));
-  const max = Math.floor(parseInt(args.max || args['0'] || 100));
+  const precision = Number.parseInt(args.decimals || 2);
+  const min = Math.ceil(Number.parseInt(args.min || 1));
+  const max = Math.floor(Number.parseInt(args.max || args['0'] || 100));
   const nr = max - Math.random() * (max - min);
   return nr.toFixed(precision);
 }
@@ -29,8 +29,8 @@ export function randomInt(_: string, args: Record<string, any>): number {
    * which will return a number between 1 and 6.
    * You can also use <randomDice/>.
    */
-  const min = Math.ceil(parseInt(args.min || 1));
-  const max = Math.floor(parseInt(args.max || args['0'] || 100));
+  const min = Math.ceil(Number.parseInt(args.min || 1));
+  const max = Math.floor(Number.parseInt(args.max || args['0'] || 100));
   return Math.floor(max - Math.random() * (max - min));
 }
 

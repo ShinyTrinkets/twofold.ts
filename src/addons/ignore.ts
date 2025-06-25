@@ -1,7 +1,7 @@
-import * as Z from './types.ts';
-import * as T from '../types.ts';
+import type * as T from '../types.ts';
 import { log } from '../logger.ts';
 import { getText } from '../tags.ts';
+import * as Z from './types.ts';
 
 function isProtected(tag: T.ParseToken): boolean {
   return tag.name === 'protect' || tag.params?.protect;
@@ -24,13 +24,13 @@ function isProtected(tag: T.ParseToken): boolean {
 const addon: Z.TwoFoldAddon = {
   name: 'Freeze/ Protect',
 
-  preEval: async (
+  async preEval(
     fn: T.TwoFoldTag,
     tag: T.ParseToken,
     localCtx: Record<string, any>,
     globCtx: Record<string, any>,
     meta: T.Runtime
-  ): Promise<any> => {
+  ): Promise<any> {
     // HOOKS1. This is a pre-evaluation hook,
     // called before evaluating the tag itself.
 
@@ -61,7 +61,7 @@ const addon: Z.TwoFoldAddon = {
     // TODO: keep this in sync with the main eval function!
     //
     if (hasProtected) {
-      if (!tag.params) tag.params = {};
+      tag.params ||= {};
       // Protect tag, to maintain structure for parent eval
       tag.params.protect = true;
 
@@ -108,13 +108,13 @@ const addon: Z.TwoFoldAddon = {
     }
   },
 
-  postEval: (
+  postEval(
     result: any,
     tag: T.ParseToken,
     localCtx: Record<string, any>
     // globCtx: Record<string, any>,
     // meta: T.Runtime
-  ): void => {
+  ): void {
     // HOOKS2. Called after evaluating the tag.
     // If the tag function wants to freeze the tag,
     // it can set args.freeze=true.
@@ -123,12 +123,12 @@ const addon: Z.TwoFoldAddon = {
     }
   },
 
-  preChildren: (
+  preChildren(
     tag: T.ParseToken,
     localCtx: Record<string, any>
     // globCtx: Record<string, any>,
     // meta: T.Runtime
-  ): void => {
+  ): void {
     // HOOKS3. Called before evaluating children.
     if (localCtx.freeze || localCtx.protect) {
       throw new Error('Frozen tag pre-children!');

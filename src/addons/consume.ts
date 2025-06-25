@@ -1,6 +1,6 @@
-import * as Z from './types.ts';
-import * as T from '../types.ts';
+import type * as T from '../types.ts';
 import { consumeTag, getText } from '../tags.ts';
+import type * as Z from './types.ts';
 
 /**
  * TwoFold Addon: Consume Tag
@@ -12,13 +12,13 @@ import { consumeTag, getText } from '../tags.ts';
 const addon: Z.TwoFoldAddon = {
   name: 'Consume',
 
-  postEval: (
+  postEval(
     result: any,
     tag: T.SingleTag | T.DoubleTag
     // localCtx: Record<string, any>,
     // globalCtx: Record<string, any>,
     // meta: T.Runtime
-  ): void => {
+  ): void {
     // HOOKS2. Called after evaluating the tag.
 
     if (tag.params && (tag.params.cut === 1 || tag.params.cut === true)) {
@@ -29,6 +29,7 @@ const addon: Z.TwoFoldAddon = {
       else if (tag.single) {
         (tag as T.ParseToken).rawText = '';
       }
+
       consumeTag(tag);
     }
   },

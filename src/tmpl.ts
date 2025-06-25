@@ -4,9 +4,7 @@
  * It renders templates with variables, conditionals, and loops.
  */
 
-interface TemplateContext {
-  [key: string]: any;
-}
+type TemplateContext = Record<string, any>;
 
 /*
  * The μTE class provides methods to render templates
@@ -19,28 +17,26 @@ export class TemplateEngine {
 
   private processTemplate(template: string, context: TemplateContext): string {
     // Handle nested if/elif/else blocks
-    template = template.replace(/\{%\s*if\s+([^%]+)%\}([\s\S]*?)\{%\s*endif\s*%\}/g, (_, condition, content) => {
-      return this.processIf(condition.trim(), content, context);
-    });
+    template = template.replaceAll(/{%\s*if\s+([^%]+)%}([\s\S]*?){%\s*endif\s*%}/g, (_, condition, content) =>
+      this.processIf(condition.trim(), content, context)
+    );
 
     // Handle for loops with else
-    template = template.replace(
-      /\{%\s*for\s+(\w+)\s+in\s+([^%]+)%\}([\s\S]*?)\{%\s*endfor\s*%\}/g,
-      (_, variable, iterable, content) => {
-        return this.processFor(variable.trim(), iterable.trim(), content, context);
-      }
+    template = template.replaceAll(
+      /{%\s*for\s+(\w+)\s+in\s+([^%]+)%}([\s\S]*?){%\s*endfor\s*%}/g,
+      (_, variable, iterable, content) => this.processFor(variable.trim(), iterable.trim(), content, context)
     );
 
     // Handle variables
-    template = template.replace(/\{\{([^}]+)\}\}/g, (_, expression) => {
-      return String(this.evaluate(expression.trim(), context) ?? '');
-    });
+    template = template.replaceAll(/{{([^}]+)}}/g, (_, expression) =>
+      String(this.evaluate(expression.trim(), context) ?? '')
+    );
 
     return template;
   }
 
   private processIf(condition: string, content: string, context: TemplateContext): string {
-    const parts = content.split(/\{%\s*(?:elif\s+([^%]+)|else)\s*%\}/);
+    const parts = content.split(/{%\s*(?:elif\s+([^%]+)|else)\s*%}/);
     const mainContent = parts[0];
 
     if (this.evaluate(condition, context)) {
@@ -54,8 +50,10 @@ export class TemplateEngine {
 
       if (elifCondition && this.evaluate(elifCondition, context)) {
         return this.processTemplate(elifContent, context).replace(/[\n\r]+$/, '');
-      } else if (!elifCondition) {
-        // else block
+      }
+
+      if (!elifCondition) {
+        // Else block
         return this.processTemplate(elifContent, context).replace(/[\n\r]+$/, '');
       }
     }
@@ -64,7 +62,7 @@ export class TemplateEngine {
   }
 
   private processFor(variable: string, iterable: string, content: string, context: TemplateContext): string {
-    const [loopContent, elseContent] = content.split(/\{%\s*else\s*%\}/);
+    const [loopContent, elseContent] = content.split(/{%\s*else\s*%}/);
     const items = this.evaluate(iterable, context);
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -103,6 +101,7 @@ export function templite(str: string, mix: any): string {
     while (y && x < key.length) {
       y = y[key[x++]];
     }
-    return y != null ? y : '';
+
+    return y == null ? '' : y;
   });
 }

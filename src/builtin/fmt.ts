@@ -44,7 +44,10 @@ async function fmtBlackOrBlue(
   meta: any = {}
 ): Promise<string | undefined> {
   text = text.trim();
-  if (!text) return;
+  if (!text) {
+    return;
+  }
+
   // TODO: call user's shell instead of ZSH
   const proc = Bun.spawn(['zsh', '-c', `${exec} --quiet --stdin-filename script.py --line-length=${line_length} -`], {
     stdin: 'pipe',
@@ -52,7 +55,10 @@ async function fmtBlackOrBlue(
   proc.stdin.write(text);
   proc.stdin.end();
   text = await new Response(proc.stdout).text();
-  if (meta.node.double) text = `\n${text.trim()}\n`;
+  if (meta.node.double) {
+    text = `\n${text.trim()}\n`;
+  }
+
   return text;
 }
 
@@ -62,7 +68,10 @@ export async function fmtPrettier(text: string, { print_width = 120 }, meta: any
    * Prettier is called within a Shell to allow it to read local config files.
    */
   text = text.trim();
-  if (!text) return;
+  if (!text) {
+    return;
+  }
+
   // TODO: user's shell instead of ZSH
   const proc = Bun.spawn(['zsh', '-c', `bunx prettier --print-width ${print_width} --stdin-filepath script.js`], {
     stdin: 'pipe',
@@ -70,6 +79,9 @@ export async function fmtPrettier(text: string, { print_width = 120 }, meta: any
   proc.stdin.write(text);
   proc.stdin.end();
   text = await new Response(proc.stdout).text();
-  if (meta.node.double) text = `\n${text.trim()}\n`;
+  if (meta.node.double) {
+    text = `\n${text.trim()}\n`;
+  }
+
   return text;
 }

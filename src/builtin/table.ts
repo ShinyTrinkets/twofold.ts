@@ -34,10 +34,16 @@ export function asciiTable(text: string, args: Record<string, string> = {}): str
    * the Markdown separator line. It's robust against extra spaces and pipes.
    */
   text = text.trim();
-  if (!text) return;
+  if (!text) {
+    return;
+  }
+
   const lines = text.split('\n');
-  if (lines.length === 0) return;
-  text = ''; // release memory
+  if (lines.length === 0) {
+    return;
+  }
+
+  text = ''; // Release memory
 
   // Parse all rows into arrays of cells
   const processedRows: string[][] = lines
@@ -50,8 +56,8 @@ export function asciiTable(text: string, args: Record<string, string> = {}): str
   }
 
   // Assume the first valid row determines the number of columns
-  const numColumns = processedRows[0].length;
-  if (numColumns === 0) {
+  const numberColumns = processedRows[0].length;
+  if (numberColumns === 0) {
     return; // Header row was empty or invalid
   }
 
@@ -67,31 +73,32 @@ export function asciiTable(text: string, args: Record<string, string> = {}): str
   }
 
   // Calculate the maximum width for each column
-  const maxWidths: number[] = Array(numColumns).fill(0);
-  processedRows.forEach(row => {
+  const maxWidths: number[] = new Array(numberColumns).fill(0);
+  for (const row of processedRows) {
     // Only consider cells up to the number of columns defined by the header
-    for (let i = 0; i < numColumns; i++) {
+    for (let i = 0; i < numberColumns; i++) {
       const cellContent = row[i] || ''; // Handle rows with fewer columns gracefully
       maxWidths[i] = Math.max(maxWidths[i], cellContent.length);
     }
-  });
+  }
 
   // Ensure minimum width for Markdown separator (---)
-  maxWidths.forEach((width, i) => {
+  for (const [i, width] of maxWidths.entries()) {
     maxWidths[i] = Math.max(width, 3); // Minimum width for "---"
-  });
+  }
 
   const outputLines: string[] = [];
 
   // Format Header Row
   const headerCells = processedRows[0];
   const paddedHeaderCells = headerCells
-    .slice(0, numColumns) // Take only expected number of cells
+    .slice(0, numberColumns) // Take only expected number of cells
     .map((cell, i) => padCell(cell, maxWidths[i]));
   // Add empty cells if header row was shorter than expected (less likely with parsing)
-  while (paddedHeaderCells.length < numColumns) {
+  while (paddedHeaderCells.length < numberColumns) {
     paddedHeaderCells.push(padCell('', maxWidths[paddedHeaderCells.length]));
   }
+
   outputLines.push(`| ${paddedHeaderCells.join(' | ')} |`);
 
   // Format Separator Row
@@ -99,16 +106,17 @@ export function asciiTable(text: string, args: Record<string, string> = {}): str
   outputLines.push(`| ${separatorCells.join(' | ')} |`);
 
   // Format Data Rows
-  processedRows.slice(1).forEach(row => {
+  for (const row of processedRows.slice(1)) {
     const paddedDataCells = row
-      .slice(0, numColumns) // Take only expected number of cells
+      .slice(0, numberColumns) // Take only expected number of cells
       .map((cell, i) => padCell(cell, maxWidths[i]));
     // Add empty cells if data row is shorter than expected
-    while (paddedDataCells.length < numColumns) {
+    while (paddedDataCells.length < numberColumns) {
       paddedDataCells.push(padCell('', maxWidths[paddedDataCells.length]));
     }
+
     outputLines.push(`| ${paddedDataCells.join(' | ')} |`);
-  });
+  }
 
   return '\n' + outputLines.join('\n') + '\n';
 }

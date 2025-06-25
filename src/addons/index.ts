@@ -8,7 +8,7 @@ import consume from './consume.ts';
 import cache1 from './cacheDisk.ts';
 import cache2 from './cacheMemo.ts';
 import intoVar from './intoVar.ts';
-import * as T from './types.ts';
+import type * as T from './types.ts';
 import * as hooks from './hooks.ts';
 
 // The order is very important here !!
@@ -26,9 +26,11 @@ for (const addon of ADDONS) {
   if (addon.preEval) {
     hooks.HOOKS1.push(addon.preEval);
   }
+
   if (addon.postEval) {
     hooks.HOOKS2.push(addon.postEval);
   }
+
   if (addon.preChildren) {
     hooks.HOOKS3.push(addon.preChildren);
   }

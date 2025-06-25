@@ -4,13 +4,12 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-
-import * as T from '../types.ts';
+import type * as T from '../types.ts';
 import * as logger from '../logger.ts';
 import { templite } from '../tmpl.ts';
-import { parseNumber } from './common.ts';
+import { editSave, renderFile as refreshFile } from '../index.ts';
 import { extractFunctions } from '../docs.ts';
-import { editSave } from '../index.ts';
+import { parseNumber } from './common.ts';
 
 export function text(s: string, args: any): string {
   /**
@@ -23,6 +22,21 @@ export function text(s: string, args: any): string {
    * will become "Hello John!".
    */
   return templite(s, args);
+}
+
+export async function renderFile(_: string, args: any, meta: any) {
+  /**
+   * Render/ refresh a file.
+   */
+  let fname = args.f || args.file || args['0'];
+  if (!fname) {
+    logger.log.warn('No file name provided for render tag.');
+    return '';
+  }
+  if (meta.file.dname) {
+    fname = path.resolve(meta.file.dname, fname);
+  }
+  await refreshFile(fname, meta.customTags, meta.cfg, true);
 }
 
 export function log(_: string, args: any, meta: any): void {
@@ -58,13 +72,26 @@ export function countDown(s: string, args: any, meta: any) {
    * It will count down from 5 to 0, and then stop.
    */
   let n = s || args.n;
-  if (n === undefined || n === null) return;
-  if (n === '' || n === '0') return;
+  if (n === undefined || n === null) {
+    return;
+  }
+
+  if (n === '' || n === '0') {
+    return;
+  }
+
   n = parseNumber(n);
-  if (isNaN(n) || n < 1) return;
-  // keep the param in the same place
-  if (s) meta.node.params['0'] = n - 1;
-  else meta.node.params.n = n - 1;
+  if (isNaN(n) || n < 1) {
+    return;
+  }
+
+  // Keep the param in the same place
+  if (s) {
+    meta.node.params['0'] = n - 1;
+  } else {
+    meta.node.params.n = n - 1;
+  }
+
   return meta.node;
 }
 
@@ -73,13 +100,22 @@ export function spinner(_: string, args: any, meta: any) {
    * Experimental: animation spinner.
    * It will animate forever, until tfold is closed.
    */
-  let n = args.n;
-  if (n === undefined || n === null) return;
+  let { n } = args;
+  if (n === undefined || n === null) {
+    return;
+  }
+
   n = parseNumber(n);
-  if (isNaN(n) || n < 0) return;
+  if (isNaN(n) || n < 0) {
+    return;
+  }
+
   const chars = ['▁', '▃', '▄', '▅', '▆', '▇', '█', '▇', '▆', '▅', '▄', '▃', '▁'];
   n++;
-  if (n >= chars.length) n = 0;
+  if (n >= chars.length) {
+    n = 0;
+  }
+
   meta.node.params['0'] = chars[n];
   meta.node.params.n = n;
   return meta.node;
@@ -134,7 +170,7 @@ export function jsDocs(_: string, args: any): string | undefined {
   try {
     fstat = fs.statSync(fpath);
   } catch (err: any) {
-    logger.log.error(err.message);
+    logger.log.warn(err.message);
     return;
   }
   const results = [];
@@ -145,7 +181,7 @@ export function jsDocs(_: string, args: any): string | undefined {
       results.push(...extractFunctions(path.join(fpath, fname)));
     }
   } else {
-    logger.log.error('Unknown path type:', fstat);
+    logger.log.warn('Unknown path type:', fstat);
     return;
   }
   let text = '\n\n';

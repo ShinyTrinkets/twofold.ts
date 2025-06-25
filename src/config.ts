@@ -1,7 +1,8 @@
-import * as T from './types.ts';
+import { lilconfig } from 'lilconfig';
+
+import type * as T from './types.ts';
 import { log } from './logger.ts';
 import { unTildify } from './util.ts';
-import { lilconfig } from 'lilconfig';
 
 export const CONFIG_DIR = unTildify('~/.config/twofold');
 
@@ -75,35 +76,42 @@ export async function userCfg(path = undefined): Promise<T.ConfigFull> {
   });
   // Explore all possible config locations
   const cfg = await explorer.search(path);
-  if (cfg && cfg.config) {
+  if (cfg?.config) {
     validateCfg(cfg.config);
     log.debug('User config:', cfg.config);
     return Object.freeze({ ...defaultCfg, ...cfg.config });
   }
+
   return Object.freeze({ ...defaultCfg });
 }
 
-const ALLOWED_LAST_STOPPER = /^[\/\?\!\.#]$/;
+const ALLOWED_LAST_STOPPER = /^[/?!.#]$/;
 
 export function validateCfg(cfg: T.Config) {
   if (cfg.openTag && cfg.openTag.length !== 1) {
     throw new ConfigError('Open tag validation error');
   }
+
   if (cfg.closeTag && cfg.closeTag.length !== 1) {
     throw new ConfigError('Close tag validation error');
   }
+
   if (cfg.closeTag && cfg.openTag && cfg.closeTag === cfg.openTag) {
     throw new ConfigError('Close tag must be different from the open tag');
   }
+
   if (cfg.closeExpr && cfg.openExpr && cfg.closeExpr === cfg.openExpr) {
     throw new ConfigError('Close expr must be different from the open expr');
   }
+
   if (cfg.lastStopper && cfg.closeTag === cfg.lastStopper) {
     throw new ConfigError('Close tag must be different from the stopper');
   }
+
   if (cfg.lastStopper && !ALLOWED_LAST_STOPPER.test(cfg.lastStopper)) {
     throw new ConfigError('Last stopper validation error');
   }
+
   if (cfg.depth && typeof cfg.depth !== 'number') {
     throw new ConfigError('Depth validation error');
   }

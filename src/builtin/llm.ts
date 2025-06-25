@@ -6,18 +6,18 @@ import { editSave } from '../index.ts';
 import { templite } from '../tmpl.ts';
 import { log } from '../logger.ts';
 
-interface HistoryMessage {
+type HistoryMessage = {
   role: string;
   content: string;
-}
+};
 
-interface HistoryAndLines {
+type HistoryAndLines = {
   history: HistoryMessage[];
   lines: {
     before: number;
     after: number;
   };
-}
+};
 
 export async function ai(
   text: string,
@@ -43,7 +43,9 @@ export async function ai(
    * Most of the remote APIs are compatible with the OpenAI API, and usually don't allow System prompts.
    */
   text = text.trimStart();
-  if (text.trim() === '') return;
+  if (text.trim() === '') {
+    return;
+  }
 
   // the default URL is just terrible, but we need something
   let apiUrl = 'http://127.1:1234/v1/chat/completions';
@@ -62,7 +64,7 @@ export async function ai(
 
   const body: Record<string, any> = {
     messages: histAndLines.history,
-    stream: !!args.stream || args.stream === undefined,
+    stream: Boolean(args.stream) || args.stream === undefined,
   };
 
   // Feedback to the user
@@ -313,7 +315,7 @@ export function _parseConversation(text: string): HistoryMessage[] {
 
   const commit = (role: string, line: string) => {
     const cutLength = role.length + 1;
-    if (currentContent.length && currentRole !== role) {
+    if (currentContent.length > 0 && currentRole !== role) {
       const content = currentContent.join('\n');
       currentContent = [];
       if (content.trim() !== '') {
@@ -322,7 +324,7 @@ export function _parseConversation(text: string): HistoryMessage[] {
     }
     currentRole = role;
     if (line.length >= cutLength) {
-      currentContent.push(line.substring(cutLength).replace(/^ +/, ''));
+      currentContent.push(line.slice(Math.max(0, cutLength)).replace(/^ +/, ''));
     }
   };
 
@@ -341,7 +343,7 @@ export function _parseConversation(text: string): HistoryMessage[] {
   }
 
   // Push the last message if there is one
-  if (currentRole && currentContent.length) {
+  if (currentRole && currentContent.length > 0) {
     messages.push({
       role: currentRole,
       content: currentContent.join('\n'),
@@ -413,7 +415,7 @@ function _normResponse(text: string): string {
   text = text.replace(/<think>[ \n]*?<\/think>/, '').trimStart();
 
   // Normalize quotes
-  text = text.replace(/[“”]/g, '"');
-  text = text.replace(/[‘’]/g, "'");
+  text = text.replaceAll(/[“”]/g, '"');
+  text = text.replaceAll(/[‘’]/g, "'");
   return text;
 }

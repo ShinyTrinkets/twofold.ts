@@ -6,15 +6,14 @@ export function parseNumber(text: string): number {
   if (typeof text !== 'string') {
     return text;
   }
+
   let n = 0;
-  if (text.includes('.')) {
-    n = parseFloat(text);
-  } else {
-    n = parseInt(text);
-  }
+  n = text.includes('.') ? Number.parseFloat(text) : Number.parseInt(text);
+
   if (isNaN(n)) {
     return 0;
   }
+
   return n;
 }
 
@@ -24,7 +23,9 @@ export async function resolveFileName(fname: string) {
       fname = path.normalize(fname);
       fname = unTildify(fname);
       const fstat = await fsPromises.stat(fname);
-      if (fstat.isFile()) return fname;
+      if (fstat.isFile()) {
+        return fname;
+      }
     } catch {
       /* ignore error */
     }
@@ -37,7 +38,9 @@ export async function resolveDirName(dname: string) {
       dname = path.normalize(dname);
       dname = unTildify(dname);
       const fstat = await fsPromises.stat(dname);
-      if (fstat.isDirectory()) return dname;
+      if (fstat.isDirectory()) {
+        return dname;
+      }
     } catch {
       /* ignore error */
     }

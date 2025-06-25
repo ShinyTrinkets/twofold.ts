@@ -93,3 +93,15 @@ test('render *.md', async () => {
   let result = await twofold.renderFolder(folder, {}, cfg);
   expect(result).toEqual({ found: 1, rendered: 0 });
 });
+
+test('the renderFile tag', async () => {
+  const fname = 'fixtures/renderFile123.md';
+  const fpath = DIR + '/' + fname;
+  fs.writeFileSync(fpath, 'This is a test file\n<randomInt/> <date/>', { encoding: 'utf8' });
+  await twofold.renderText(`<renderFile file="test/${fname}"/>`);
+  const result = fs.readFileSync(fpath, { encoding: 'utf8' });
+  expect(result).toContain('This is a test file');
+  expect(result).not.toContain('randomInt');
+  expect(result).not.toContain('date');
+  fs.unlinkSync(fpath);
+});

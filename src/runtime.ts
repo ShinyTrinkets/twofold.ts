@@ -6,19 +6,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
+import type * as T from './types.ts';
 import parse from './parser.ts';
 import Lexer from './lexer.ts';
 import builtins from './builtin/index.ts';
-import * as T from './types.ts';
 import * as hooks from './addons/hooks.ts';
 import * as config from './config.ts';
 import * as A from './addons/types.ts';
-import { unParse } from './tags.ts';
 import { MemoCache } from './cache.ts';
 import { log } from './logger.ts';
-import { isDoubleTag, isSingleTag } from './tags.ts';
-import { interpolate, shouldInterpolate } from './evaluate.ts';
-import { evaluateDoubleTag, evaluateSingleTag } from './evaluate.ts';
+import { isDoubleTag, isSingleTag, unParse } from './tags.ts';
+import { evaluateDoubleTag, evaluateSingleTag, interpolate, shouldInterpolate } from './evaluate.ts';
 import { deepClone, isFunction } from './util.ts';
 import './addons/index.ts'; // Trigger all addons
 
@@ -84,6 +82,7 @@ export default class Runtime {
     } else {
       dname = path.dirname(fname);
     }
+
     const stat = fs.statSync(fname);
     runtime.file = {
       fname,
@@ -131,7 +130,7 @@ export default class Runtime {
       throw new Error(`File "${this.file.fname}" is locked!`);
     }
 
-    if (!text) text = this.ast.map(unParse).join('');
+    text ||= this.ast.map(unParse).join('');
     const resultHash = crypto.createHash('sha224').update(text).digest('hex');
     if (!force && resultHash === this.file.hash) {
       return false; // No changes, nothing to write
@@ -229,8 +228,8 @@ export default class Runtime {
             } else {
               localCtx[k] = spread;
             }
-          } catch (err: any) {
-            log.warn(`Cannot interpolate string for ${tag.name}: ${k}=${v}!`, err.message);
+          } catch (error: any) {
+            log.warn(`Cannot interpolate string for ${tag.name}: ${k}=${v}!`, error.message);
           }
         }
       }
@@ -248,16 +247,17 @@ export default class Runtime {
       for (const h of hooks.HOOKS3) {
         try {
           await h(tag, localCtx, customCtx, this);
-        } catch (err: any) {
-          if (err instanceof A.IgnoreNext) {
-            log.warn(`Hook preChild ignore for tag "${tag.name}"!`, err.message);
+        } catch (error: any) {
+          if (error instanceof A.IgnoreNext) {
+            log.warn(`Hook preChild ignore for tag "${tag.name}"!`, error.message);
             evalChildren = false;
           } else {
-            log.warn(`Hook preChild raised for tag "${tag.name}"!`, err.message);
+            log.warn(`Hook preChild raised for tag "${tag.name}"!`, error.message);
             return;
           }
         }
       }
+
       // Make a deep copy of the local context, to create
       // a separate variable scope for the children
       // At this point, the parent props are interpolated
@@ -266,11 +266,18 @@ export default class Runtime {
         for (const c of tag.children) {
           if (c.name && (c.single || c.double)) {
             c.parent = { name: tag.name, index: tag.index, params: tag.params };
-            if (tag.single) c.parent.single = true;
-            else if (tag.double) c.parent.double = true;
+            if (tag.single) {
+              c.parent.single = true;
+            } else if (tag.double) {
+              c.parent.double = true;
+            }
+
             c.parent.params = { ...tag.params };
-            if (tag.rawParams) c.parent.rawParams = tag.rawParams;
+            if (tag.rawParams) {
+              c.parent.rawParams = tag.rawParams;
+            }
           }
+
           await this.evaluateTag(c, childrenCtx);
         }
       }
@@ -293,7 +300,9 @@ export default class Runtime {
 
     // Don't want to change the node in the AST
     this.node = structuredClone(tag);
-    if (!tag.params) this.node.params = {};
+    if (!tag.params) {
+      this.node.params = {};
+    }
 
     // Inject the parsed parent into meta
     if (tag.parent) {
@@ -304,15 +313,16 @@ export default class Runtime {
       this.node.parent = {};
     }
 
-    let result: any = undefined;
+    let result: any;
     // Hook interrupt callback
     for (const h of hooks.HOOKS1) {
       try {
         result = await h(func, tag, localCtx, globalCtx, this);
-      } catch (err: any) {
-        log.warn(`Hook preEval raised for tag "${tag.name}"!`, err.message);
+      } catch (error: any) {
+        log.warn(`Hook preEval raised for tag "${tag.name}"!`, error.message);
         return; // Exit early
       }
+
       if (result !== undefined && result !== null) {
         // If the hook returned a value, it is used as a result
         // and the tag is not evaluated
@@ -335,15 +345,16 @@ export default class Runtime {
       result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, sealedMeta);
     }
 
-    let result2: any = undefined;
+    let result2: any;
     // Hook interrupt callback
     for (const h of hooks.HOOKS2) {
       try {
         result2 = await h(result, tag, localCtx, globalCtx, sealedMeta);
-      } catch (err: any) {
-        log.warn(`Hook postEval raised for tag "${tag.name}"!`, err.message);
+      } catch (error: any) {
+        log.warn(`Hook postEval raised for tag "${tag.name}"!`, error.message);
         return; // Exit early
       }
+
       if (result2 !== undefined && result2 !== null) {
         // If the hook returned a value, it is used to replace
         // the tag's rawText or children

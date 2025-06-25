@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { homedir } from 'node:os';
 import { types } from 'node:util';
+
 import { log } from './logger.ts';
 
 const HOME_DIR = homedir();
@@ -23,7 +24,7 @@ export function deepClone<T>(source: T): T {
   }
   // Handle Date objects
   if (source instanceof Date) {
-    return new Date(source.getTime()) as unknown as T;
+    return new Date(source) as unknown as T;
   }
   // Handle RegExp objects
   if (source instanceof RegExp) {
@@ -55,7 +56,7 @@ export function deepClone<T>(source: T): T {
  * Split text at the ✂----- marker.
  */
 export function splitToMarker(txt: string) {
-  const m = txt.match(/(.+)✂[-]+[!?]?/s);
+  const m = /(.+)✂-+[!?]?/s.exec(txt);
   return m && m[1] ? m[1].trimEnd() : txt;
 }
 
@@ -64,7 +65,10 @@ export function splitToMarker(txt: string) {
  */
 export function joinWithMarker(input: string, output: string) {
   output = output.trim();
-  if (!output) return `\n${input}\n✂----------\n`;
+  if (!output) {
+    return `\n${input}\n✂----------\n`;
+  }
+
   return `\n${input}\n✂----------\n${output}\n`;
 }
 
@@ -101,7 +105,10 @@ export function sleep(nr: number) {
 }
 
 export function listTree(dir: string, depth = Infinity): string[] {
-  if (depth <= 0) return [];
+  if (depth <= 0) {
+    return [];
+  }
+
   const files: string[] = [];
   for (const entry of fs.readdirSync(dir)) {
     const fullPath = path.join(dir, entry);

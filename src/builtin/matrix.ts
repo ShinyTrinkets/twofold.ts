@@ -1,4 +1,4 @@
-import * as T from '../types.ts';
+import type * as T from '../types.ts';
 
 function getRandomDialog() {
   const dialog = ['MORE!', 'Mooore!!', 'We need more!', 'More of me!', 'More, more, more!'];
@@ -15,6 +15,7 @@ export function smith(_s: any, _a: any, meta: T.Runtime) {
   if (!meta.node.children) {
     meta.node.children = [];
   }
+
   if (meta.node.double) {
     const oldChildren = meta.node.children;
     meta.node.children.unshift({
@@ -33,7 +34,7 @@ export function smith(_s: any, _a: any, meta: T.Runtime) {
         firstTagText: '<smithClone>',
         secondTagText: '</smithClone>',
         children: oldChildren,
-        rawText: '', // not needed
+        rawText: '', // Not needed
       },
       {
         index: -1,
@@ -53,14 +54,17 @@ export function neo(_s: any, _a: any, meta: T.Runtime) {
   if (!meta.node.children) {
     meta.node.children = [];
   }
+
   if (meta.node.children.length === 1 && !meta.node.children[0].name) {
     meta.node.children = [];
   }
+
   for (const child of meta.node.children) {
     if (child.name === 'smith' || child.name === 'smithClone') {
       meta.node.children = child.children;
       break;
     }
   }
+
   return meta.node;
 }

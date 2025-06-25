@@ -2,20 +2,20 @@
  * Functions for evaluating LLMs.
  */
 
-import { _makeRequest } from './llm.ts';
 import { templite } from '../tmpl.ts';
+import { _makeRequest } from './llm.ts';
 
-interface HistoryMessage {
+type HistoryMessage = {
   role: string;
   content: string;
-}
+};
 
-interface HistoryQAC {
+type HistoryQAC = {
   q: string; // Question
   a: string; // Answer
   c: string; // Correct Answer (Ground Truth)
   s?: string; // Similarity Score (optional)
-}
+};
 
 export async function llmEval(text: string, args: Record<string, any> = {}) {
   /**
@@ -29,7 +29,9 @@ export async function llmEval(text: string, args: Record<string, any> = {}) {
    * </llmEval>
    */
   text = text.trimStart();
-  if (text.trim() === '') return;
+  if (text.trim() === '') {
+    return;
+  }
 
   // Disable streaming
   args.stream = false;
