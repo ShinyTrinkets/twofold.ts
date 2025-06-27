@@ -133,9 +133,15 @@ test('freeze children, omnious', async () => {
 });
 
 test('into variable addon', async () => {
-  const vars = {};
-  const txt = '<dirList "img/" intoVar="myVar"></dirList>';
-  const tmp = await twofold.renderText(txt, vars);
+  let vars = {};
+  let txt = '<dirList "img/" intoVar="myVar"></dirList>';
+  let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
-  expect(vars['myVar']).toBe('* logo1.jpg\n* logo2.jpg');
+  expect(vars['myVar']).toBe('["logo1.jpg","logo2.jpg"]');
+
+  vars = {};
+  txt = '<dirList "img/" intoVar="myVar" trafVar={JSON.parse}></dirList>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars['myVar']).toEqual(['logo1.jpg', 'logo2.jpg']);
 });

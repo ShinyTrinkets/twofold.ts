@@ -28,9 +28,9 @@ export async function renderFile(_: string, args: any, meta: any) {
   /**
    * Render/ refresh a file.
    */
-  let fname = args.f || args.file || args['0'];
+  let fname = args.f || args.file || args.src || args['0'];
   if (!fname) {
-    logger.log.warn('No file name provided for render tag.');
+    logger.log.warn('No file name provided for renderFile tag.');
     return '';
   }
   if (meta.file.dname) {
@@ -38,6 +38,76 @@ export async function renderFile(_: string, args: any, meta: any) {
   }
   await refreshFile(fname, meta.customTags, meta.cfg, true);
 }
+
+function __duplicate(_: string, args: any, meta: any) {
+  /**
+   * Duplicate a tag using a template, esentially creating a for loop.
+   * v=x from=[1,2,3] will create 3 duplicates of the tag template,
+   * where x will be 1, then 2, then 3.
+   * The tag interpolation is done using the "v=x" variable,
+   * and can be defined as a JavaScript ${x} expression or
+   * {{x}} template string.
+   * Duplicate is considered EXPERIMENTAL. The props may be renamed
+   * or changed in the future.
+   *
+   * Example:
+   * <duplicate tag="set x${i}=${i}" single=true v="i" from=[1,2,3]>
+   *  <set i1=1/>
+   *  <set i2=2/>
+   *  <set i3=3/>
+   * </duplicate>
+   * In this example, the tag will be duplicated 3 times.
+   * You can also define the tag template as "set x{{i}}={{i}}",
+   * which is the same as above.
+   *
+   * Example:
+   * <dirList "/path/to/dir" intoVar="fileList1" trafVar={JSON.parse}/>
+   * <duplicate tag="cat file={{f}}" double=true v="f" from={fileList1}>
+   *  <cat file=file1.txt></cat>
+   *  <cat file=file2.txt></cat>
+   * </duplicate>
+   */
+  if (!args.tag || !args.from) {
+    logger.log.warn('The "duplicate" tag requires "tag" and "from" parameters.');
+    return;
+  }
+  if (!Array.isArray(args.from)) {
+    logger.log.warn('The "duplicate" tag requires "from" to be an array.');
+    return;
+  }
+
+  // The default variable name is 'x'
+  const v = args.v || 'x';
+  const openTag = meta.config.openTag;
+  const closeTag = meta.config.closeTag;
+  const lastStopper = meta.config.lastStopper;
+  const name = args.tag.split(' ')[0];
+  const fn = new Function(v, `return \`${args.tag}\` ;`);
+
+  const loop = [];
+  for (let i = 0; i < args.from.length; i++) {
+    const val = args.from[i];
+    const body = templite(fn(val), { [v]: val });
+    if (args.double) {
+      loop.push(`${openTag}${body}${closeTag}${openTag}${lastStopper}${name}${closeTag}`);
+    } else {
+      loop.push(`${openTag}${body}${lastStopper}${closeTag}`);
+    }
+  }
+  if (meta.node!.double) {
+    return '\n' + loop.join('\n') + '\n';
+  }
+  return loop.join(args.sep || '\n');
+}
+
+export const duplicate: T.TwoFoldWrap = {
+  fn: __duplicate,
+  // This param tells the Runtime to
+  // run this function before the children,
+  // in breadth-first order
+  evalOrder: 0,
+  description: 'Duplicate tags.',
+};
 
 export function log(_: string, args: any, meta: any): void {
   /**
@@ -48,7 +118,7 @@ export function log(_: string, args: any, meta: any): void {
    */
   const level = args.level || args.l || args['0'] || 'info';
   const params: Record<string, any> = {};
-  for (const key in meta.node.params) {
+  for (const key in meta.node!.params) {
     if (key === 'level' || key === 'l' || key === '0') continue;
     params[key] = args[key];
   }

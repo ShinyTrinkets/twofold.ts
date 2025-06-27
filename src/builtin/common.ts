@@ -1,4 +1,5 @@
 import path from 'node:path';
+import picomatch from 'picomatch';
 import * as fsPromises from 'node:fs/promises';
 import { unTildify } from '../util.ts';
 
@@ -32,17 +33,7 @@ export async function resolveFileName(fname: string) {
   }
 }
 
-export async function resolveDirName(dname: string) {
-  if (dname) {
-    try {
-      dname = path.normalize(dname);
-      dname = unTildify(dname);
-      const fstat = await fsPromises.stat(dname);
-      if (fstat.isDirectory()) {
-        return dname;
-      }
-    } catch {
-      /* ignore error */
-    }
-  }
+export function isGlobExpr(glob: string): boolean {
+  const e = picomatch.scan(glob);
+  return !!e.glob || e.isGlob || e.isExtglob || e.isGlobstar;
 }

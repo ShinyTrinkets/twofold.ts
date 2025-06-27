@@ -5,6 +5,7 @@ import twofold from '../src/index.ts';
 import Runtime from '../src/runtime.ts';
 import builtin from '../src/builtin/index.ts';
 import { unParse } from '../src/tags.ts';
+import { defaultCfg } from '../src/config.ts';
 
 test('simple evaluate', async () => {
   const txt = ' <main><increment "8" /></main>';
@@ -279,6 +280,27 @@ test('separated sort render', async () => {
   expect(tmp.indexOf('!!!')).toBe(0);
 });
 
+test('duplicate tag', async () => {
+  let vars = {};
+  let txt = '<duplicate tag="set x${a}=${a}" single=true v="a" from=[1,2,3]></duplicate>';
+  let tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(`<duplicate tag="set x\${a}=\${a}" single=true v="a" from=[1,2,3]>
+<set x1=1/>
+<set x2=2/>
+<set x3=3/>
+</duplicate>`);
+
+  txt =
+    '<dirList "img/" intoVar="fileList"></dirList>\n' +
+    '<duplicate tag="cat file={{f}}" double=true v="f" from={JSON.parse(fileList)}></duplicate>';
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(`<dirList "img/" intoVar="fileList"></dirList>
+<duplicate tag="cat file={{f}}" double=true v="f" from={JSON.parse(fileList)}>
+<cat file=logo1.jpg></cat>
+<cat file=logo2.jpg></cat>
+</duplicate>`);
+});
+
 test('mixed tags', async () => {
   // This test validates a lot of usecases for multiple mixed tags
   // Wrong tags, wrong helper names
@@ -329,6 +351,7 @@ test('custom single tag', async () => {
     {},
     { mumu },
     {
+      ...defaultCfg,
       openTag: '{',
       closeTag: '}',
     }
@@ -339,6 +362,7 @@ test('custom single tag', async () => {
     {},
     { mumu },
     {
+      ...defaultCfg,
       openTag: '{',
       closeTag: '}',
     }
@@ -351,6 +375,7 @@ test('custom single tag', async () => {
     {},
     { mumu },
     {
+      ...defaultCfg,
       lastStopper: '?',
     }
   );
@@ -360,6 +385,7 @@ test('custom single tag', async () => {
     {},
     { mumu },
     {
+      ...defaultCfg,
       lastStopper: '?',
     }
   );
@@ -369,13 +395,14 @@ test('custom single tag', async () => {
     {},
     { mumu },
     {
+      ...defaultCfg,
       lastStopper: '#',
     }
   );
   expect(tmp).toBe('ok');
 
   // Full config test
-  const cfg = { openTag: '{', closeTag: '}', lastStopper: '!!' };
+  const cfg = { ...defaultCfg, openTag: '{', closeTag: '}', lastStopper: '!!' };
   tmp = await twofold.renderText('<mumu />', {}, { mumu }, cfg);
   expect(tmp).toBe('<mumu />');
   tmp = await twofold.renderText('{mumu !}', {}, { mumu }, cfg);
@@ -389,27 +416,27 @@ test('custom double tag', async () => {
   expect(tmp).toBe('<mumu>ok</mumu>');
 
   // Test open and close tag
-  cfg = { openTag: '{', closeTag: '}' };
+  cfg = { ...defaultCfg, openTag: '{', closeTag: '}' };
   tmp = await twofold.renderText('<mumu></mumu>', {}, { mumu }, cfg);
   expect(tmp).toBe('<mumu></mumu>');
   tmp = await twofold.renderText('{mumu}{/mumu}', {}, { mumu }, cfg);
   expect(tmp).toBe('{mumu}ok{/mumu}');
 
   // Test last stopper for double
-  cfg = { lastStopper: '?' };
+  cfg = { ...defaultCfg, lastStopper: '?' };
   tmp = await twofold.renderText('<mumu></mumu>', {}, { mumu }, cfg);
   expect(tmp).toBe('<mumu></mumu>');
   tmp = await twofold.renderText('<mumu><?mumu>', {}, { mumu }, cfg);
   expect(tmp).toBe('<mumu>ok<?mumu>');
 
   // Full config test
-  cfg = { openTag: '{', closeTag: '}', lastStopper: '#' };
+  cfg = { ...defaultCfg, openTag: '{', closeTag: '}', lastStopper: '#' };
   tmp = await twofold.renderText('<mumu></mumu>', {}, { mumu }, cfg);
   expect(tmp).toBe('<mumu></mumu>');
   tmp = await twofold.renderText('{mumu} {#mumu}', {}, { mumu }, cfg);
   expect(tmp).toBe('{mumu}ok{#mumu}');
 
-  cfg = { openTag: '(', closeTag: ')', lastStopper: '.' };
+  cfg = { ...defaultCfg, openTag: '(', closeTag: ')', lastStopper: '.' };
   tmp = await twofold.renderText('(mumu) (.mumu)', {}, { mumu }, cfg);
   expect(tmp).toBe('(mumu)ok(.mumu)');
 });

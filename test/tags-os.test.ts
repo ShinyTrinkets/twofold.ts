@@ -1,6 +1,6 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
-import { cat } from '../src/builtin/os.ts';
+import { cat, dirList } from '../src/builtin/os.ts';
 
 test('cat command', async () => {
   let text = await cat('test/fixtures/blns.txt', { limit: 66 }, { node: {} });
@@ -26,4 +26,12 @@ test('cat command', async () => {
   );
   expect(text.length).toBe(18);
   expect(text).toBe('<upper>ABC</upper>');
+});
+
+test('dirList command', () => {
+  let text = dirList('', { d: 'test/fixtures/*.x*', sep: ' ' }, {});
+  expect(text).toBe('* menu.xml * xmlStyles.xml');
+
+  text = dirList('', { d: 'test/fixtures/t*', li: '', sep: '' }, {});
+  expect(text).toBe(' text0.md text1.md');
 });

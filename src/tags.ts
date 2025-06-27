@@ -27,15 +27,12 @@ export function getText(node: SingleTag | DoubleTag): string {
     if (isRawText(node as ParseToken)) {
       return (node as ParseToken).rawText;
     }
-
     return '';
   }
-
   // @ts-ignore It's fine
   for (const c of node.children) {
     text += isDoubleTag(c) ? getText(c) : c.rawText;
   }
-
   return text;
 }
 
@@ -49,7 +46,6 @@ export function unParse(node: ParseToken): string {
     for (const c of node.children) {
       text += isDoubleTag(c) ? unParse(c) : c.rawText;
     }
-
     text += node.secondTagText;
   } // Empty double tag, single tag, or raw text
   else if (isDoubleTag(node)) {
@@ -58,7 +54,6 @@ export function unParse(node: ParseToken): string {
   } else {
     text = node.rawText;
   }
-
   return text;
 }
 
