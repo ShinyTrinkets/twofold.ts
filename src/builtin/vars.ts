@@ -405,7 +405,7 @@ async function __evaluateAll(t: string, args: Record<string, any> = {}, meta: T.
   if (!patt) return;
   const root = path.join(meta.file.dname || '.', path.dirname(patt));
   const files = getDirList(patt, meta.file?.dname!).sort((a, b) => a.localeCompare(b));
-  for (let fname of files) {
+  for (const fname of files) {
     const fullName = path.resolve(root, fname);
     if (args.src) args.src = fullName;
     else if (args.from) args.from = fullName;
