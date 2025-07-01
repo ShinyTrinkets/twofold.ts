@@ -84,6 +84,10 @@ export default class Runtime {
     }
 
     const stat = fs.statSync(fname);
+    if (!stat || !stat.isFile()) {
+      throw new Error(`Runtime from-file: "${fname}" is not a file!`);
+    }
+
     runtime.file = {
       fname,
       dname,
@@ -127,7 +131,8 @@ export default class Runtime {
 
   async write(output: string | null, text: string | null, force: boolean = false): Promise<boolean> {
     if (!output && this.file.locked) {
-      throw new Error(`File "${this.file.fname}" is locked!`);
+      log.warn(`File "${this.file.fname}" is locked!`);
+      return false; // Cannot write to a locked file
     }
 
     text ||= this.ast.map(unParse).join('');
@@ -154,7 +159,9 @@ export default class Runtime {
 
   async evaluateAll(customCtx: Record<string, any> = {}): Promise<string> {
     if (this.state.running) {
-      log.warn('Runtime is already running!');
+      // Should I return an error here?
+      // Or just return the empty string?
+      log.warn('Runtime evaluate is already running!');
       return '';
     }
     this.state.running = true;

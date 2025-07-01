@@ -1,9 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
-import picomatch from 'picomatch';
-import { log } from '../logger.ts';
-import { isGlobExpr } from './common.ts';
-import { resolveFileName } from './common.ts';
+import { getDirList, resolveFileName } from './common.ts';
 
 async function _resolvFname(f1: string, f2: string) {
   if (!(f1 || f2)) {
@@ -113,34 +109,9 @@ export function dirList(_t: string, args: Record<string, any> = {}, meta: any) {
    * List files, or folders in a directory. Similar to "ls" command from Linux,
    * or "dir" command from Windows.
    */
-  const pth = args['0'] || args.d || args.path;
-  if (!pth) return;
-
-  const result: string[] = [];
-
-  if (isGlobExpr(pth)) {
-    const patt = path.basename(pth);
-    const root = path.join(meta.file?.dname || '.', path.dirname(pth));
-    for (const fname of fs.readdirSync(root)) {
-      if (picomatch.isMatch(fname, patt)) {
-        result.push(fname);
-      }
-    }
-  } else {
-    const fstat = fs.statSync(pth);
-    if (fstat.isFile()) {
-      result.push(pth);
-    } else if (fstat.isDirectory()) {
-      for (const fname of fs.readdirSync(pth)) {
-        result.push(fname);
-      }
-    } else {
-      log.warn('Unknown path type for dirList:', fstat);
-      return;
-    }
-  }
-
-  result.sort((a, b) => a.localeCompare(b));
+  const patt = args['0'] || args.d || args.path;
+  if (!patt) return;
+  const result = getDirList(patt, meta.file?.dname).sort((a, b) => a.localeCompare(b));
 
   // TODO: maybe in the future we will support Array results
   // for now, the result will always be a string
@@ -148,8 +119,6 @@ export function dirList(_t: string, args: Record<string, any> = {}, meta: any) {
     return JSON.stringify(result);
   }
 
-  const li = typeof args.li === 'string' ? args.li : '*';
-  const space = typeof args.space === 'string' ? args.space : ' ';
-  const sep = typeof args.sep === 'string' ? args.sep : '\n';
+  const { li = '*', space = ' ', sep = '\n' } = args;
   return result.map(f => `${li}${space}${f}`).join(sep);
 }

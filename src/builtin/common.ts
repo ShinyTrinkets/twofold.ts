@@ -1,7 +1,9 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import picomatch from 'picomatch';
 import * as fsPromises from 'node:fs/promises';
 import { unTildify } from '../util.ts';
+import { log } from '../logger.ts';
 
 export function parseNumber(text: string): number {
   if (typeof text !== 'string') {
@@ -36,4 +38,22 @@ export async function resolveFileName(fname: string) {
 export function isGlobExpr(glob: string): boolean {
   const e = picomatch.scan(glob);
   return !!e.glob || e.isGlob || e.isExtglob || e.isGlobstar;
+}
+
+export function getDirList(fname: string, dname: string): string[] {
+  if (isGlobExpr(fname)) {
+    const patt = path.basename(fname);
+    const root = path.join(dname || '.', path.dirname(fname));
+    return fs.readdirSync(root).filter(fname => picomatch.isMatch(fname, patt));
+  }
+
+  const fstat = fs.statSync(fname);
+  if (fstat.isFile()) {
+    return [fname];
+  }
+  if (fstat.isDirectory()) {
+    return fs.readdirSync(fname);
+  }
+  log.warn('Unknown path type for dirList:', fstat);
+  return [];
 }

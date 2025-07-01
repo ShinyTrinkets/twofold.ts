@@ -4,11 +4,11 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import picomatch from 'picomatch';
 import type * as T from '../types.ts';
 import Runtime from '../runtime.ts';
 import { log } from '../logger.ts';
 import { interpolate, shouldInterpolate } from '../evaluate.ts';
+import { getDirList } from './common.ts';
 
 let parseToml: (content: string) => Record<string, any>;
 
@@ -265,61 +265,57 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
    * Example:
    * <loadAll from="path/to/files/*.json"/>
    */
-  let patt = args['0'] || args.src || args.from || args.path;
+  const patt = args['0'] || args.src || args.from || args.path;
   if (!patt) return;
-  const root = path.join(meta.file.dname || '.', path.dirname(patt));
-  patt = path.basename(patt);
+  const files = getDirList(patt, meta.file?.dname!).sort((a, b) => a.localeCompare(b));
 
-  for (const fname of fs.readdirSync(root)) {
-    if (picomatch.isMatch(fname, patt)) {
-      const fullPath = path.resolve(root, fname);
-      let text = '';
-      try {
-        if (typeof Bun !== 'undefined') {
-          const file = Bun.file(fullPath);
-          text = await file.text();
-        } else if (typeof Deno !== 'undefined') {
-          text = Deno.readTextFileSync(fullPath);
-        } else {
-          text = fs.readFileSync(fullPath, 'utf-8');
-        }
-      } catch (err: any) {
-        log.warn(`Cannot read file "${fullPath}"!`, err.message);
-        continue;
+  for (const fname of files) {
+    let text = '';
+    try {
+      if (typeof Bun !== 'undefined') {
+        const file = Bun.file(fname);
+        text = await file.text();
+      } else if (typeof Deno !== 'undefined') {
+        text = Deno.readTextFileSync(fname);
+      } else {
+        text = fs.readFileSync(fname, 'utf-8');
       }
+    } catch (err: any) {
+      log.warn(`Cannot read file "${fname}"!`, err.message);
+      continue;
+    }
 
-      // Check the file extension
-      const ext = path.extname(fname).toLowerCase();
-      const key = path.basename(fname, ext);
-      if (ext === '.json') {
-        // Load JSON file
-        try {
-          const data = JSON.parse(text);
-          if (typeof data !== 'object' || Array.isArray(data)) {
-            log.warn(`Cannot use JSON file "${fname}"! ERROR: Not an object!`);
-          } else {
-            meta.globalCtx[key] = meta.globalCtx[key] || {};
-            for (const [k, v] of Object.entries(data)) {
-              meta.globalCtx[key][k] = v;
-            }
-          }
-        } catch (err: any) {
-          log.warn(`Cannot parse JSON file "${fname}"!`, err.message);
-        }
-      } else if (ext === '.toml') {
-        // Load TOML file
-        try {
-          const data = parseToml!(text);
+    // Check the file extension
+    const ext = path.extname(fname).toLowerCase();
+    const key = path.basename(fname, ext);
+    if (ext === '.json') {
+      // Load JSON file
+      try {
+        const data = JSON.parse(text);
+        if (typeof data !== 'object' || Array.isArray(data)) {
+          log.warn(`Cannot use JSON file "${fname}"! ERROR: Not an object!`);
+        } else {
           meta.globalCtx[key] = meta.globalCtx[key] || {};
           for (const [k, v] of Object.entries(data)) {
             meta.globalCtx[key][k] = v;
           }
-        } catch (err: any) {
-          log.warn(`Cannot parse TOML file "${fname}"!`, err.message);
         }
-      } else {
-        log.warn(`Unsupported file type "${ext}" for file "${fname}"! Only JSON and TOML are supported.`);
+      } catch (err: any) {
+        log.warn(`Cannot parse JSON file "${fname}"!`, err.message);
       }
+    } else if (ext === '.toml') {
+      // Load TOML file
+      try {
+        const data = parseToml!(text);
+        meta.globalCtx[key] = meta.globalCtx[key] || {};
+        for (const [k, v] of Object.entries(data)) {
+          meta.globalCtx[key][k] = v;
+        }
+      } catch (err: any) {
+        log.warn(`Cannot parse TOML file "${fname}"!`, err.message);
+      }
+    } else {
+      log.warn(`Unsupported file type "${ext}" for file "${fname}"! Only JSON and TOML are supported.`);
     }
   }
 }
@@ -338,6 +334,10 @@ async function __evaluate(_t: string, args: Record<string, any> = {}, meta: T.Ru
    */
   let fname = args.src || args.from || args.file || args.path;
   if (!fname) return;
+  // if (meta.memoCache.hasCache(`evaluate-${fname}`)) {
+  //   log.info(`Main file was already evaluated: "${fname}"! Skipping.`);
+  //   // return;
+  // }
   if (meta.file.dname) {
     fname = path.resolve(meta.file.dname, fname);
   }
@@ -362,6 +362,7 @@ async function __evaluate(_t: string, args: Record<string, any> = {}, meta: T.Ru
 
   const cfg = { ...meta.config, onlyTags, skipTags };
   const engine = await Runtime.fromFile(fname, meta.customTags, cfg);
+
   // Very important!! Reuse the same memoCache
   // to avoid running the same file multiple times
   engine.memoCache = meta.memoCache;
@@ -369,12 +370,17 @@ async function __evaluate(_t: string, args: Record<string, any> = {}, meta: T.Ru
   for (const t of engine.ast) {
     // Track eval inside eval inside eval
     if (t.name === 'evaluate') {
-      if (meta.memoCache.hasCache(fname)) {
-        log.warn(`File was already evaluated: "${fname}"! Skipping.`);
+      const key = t.params?.src || t.params?.from || t.params?.file || t.params?.path;
+      if (!key) {
+        // log.warn('Cannot evaluate empty file! Skipping.');
+        continue; // No file to evaluate
+      }
+      if (meta.memoCache.hasCache(`evaluate-${key}`)) {
+        log.info(`File was already evaluated: "${key}"! Skipping.`);
         return;
       }
       // Cache the file name to avoid running it again for a few seconds
-      meta.memoCache.setCache(fname, true, ttl);
+      meta.memoCache.setCache(`evaluate-${key}`, true, ttl);
     }
     await engine.evaluateTag(t, meta.globalCtx);
   }
@@ -398,15 +404,14 @@ async function __evaluateAll(t: string, args: Record<string, any> = {}, meta: T.
   const patt = args['0'] || args.src || args.from || args.path;
   if (!patt) return;
   const root = path.join(meta.file.dname || '.', path.dirname(patt));
-  for (let fname of fs.readdirSync(root)) {
-    if (picomatch.isMatch(fname, path.basename(patt))) {
-      fname = path.resolve(root, fname);
-      if (args.src) args.src = fname;
-      else if (args.from) args.from = fname;
-      else if (args.path) args.path = fname;
-      log.info(`Evaluating "${patt}" file "${path.relative(root, fname)}"...`);
-      await __evaluate(t, args, meta);
-    }
+  const files = getDirList(patt, meta.file?.dname!).sort((a, b) => a.localeCompare(b));
+  for (let fname of files) {
+    const fullName = path.resolve(root, fname);
+    if (args.src) args.src = fullName;
+    else if (args.from) args.from = fullName;
+    else if (args.path) args.path = fullName;
+    log.info(`Evaluating "${patt}" file "${fname}"...`);
+    await __evaluate(t, args, meta);
   }
 }
 
