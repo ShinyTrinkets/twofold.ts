@@ -1,5 +1,5 @@
-import twofold from "../src/index.ts";
-import { testing } from "./wrap.ts";
+import twofold from '../src/index.ts';
+import { testing } from './wrap.ts';
 
 const { test, expect } = await testing;
 //
@@ -43,6 +43,12 @@ test('set global variables', async () => {
   expect(tmp).toBe(txt);
   expect(vars.name).toBe(' John ');
   expect(vars.nameTrim).toBe('John');
+
+  vars = {};
+  txt = "<set 'x'>Blah blah</set>";
+  tmp = await twofold.renderText(txt, vars);
+  expect(tmp).toBe(txt);
+  expect(vars).toEqual({ x: 'Blah blah' });
 
   vars = {};
   // set inner variables
@@ -107,7 +113,7 @@ test('set global variables', async () => {
 });
 
 test('set variable group', async () => {
-  let vars = {};
+  let vars: any = {};
   // Zero-props for Set tags are called "group"
   let txt = `<set '⍺' x=1 a="a" />`;
   let tmp = await twofold.renderText(txt, vars);
@@ -218,7 +224,7 @@ test('set variable group', async () => {
 });
 
 test('set global JSON/ TOML data', async () => {
-  let vars = {};
+  let vars: any = {};
   let txt = '<json>{ "x":1, "a":"a" }</json>';
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
@@ -304,7 +310,7 @@ x:1
 });
 
 test('JSON/ TOML data inside group', async () => {
-  let vars = {};
+  let vars: any = {};
   let txt = `<json 'a'>{ "x":1, "a":"a" }</json>`;
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);
@@ -366,7 +372,7 @@ oct3 = 0o755
 });
 
 test('variable interpolation', async () => {
-  let vars = {};
+  let vars: any = {};
   let txt = '<set name=`John`/><set hello=`Hello ${name}!`/>';
   let tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({ name: 'John', hello: 'Hello John!' });
@@ -557,7 +563,7 @@ temp_targets = { cpu = 79.5, case = 72.0 }
 });
 
 test('spread syntax', async () => {
-  let vars = {};
+  let vars: any = {};
   // Regular tag with spread
   let txt = '<set "g1" x=1 y=2 z="z1"/> <set "g2" x=2 y=3 z="z2"/> <mumu {...g1, ...g2} n=null />';
   let tmp = await twofold.renderText(txt, vars, {
@@ -642,7 +648,7 @@ test('spread syntax', async () => {
 });
 
 test('bad spreads & dynamic groups', async () => {
-  let vars = {};
+  let vars: any = {};
   let txt = '';
   let tmp = '';
   //
@@ -705,7 +711,7 @@ test('bad spreads & dynamic groups', async () => {
 });
 
 test('del variable', async () => {
-  let vars = {};
+  let vars: any = {};
   let txt = '<set name="Tony" age=50/><del "name, age"/>';
   let tmp = await twofold.renderText(txt, vars);
   expect(vars).toEqual({});
@@ -761,7 +767,7 @@ test('del variable', async () => {
 });
 
 test('evaluating all *.md', async () => {
-  let vars = {};
+  let vars: any = {};
   let txt = '<set x=0/><evaluateAll cacheTTL=100 src="test/fixtures/i*.md"/>';
   let tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(txt);

@@ -84,7 +84,7 @@ export default class Runtime {
     }
 
     const stat = fs.statSync(fname);
-    if (!stat || !stat.isFile()) {
+    if (!stat?.isFile()) {
       throw new Error(`Runtime from-file: "${fname}" is not a file!`);
     }
 
@@ -164,6 +164,7 @@ export default class Runtime {
       log.warn('Runtime evaluate is already running!');
       return '';
     }
+
     this.state.running = true;
     this.state.started = new Date();
     this.memoCache = new MemoCache();
@@ -189,12 +190,14 @@ export default class Runtime {
 
   async evaluateTag(tag: T.ParseToken, customCtx: Record<string, any> = {}): Promise<void> {
     if (!tag.name) {
-      return;
+      return; // Raw text or invalid tag
     }
+
     if (this.config.onlyTags && this.config.onlyTags.size > 0 && !this.config.onlyTags.has(tag.name)) {
       log.debug(`Skipping tag "${tag.name}" evaluation! Not in filter.only!`);
       return;
     }
+
     if (this.config.skipTags && this.config.skipTags.has(tag.name)) {
       log.debug(`Skipping tag "${tag.name}" evaluation! Already in filter.skip!`);
       return;
@@ -206,6 +209,8 @@ export default class Runtime {
       if (typeof func.evalOrder === 'number') {
         evalOrder = func.evalOrder as number;
       }
+      // The "function" could be invalid,
+      // but the props and children must be evaluated
       func = func.fn as T.TwoFoldTag;
     }
 
@@ -215,9 +220,10 @@ export default class Runtime {
         if (shouldInterpolate(v, this.config)) {
           const interCtx = { ...tag.params, ...customCtx };
           if (interCtx['0']) {
-            // interpolate crashes with param called '0'
+            // Interpolate crashes with param called '0'
             delete interCtx['0'];
           }
+
           try {
             const spread = interpolate(v, interCtx, this.config);
             if (k === '0') {
@@ -244,12 +250,21 @@ export default class Runtime {
 
     // BFS evaluation order
     if (evalOrder === 0 && isFunction(func)) {
-      await this._executeWithHooks(tag, func as T.TwoFoldTag, localCtx, customCtx);
+      const result = await this._executeWithHooks(tag, func as T.TwoFoldTag, localCtx, customCtx);
+
+      // If the result is a string, it must be dynamically parsed into children
+      // This operation only makes sense for BFS double tags
+      if (isDoubleTag(tag) && result && typeof result === 'string') {
+        const children = parse(new Lexer(this.config).lex(result), this.config);
+        if (children.length) {
+          tag.children = children;
+        }
+      }
     }
 
     // Deep evaluate all children, including invalid TwoFold tags
-    let evalChildren = true;
     if (tag.children) {
+      let evalChildren = true;
       // Hook interrupt callback
       for (const h of hooks.HOOKS3) {
         try {
@@ -301,7 +316,7 @@ export default class Runtime {
     func: T.TwoFoldTag,
     localCtx: Record<string, any>,
     globalCtx: Record<string, any>
-  ): Promise<void> {
+  ): Promise<any> {
     // Inject stuff inside Meta to prepare for evaluating the tag
     this.globalCtx = globalCtx;
 
@@ -320,11 +335,14 @@ export default class Runtime {
       this.node.parent = {};
     }
 
+    // Prevent new properties from being added to Meta
+    const sealedEngine = Object.seal(this);
+
     let result: any;
     // Hook interrupt callback
     for (const h of hooks.HOOKS1) {
       try {
-        result = await h(func, tag, localCtx, globalCtx, this);
+        result = await h(func, tag, localCtx, globalCtx, sealedEngine);
       } catch (error: any) {
         log.warn(`Hook preEval raised for tag "${tag.name}"!`, error.message);
         return; // Exit early
@@ -339,24 +357,23 @@ export default class Runtime {
         } else if (isSingleTag(tag)) {
           tag.rawText = result.toString();
         }
-        return; // Exit early
+
+        return result; // Exit early
       }
     }
 
-    // Prevent new properties from being added to Meta
-    const sealedMeta = Object.seal(this); // Use a new variable for the sealed meta
     // Call the specialized evaluate function
     if (isDoubleTag(tag)) {
-      result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, sealedMeta);
+      result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, sealedEngine);
     } else if (isSingleTag(tag)) {
-      result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, sealedMeta);
+      result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, sealedEngine);
     }
 
     let result2: any;
     // Hook interrupt callback
     for (const h of hooks.HOOKS2) {
       try {
-        result2 = await h(result, tag, localCtx, globalCtx, sealedMeta);
+        result2 = await h(result, tag, localCtx, globalCtx, sealedEngine);
       } catch (error: any) {
         log.warn(`Hook postEval raised for tag "${tag.name}"!`, error.message);
         return; // Exit early
@@ -372,6 +389,13 @@ export default class Runtime {
           tag.rawText = result2.toString();
         }
       }
+    }
+
+    // result2 || result; The final result
+    if (result2 !== undefined && result2 !== null) {
+      return result2;
+    } else {
+      return result;
     }
   }
 }

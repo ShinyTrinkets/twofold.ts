@@ -289,8 +289,38 @@ only variable interpolation is done.
 If this wraps some tags, they will be flattened/ destroyed.
 Example:
 <set name="John"/>
-<text>Hello {{name}}!</text>
-will become "Hello John!".
+<text>Hello {{name}}!</text> will become "Hello John!".
+
+---
+
+## renderFile (_: string, args: any, meta: any)
+
+Render/ refresh a file.
+
+---
+
+## duplicate (_: string, args: any, meta: any)
+
+Duplicate a tag using a template, esentially creating a for loop. v=x from=[1,2,3] will create 3
+duplicates of the tag template, where x will be 1, then 2, then 3. The tag interpolation is done
+using the "v=x" variable, and can be defined as a JavaScript ${x} expression or {{x}} template
+string. Duplicate is considered EXPERIMENTAL. The props may be renamed or changed in the future.
+
+Example:
+<duplicate tag="set x${i}=${i}" single=true v="i" from=[1,2,3]>
+<set i1=1/>
+<set i2=2/>
+<set i3=3/>
+</duplicate>
+In this example, the tag will be duplicated 3 times. You can also define the tag
+template as "set x{{i}}={{i}}", which is the same as above.
+
+Example:
+<dirList "/path/to/dir" intoVar="fileList1" trafVar={JSON.parse}/>
+<duplicate tag="cat file={{f}}" double=true v="f" from={fileList1}>
+<cat file=file1.txt></cat>
+<cat file=file2.txt></cat>
+</duplicate>
 
 ---
 
@@ -516,23 +546,22 @@ Example: <head 'file.txt' lines=10 />
 
 ## tail (txtFile: string, { f = null, lines = 10 } = {}, meta = {})
 
-Read a number of lines from the end of file. Similar to "tail" command from Linux.
-Specify lines=-1 to read the whole file.
-Example: <tail 'file.txt' lines=10 />
+Example:
+<tail 'file.txt' lines=10 />
 
 ---
 
-## dir (txtDir: string, { d = null, li = '*', space = ' ' } = {})
+## dirList (_t: string, args: Record<string, any> = {}, meta: any)
 
-List files in a directory. Similar to "ls" command from Linux,
-or "dir" command from Windows.
+List files, or folders in a directory. Similar to "ls" command from Linux, or "dir" command from
+Windows.
 
 ---
 
 ## cmd (txtCmd: string, { cmd, args = [] }, _meta: Record<string, any> = {})
 
-Execute a system command and return the output, _without spawning a shell_;
-you probably want to use SH, ZSH, or Bash instead of this.
+Execute a system command and return the output, _without spawning a shell_; you probably want to use
+SH, ZSH, or Bash instead of this.
 
 ---
 
@@ -670,6 +699,15 @@ Example:
 <evaluate file="path/to/file"/>
 <evaluate only="set,del" from="path/to/another"/>
 <evaluate skip="weather,ai" from="path/to/another"/>
+
+---
+
+## evaluateAll (t: string, args: Record<string, any> = {}, meta: T.Runtime)
+
+Evaluate tags of more files, in the current context. You can selectively evaluate only some tags.
+
+Example:
+<evaluateAll only="set,del" from="path/to/*.md"/>
 
 ---
 

@@ -292,13 +292,30 @@ test('duplicate tag', async () => {
 
   txt =
     '<dirList "img/" intoVar="fileList"></dirList>\n' +
-    '<duplicate tag="cat file={{f}}" double=true v="f" from={JSON.parse(fileList)}></duplicate>';
+    '<duplicate tag="blah file={{f}}" double=true v="f" from={JSON.parse(fileList)}></duplicate>';
   tmp = await twofold.renderText(txt, vars);
   expect(tmp).toBe(`<dirList "img/" intoVar="fileList"></dirList>
-<duplicate tag="cat file={{f}}" double=true v="f" from={JSON.parse(fileList)}>
-<cat file=logo1.jpg></cat>
-<cat file=logo2.jpg></cat>
+<duplicate tag="blah file={{f}}" double=true v="f" from={JSON.parse(fileList)}>
+<blah file=logo1.jpg></blah>
+<blah file=logo2.jpg></blah>
 </duplicate>`);
+
+  // Test with custom function
+  const DB = {};
+  const foo = (t: string, args: any) => {
+    for (const k in args) {
+      DB[k] = args[k];
+    }
+  };
+  vars = {};
+  txt = '<duplicate tag="foo val${i}=${i}" v="i" from=[1,2,3]></duplicate>';
+  tmp = await twofold.renderText(txt, vars, { foo });
+  expect(tmp).toBe(`<duplicate tag="foo val\${i}=\${i}" v="i" from=[1,2,3]>
+<foo val1=1/>
+<foo val2=2/>
+<foo val3=3/>
+</duplicate>`);
+  expect(DB).toEqual({ val1: 1, val2: 2, val3: 3 });
 });
 
 test('mixed tags', async () => {

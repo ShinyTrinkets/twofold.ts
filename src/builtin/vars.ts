@@ -40,6 +40,10 @@ function __set(_t: string, args: Record<string, any>, meta: T.Runtime): void {
   const rawGroup = meta.node.rawParams?.['0'];
   if (group && Object.keys(meta.node.params).length <= 1) {
     // A group was defined, but no vars inside...
+    // Is this single tag, like <set "name">...</set>?
+    if (args.innerText.trim().length > 0) {
+      meta.globalCtx[group] = args.innerText;
+    }
     // Tz tz tz!
     return;
   }
