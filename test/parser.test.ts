@@ -1,7 +1,7 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
 import Lexer from '../src/lexer.ts';
-import parse from '../src/parser.ts';
+import AST from '../src/parser.ts';
 //
 // TwoFold Parse testing
 //
@@ -45,8 +45,9 @@ const TESTS = [
     [{ index: 0, rawText: '\n<I am doing>some</stuff>\n' }], // this is raw-text
   ],
   [
+    // Tags don't match, this is raw-text
     '<title> <title> <title> <title> <title>',
-    [{ index: 0, rawText: '<title> <title> <title> <title> <title>' }], // this is raw-text
+    [{ index: 0, rawText: '<title> <title> <title> <title> <title>' }],
   ],
 
   [
@@ -124,6 +125,7 @@ const TESTS = [
     ],
   ],
   [
+    // Valid zero prop tag
     '<cmd `bash -c "ls -la"` />',
     [
       {
@@ -180,7 +182,8 @@ const TESTS = [
     ],
   ],
   [
-    '<temp type=f deep=no nr=3 null=null false=false>0</temp>', // JS types
+    // Testing JS types: number, boolean, null
+    '<temp type=f deep=no nr=3 null=null false=false>0</temp>',
     [
       {
         index: 0,
@@ -248,7 +251,7 @@ const TESTS = [
     ],
   ],
   [
-    // correct deeply nested tags
+    // Testing valid deeply nested tags
     '<t1><t2><t3>!<xXx/>?</t3></t2></t1>',
     [
       {
@@ -344,7 +347,7 @@ const TESTS = [
     ],
   ],
   [
-    // wrong nested tags, 1 level deep
+    // wrong nested D-tags, top level
     '<t1><t2> </t2></tx>',
     [
       { index: 0, rawText: '<t1>' },
@@ -380,6 +383,7 @@ const TESTS = [
     ],
   ],
   [
+    // Testing a mix of valid and invalid D-tags
     '<trick1><trick2><trick3><trick4></trick2>',
     [
       {
@@ -461,7 +465,8 @@ const TESTS = [
       },
     ],
   ],
-  // HTML-like test
+  // The parser should work with HTML-like tags
+  // This is a valid HTML document
   [
     `<html>
   <head><title>Hello world</title>
@@ -595,13 +600,8 @@ const TESTS = [
 
 test('all parse tests', () => {
   for (const [text, expected] of TESTS) {
-    const o = new Lexer();
-    o.push(text);
-    const lex = o.finish();
-    // console.log('-T- LEXED ::', JSON.stringify(lex, null, ' '), '\n');
-    const ast = parse(lex);
-    // console.log('-T- PARSED ::', JSON.stringify(ast, null, ' '), '\n');
-    expect(ast).toEqual(expected);
+    const tree = new AST().parse(text as string);
+    expect(tree).toEqual(expected);
   }
 });
 
@@ -609,11 +609,11 @@ test('weird parse tests', () => {
   let lex, ast;
 
   lex = new Lexer().lex('');
-  ast = parse(lex);
+  ast = new AST().parseTokens(lex);
   expect(ast).toStrictEqual([]);
 
   lex = [{}];
-  ast = parse(lex);
+  ast = new AST().parseTokens(lex);
   expect(ast).toStrictEqual([]);
 
   lex = [
@@ -622,6 +622,6 @@ test('weird parse tests', () => {
     { double: true, name: 'a', rawText: '</a>' },
     { double: true, name: 'a', rawText: '<b>' },
   ];
-  ast = parse(lex);
+  ast = new AST().parseTokens(lex);
   expect(ast).toEqual([{ index: 0, rawText: '12</a><b>' }]);
 });

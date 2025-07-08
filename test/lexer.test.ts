@@ -328,6 +328,19 @@ const TESTS = [
     ],
   ],
   [
+    '<link id=LUA-Lang />',
+    [
+      {
+        index: 0,
+        name: 'link',
+        params: { id: 'LUA-Lang' },
+        rawParams: { id: 'LUA-Lang' },
+        rawText: '<link id=LUA-Lang />',
+        single: true,
+      },
+    ],
+  ],
+  [
     '<todo prio=! due=2025-12-12 text=`\n- task 1\n- task 2\n`/>',
     [
       {
