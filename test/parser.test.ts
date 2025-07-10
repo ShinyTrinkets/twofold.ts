@@ -297,7 +297,8 @@ const TESTS = [
   ],
   [
     // wrong deeply nested tags
-    '<t1><tx><t3><xXx/>?</t3></ty></t1>',
+    // THIS TEST IS FALIING !!!
+    '<t1><tx><t3>1<xXx/>?</t3></ty></t1>',
     [
       {
         index: 0,
@@ -316,17 +317,18 @@ const TESTS = [
             secondTagText: '</t3>',
             name: 't3',
             children: [
+              { index: 12, rawText: '1' },
               {
-                index: 12,
+                index: 13,
                 name: 'xXx',
-                path: '0.children.1.children.0',
+                path: '0.children.1.children.1',
                 rawText: '<xXx/>',
                 single: true,
               },
-              { index: 18, rawText: '?' },
+              { index: 19, rawText: '?' },
             ],
           },
-          { index: 24, rawText: '</ty>' },
+          { index: 25, rawText: '</ty>' },
         ],
       },
     ],
@@ -599,10 +601,12 @@ const TESTS = [
 ];
 
 test('all parse tests', () => {
+  console.time('parse tests');
   for (const [text, expected] of TESTS) {
     const tree = new AST().parse(text as string);
     expect(tree).toEqual(expected);
   }
+  console.timeEnd('parse tests');
 });
 
 test('weird parse tests', () => {

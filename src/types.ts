@@ -24,7 +24,7 @@ export type ParseToken = {
   firstTagText?: string;
   secondTagText?: string;
   children?: ParseToken[];
-  parent?: Record<string, any>;
+  parent?: ParseToken;
 };
 
 // A valid single tag
@@ -36,7 +36,7 @@ export type SingleTag = {
   rawText: string;
   params?: Record<string, any>;
   rawParams?: Record<string, string>;
-  parent?: Record<string, any>;
+  parent?: ParseToken;
 };
 
 // A valid double tag
@@ -50,7 +50,7 @@ export type DoubleTag = {
   children?: ParseToken[];
   params?: Record<string, any>;
   rawParams?: Record<string, string>;
-  parent?: Record<string, any>;
+  parent?: ParseToken;
 };
 
 export type ScanToken = {

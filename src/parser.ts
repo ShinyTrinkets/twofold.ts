@@ -22,7 +22,7 @@ export default class AST {
 
   parseTokens(tokens: T.LexToken[]): ParseToken[] {
     const { openTag, lastStopper } = this.config;
-    // (optional) This RegExp can be used to match the first character of a tag.
+    // (optional) This RegExp can be used to match the first character of a tag
     const RE_FIRST_START = new RegExp(
       `^[${openTag as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
     );
@@ -36,52 +36,33 @@ export default class AST {
     const getTopAst = (): ParseToken => ast[ast.length - 1];
     const getTopStack = (): ParseToken => stack[stack.length - 1];
 
-    // Implementation notes:
-    // A valid double tag doesn't contain rawText, it contains children
-    // Non-matching double tags must be converted to raw text
-    // Pushing a double-tag on the stack means that all the following tags become children of this tag,
-    // until it is either closed, or discovered to be invalid (eg. the second tag doesn't match the first tag)
-    // Unknown tags should be destroyed and ignored
-    // Single and double tags must have .path
-
-    function addChild(parent: ParseToken, child: ParseToken): void {
-      parent.children ||= [];
-
-      const topChild = parent.children.at(-1);
-      if (isRawText(topChild) && isRawText(child)) {
-        topChild.rawText += child.rawText;
-      } else {
-        parent.children.push(child);
-      }
-    }
-
-    /**
-     * Recursively adds dot-notation paths to tag nodes in the AST.
-     * Raw text nodes are ignored.
-     */
-    function addPaths(nodes: ParseToken[], currentPath = ''): void {
-      for (const [index, node] of nodes.entries()) {
-        // Only add paths to single or double tags, not raw text
-        if (node.name && (node.single || node.double)) {
-          // Calculate the path based on whether it's a root node or a child node
-          node.path = currentPath ? `${currentPath}.children.${index}` : index.toString();
-          // If the node is a double tag and has children, recurse
-          if (isDoubleTag(node) && node.children) {
-            addPaths(node.children, node.path);
-          }
+    // Helper to assign path to a node
+    const assignPathToNode = function (node: ParseToken, parent: ParseToken | undefined, index: number): void {
+      if (node.name && (node.single || node.double)) {
+        if (!parent) {
+          node.path = index.toString();
+        } else {
+          node.path = parent.path + '.children.' + index;
         }
       }
-    }
+    };
 
     const commitToken = function (token: ParseToken): void {
-      const topAst = getTopAst();
-      const topStack = getTopStack();
-      const parent = topStack || topAst;
-      if (isDoubleTag(topStack)) {
-        addChild(topStack, token);
-      } else if (isRawText(parent) && isRawText(token)) {
-        parent.rawText += token.rawText;
+      const topNode = getTopStack() || getTopAst();
+      if (isDoubleTag(topNode)) {
+        topNode.children ||= [];
+        // Add a child node to a D-tag parent, merging rawText if needed
+        const topChild = topNode.children.at(-1)!;
+        if (isRawText(topChild) && isRawText(token)) {
+          topChild.rawText += token.rawText;
+        } else {
+          assignPathToNode(token, topNode, topNode.children.length);
+          topNode.children.push(token);
+        }
+      } else if (isRawText(topNode) && isRawText(token)) {
+        topNode.rawText += token.rawText;
       } else {
+        assignPathToNode(token, undefined, ast.length);
         ast.push(token);
       }
     };
@@ -92,26 +73,44 @@ export default class AST {
       // A valid double tag doesn't have raw text
       // @ts-ignore Shut up, TS
       delete topStack.rawText;
-      // Remove the tag from the stack and commit
-      // @ts-ignore Top stack exists
-      commitToken(stack.pop());
-    };
 
-    const dropFakeDouble = function (): void {
-      if (stack.length === 0) {
-        return;
+      // Remove the tag from the stack
+      const doubleTag = stack.pop()!;
+      const parentNode = getTopStack();
+
+      // First add the double tag to its parent
+      if (parentNode && isDoubleTag(parentNode)) {
+        parentNode.children ||= [];
+        const index = parentNode.children.length;
+        parentNode.children.push(doubleTag);
+        // Assign path to the double tag
+        if (doubleTag.name && doubleTag.double) {
+          doubleTag.path = parentNode.path + '.children.' + index;
+        }
+      } else {
+        const index = ast.length;
+        ast.push(doubleTag);
+        // Assign path to the double tag
+        if (doubleTag.name && doubleTag.double) {
+          doubleTag.path = index.toString();
+        }
       }
 
-      const topStack = stack.pop()!;
-      // Non-matching double tags are converted to raw text here
-      // Remove the tag from the stack and prepare to cleanup
-      commitToken({
-        index: topStack.index,
-        rawText: topStack.firstTagText || topStack.rawText,
-      });
-      if (topStack.children) {
-        for (const child of topStack.children) {
-          commitToken(child);
+      // Process all nodes within the double tag hierarchy
+      if (doubleTag.children && doubleTag.children.length > 0) {
+        // Use a queue to process all nodes breadth-first without recursion
+        const queue = [...doubleTag.children.entries()].map(([i, child]) => ({ node: child, parent: doubleTag, index: i }));
+
+        while (queue.length > 0) {
+          const { node, parent, index } = queue.shift()!;
+          // Assign path to the current node
+          if (node.name && (node.single || node.double)) {
+            node.path = parent.path + '.children.' + index;
+          }
+          // Add any children to the queue for processing
+          if (node.children && node.children.length > 0) {
+            queue.push(...node.children.entries().map(([i, child]) => ({ node: child, parent: node, index: i })));
+          }
         }
       }
     };
@@ -148,9 +147,22 @@ export default class AST {
 
             if (unwindNo >= 0) {
               for (let i = stack.length - 1; i > unwindNo; i--) {
-                dropFakeDouble();
+                // Drop fake double tags
+                if (stack.length > 0) {
+                  const fakeDouble = stack.pop()!;
+                  // Non-matching double tags are converted to raw text here
+                  // Remove the tag from the stack and prepare for cleanup
+                  commitToken({
+                    index: fakeDouble.index,
+                    rawText: fakeDouble.firstTagText || fakeDouble.rawText,
+                  });
+                  if (fakeDouble.children) {
+                    for (const child of fakeDouble.children) {
+                      commitToken(child);
+                    }
+                  }
+                }
               }
-
               commitDouble(token);
             } else {
               commitToken({ index: token.index, rawText: token.rawText });
@@ -168,11 +180,12 @@ export default class AST {
       if (isRawText(topAst) && isRawText(token)) {
         topAst.rawText += token.rawText;
       } else if (isSingleTag(token) || isFullDoubleTag(token)) {
+        assignPathToNode(token, undefined, ast.length);
         ast.push(token);
       } else if (isRawText(topAst)) {
         topAst.rawText += token.rawText;
       } else {
-        // Unknown type of tag, destroy
+        // Unknown type of tag, convert to raw text
         ast.push({ index: token.index, rawText: token.rawText });
       }
     };
@@ -185,15 +198,11 @@ export default class AST {
         for (const child of token.children) {
           finalCommit(child);
         }
-
         continue;
       } else {
         finalCommit(token);
       }
     }
-
-    // Recursively add dot-notation paths
-    addPaths(ast);
 
     this.ast = ast;
     return ast;
