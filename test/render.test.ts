@@ -2,8 +2,8 @@ import * as fs from 'node:fs';
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
 
+import AST from '../src/parser.ts';
 import Lexer from '../src/lexer.ts';
-import parse from '../src/parser.ts';
 import twofold from '../src/index.ts';
 import { isDoubleTag, isRawText, isSingleTag } from '../src/tags.ts';
 
@@ -19,7 +19,7 @@ test('no blocks found', () => {
   });
   const lex = o.lex(txt);
   expect(lex).toHaveLength(1);
-  const ast = parse(lex);
+  const ast = new AST().parse(lex);
   expect(ast).toHaveLength(1);
   expect(isRawText(ast[0])).toBeTruthy();
 });
@@ -29,10 +29,11 @@ test('some blocks found', async () => {
   const txt = fs.readFileSync(DIR + '/fixtures/text1.md', {
     encoding: 'utf8',
   });
+
   const lex = o.lex(txt);
   expect(lex).toHaveLength(14);
   expect(isRawText(lex[0])).toBeTruthy();
-  const ast = parse(lex);
+  const ast = new AST().parse(lex);
   expect(ast).toHaveLength(7);
 
   expect(isRawText(ast[0])).toBeTruthy();

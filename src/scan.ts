@@ -3,7 +3,7 @@ import picomatch from 'picomatch';
 
 import type * as T from './types.ts';
 import { type DoubleTag, type ParseToken, type ScanToken, type SingleTag } from './types.ts';
-import parse from './parser.ts';
+import AST from './parser.ts';
 import Lexer from './lexer.ts';
 import functions from './builtin/index.ts';
 import { listTree } from './util.ts';
@@ -83,7 +83,7 @@ export async function scanFile(
   }
 
   console.log('Txt length ::', len.toLocaleString('en-GB'));
-  const ast = parse(lexer.finish(), cfg);
+  const ast = new AST(cfg).parse(lexer.finish());
   lexer.reset(); // Reset lexer to force free memory
   ast.map(walk);
   ast.length = 0; // Clear the AST to free memory

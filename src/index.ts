@@ -2,9 +2,9 @@ import picomatch from 'picomatch';
 
 import * as config from './config.ts';
 import type * as T from './types.ts';
-import Lexer from './lexer.ts';
-import parse from './parser.ts';
 import Runtime from './runtime.ts';
+import Lexer from './lexer.ts';
+import AST from './parser.ts';
 import { syncTag, unParse } from './tags.ts';
 import { deepGet, deepSet, listTree } from './util.ts';
 
@@ -33,10 +33,10 @@ export async function renderFile(
   const engine = await Runtime.fromFile(file, customTags, cfg);
 
   // Save time and IO if the file doesn't have TwoFold tags
-  if (engine.ast.length === 1 && typeof engine.ast[0].rawText === 'string') {
+  if (engine.ast.length === 1 && typeof engine.ast.nodes[0].rawText === 'string') {
     return {
       changed: false,
-      text: engine.ast[0].rawText,
+      text: engine.ast.nodes[0].rawText,
     };
   }
 
@@ -64,6 +64,7 @@ export async function renderFolder(
   const stats = { found: 0, rendered: 0 };
   const isMatch = cfg.glob ? picomatch('**/' + cfg.glob) : null;
   for (const fname of listTree(dname, cfg.depth || 1)) {
+    // @ts-ignore It's valid code
     if (isMatch && !isMatch(fname, { basename: true }).isMatch) {
       continue;
     }
@@ -87,7 +88,8 @@ export async function editSave(meta: Runtime): Promise<T.ParseToken> {
   // Reform/ restructure de-synced tag, in place
   syncTag(node);
   let oldNode = node;
-  const lexer = new Lexer();
+  const lexer = new Lexer(meta.config);
+  const parser = new AST(meta.config);
   let ast: T.ParseToken[] = [];
 
   if (typeof Bun !== 'undefined') {
@@ -95,7 +97,7 @@ export async function editSave(meta: Runtime): Promise<T.ParseToken> {
     // and the path to the node in the AST
     const file = Bun.file(meta.file.fname!);
     let text = await file.text();
-    ast = parse(lexer.lex(text));
+    ast = parser.parse(lexer.lex(text));
     lexer.reset();
     // Keep a copy of the original text
     oldNode = structuredClone(deepGet(ast, node.path!));
@@ -106,7 +108,7 @@ export async function editSave(meta: Runtime): Promise<T.ParseToken> {
     file.write(text);
   } else if (typeof Deno !== 'undefined') {
     let text = await Deno.readTextFile(meta.file.fname!);
-    ast = parse(lexer.lex(text));
+    ast = parser.parse(lexer.lex(text));
     lexer.reset();
     // Keep a copy of the original text
     oldNode = structuredClone(deepGet(ast, node.path!));

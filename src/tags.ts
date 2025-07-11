@@ -7,7 +7,7 @@ export const isRawText = (t: LexToken | ParseToken): boolean =>
 
 export const isFullDoubleTag = (t: ParseToken) => isDoubleTag(t) && t.firstTagText && t.secondTagText;
 
-export function consumeTag(tag: SingleTag | DoubleTag) {
+export function consumeTag(tag: ParseToken | SingleTag | DoubleTag) {
   for (const k of Object.keys(tag)) {
     if (k === 'rawText') {
       continue;
@@ -21,7 +21,7 @@ export function consumeTag(tag: SingleTag | DoubleTag) {
 /**
  * Deep extract text from a node and all its children.
  */
-export function getText(node: SingleTag | DoubleTag): string {
+export function getText(node: ParseToken | SingleTag | DoubleTag): string {
   let text = '';
   if (!(node as ParseToken).children) {
     if (isRawText(node as ParseToken)) {

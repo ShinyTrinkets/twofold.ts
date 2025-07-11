@@ -7,9 +7,9 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 
 import type * as T from './types.ts';
-import parse from './parser.ts';
 import Lexer from './lexer.ts';
 import builtins from './builtin/index.ts';
+import AST from './parser.ts';
 import * as hooks from './addons/hooks.ts';
 import * as config from './config.ts';
 import * as A from './addons/types.ts';
@@ -25,8 +25,8 @@ import './addons/index.ts'; // Trigger all addons
  * It holds the parsed AST, file metadata, configuration, and global context.
  */
 export default class Runtime {
+  ast: AST;
   file: T.RuntimeFile;
-  ast: T.ParseToken[] = [];
   node: T.ParseToken = { index: -1, rawText: '' };
   state: T.RuntimeState;
   config: T.ConfigFull = config.defaultCfg;
@@ -36,6 +36,7 @@ export default class Runtime {
   allFunctions: Readonly<Record<string, any>>;
 
   constructor(customTags: Record<string, Function> = {}, cfg: T.ConfigFull = config.defaultCfg) {
+    this.ast = new AST(cfg);
     this.file = { size: 0, hash: '' };
     this.state = { running: false };
     this.config = Object.freeze(cfg);
@@ -59,7 +60,7 @@ export default class Runtime {
       size: text.length,
       hash: crypto.createHash('sha224').update(text).digest('hex'),
     };
-    runtime.ast = parse(new Lexer(cfg).lex(text), cfg);
+    runtime.ast.parse(text);
     return runtime;
   }
 
@@ -122,7 +123,7 @@ export default class Runtime {
       lexer.push(text);
     }
 
-    runtime.ast = parse(lexer.finish(), cfg);
+    runtime.ast.parse(lexer.finish());
     runtime.file.hash = streamHash.digest('hex');
     lexer.reset();
 
@@ -135,7 +136,7 @@ export default class Runtime {
       return false; // Cannot write to a locked file
     }
 
-    text ||= this.ast.map(unParse).join('');
+    text ||= this.ast.nodes.map(unParse).join('');
     const resultHash = crypto.createHash('sha224').update(text).digest('hex');
     if (!force && resultHash === this.file.hash) {
       return false; // No changes, nothing to write
@@ -173,6 +174,7 @@ export default class Runtime {
     const chunks = [];
     for (const tag of this.ast) {
       await this.evaluateTag(tag, customCtx);
+      this.node = { index: -1, rawText: '' };
       chunks.push(unParse(tag));
     }
 
@@ -180,7 +182,7 @@ export default class Runtime {
     this.file.size = text.length;
     this.file.hash = crypto.createHash('sha224').update(text).digest('hex');
 
-    this.node = { index: -1, rawText: '' };
+    // Reset runtime engine state
     this.state.stopped = new Date();
     this.state.running = false;
     this.memoCache.empty();
@@ -255,7 +257,7 @@ export default class Runtime {
       // If the result is a string, it must be dynamically parsed into children
       // This operation only makes sense for BFS double tags
       if (isDoubleTag(tag) && result && typeof result === 'string') {
-        const children = parse(new Lexer(this.config).lex(result), this.config);
+        const children = new AST(this.config).parse(result);
         if (children.length) {
           tag.children = children;
         }
@@ -287,7 +289,7 @@ export default class Runtime {
         const childrenCtx = deepClone(customCtx);
         for (const c of tag.children) {
           if (c.name && (c.single || c.double)) {
-            c.parent = { name: tag.name, index: tag.index, params: tag.params };
+            c.parent = { name: tag.name, index: tag.index, params: tag.params, rawText: '' };
             if (tag.single) {
               c.parent.single = true;
             } else if (tag.double) {
@@ -332,6 +334,7 @@ export default class Runtime {
       delete this.node.parent.children;
       delete this.node.parent.parent;
     } else {
+      // @ts-ignore It's OK to have an empty parent
       this.node.parent = {};
     }
 
@@ -364,8 +367,10 @@ export default class Runtime {
 
     // Call the specialized evaluate function
     if (isDoubleTag(tag)) {
+      // @ts-ignore Sealed engine is used to prevent new properties
       result = await evaluateDoubleTag(tag as T.DoubleTag, localCtx, func, sealedEngine);
     } else if (isSingleTag(tag)) {
+      // @ts-ignore Sealed engine is used to prevent new properties
       result = await evaluateSingleTag(tag as T.SingleTag, localCtx, func, sealedEngine);
     }
 

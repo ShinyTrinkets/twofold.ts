@@ -297,7 +297,6 @@ const TESTS = [
   ],
   [
     // wrong deeply nested tags
-    // THIS TEST IS FALIING !!!
     '<t1><tx><t3>1<xXx/>?</t3></ty></t1>',
     [
       {
@@ -409,7 +408,7 @@ const TESTS = [
     ],
   ],
   [
-    '<ignore><line "1"/></randomCard></ignore>',
+    '<ignore><line "1"/></randomCard></ignore>\n',
     [
       {
         double: true,
@@ -438,10 +437,11 @@ const TESTS = [
           },
         ],
       },
+      { index: 41, rawText: '\n' },
     ],
   ],
   [
-    '<i><increment plus=4>6</increment><sort x=t>\n<//></i>',
+    '<i><increment plus=4>6</increment><sort x=t>\n<//></i>\n',
     [
       {
         index: 0,
@@ -465,6 +465,7 @@ const TESTS = [
           { index: 34, rawText: '<sort x=t>\n<//>' },
         ],
       },
+      { index: 54, rawText: '\n' },
     ],
   ],
   // The parser should work with HTML-like tags
@@ -613,11 +614,11 @@ test('weird parse tests', () => {
   let lex, ast;
 
   lex = new Lexer().lex('');
-  ast = new AST().parseTokens(lex);
+  ast = new AST().parse(lex);
   expect(ast).toStrictEqual([]);
 
   lex = [{}];
-  ast = new AST().parseTokens(lex);
+  ast = new AST().parse(lex);
   expect(ast).toStrictEqual([]);
 
   lex = [
@@ -626,6 +627,6 @@ test('weird parse tests', () => {
     { double: true, name: 'a', rawText: '</a>' },
     { double: true, name: 'a', rawText: '<b>' },
   ];
-  ast = new AST().parseTokens(lex);
+  ast = new AST().parse(lex);
   expect(ast).toEqual([{ index: 0, rawText: '12</a><b>' }]);
 });

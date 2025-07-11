@@ -4,7 +4,6 @@ const { test, expect } = await testing;
 import twofold from '../src/index.ts';
 import Runtime from '../src/runtime.ts';
 import builtin from '../src/builtin/index.ts';
-import { unParse } from '../src/tags.ts';
 import { defaultCfg } from '../src/config.ts';
 
 test('simple evaluate', async () => {
@@ -12,12 +11,12 @@ test('simple evaluate', async () => {
   const run = Runtime.fromText(txt);
   const ast = run.ast;
 
-  await run.evaluateTag(ast[0]);
+  await run.evaluateTag(ast.nodes[0]);
   expect(ast.length).toBe(2);
-  expect(ast[0]).toEqual({ index: 0, rawText: ' ' });
+  expect(ast.nodes[0]).toEqual({ index: 0, rawText: ' ' });
 
-  await run.evaluateTag(ast[1]);
-  expect(ast[1]).toEqual({
+  await run.evaluateTag(ast.nodes[1]);
+  expect(ast.nodes[1]).toEqual({
     index: 1,
     double: true,
     name: 'main',
@@ -36,15 +35,15 @@ test('evaluate countDown tag', async () => {
   let txt = '<main><countDown "9" /></main>';
   let run = Runtime.fromText(txt);
   let ast: any = run.ast;
-  await run.evaluateTag(ast[0]);
-  expect(ast[0].children[0].rawText).toBe('<countDown "8" />');
+  await run.evaluateTag(ast.nodes[0]);
+  expect(ast.nodes[0].children[0].rawText).toBe('<countDown "8" />');
 
   txt = '<main><countDown "9">.</countDown></main>';
   run = Runtime.fromText(txt);
   ast = run.ast;
-  await run.evaluateTag(ast[0]);
-  expect(ast[0].children[0].firstTagText).toBe('<countDown "8">');
-  expect(ast[0].children[0].secondTagText).toBe('</countDown>');
+  await run.evaluateTag(ast.nodes[0]);
+  expect(ast.nodes[0].children[0].firstTagText).toBe('<countDown "8">');
+  expect(ast.nodes[0].children[0].secondTagText).toBe('</countDown>');
 });
 
 test('evaluate custom tags', async () => {
@@ -84,8 +83,8 @@ test('evaluate custom tags', async () => {
     },
   });
   expect(run.ast.length).toBe(1);
-  await run.evaluateTag(run.ast[0]);
-  expect(unParse(run.ast[0])).toBe(`<t1 x="x">
+  await run.evaluateTag(run.ast.nodes[0]);
+  expect(run.ast.unParse()).toBe(`<t1 x="x">
     <t2 z="z">
       <t3 "a" b=2 />
     </t2>
@@ -118,7 +117,7 @@ test('evaluate consumable custom tags', async () => {
   });
   expect(run.ast.length).toBe(1);
   await run.evaluateAll();
-  expect(unParse(run.ast[0])).toBe('<t1>\n      <t3 />\n    \n    <t4 cut=1 />\n  </t1>');
+  expect(run.ast.unParse()).toBe('<t1>\n      <t3 />\n    \n    <t4 cut=1 />\n  </t1>');
 });
 
 test('evaluate frozen custom tags', async () => {
@@ -154,7 +153,7 @@ test('evaluate frozen custom tags', async () => {
   });
   expect(run.ast.length).toBe(1);
   await run.evaluateAll();
-  expect(unParse(run.ast[0])).toBe(`<t1 x="x">
+  expect(run.ast.unParse()).toBe(`<t1 x="x">
     <t2 freeze=true>
       <t3 />
       <t4> </t4>
@@ -191,7 +190,7 @@ test('destroy ☠️ custom tags', async () => {
   });
   expect(run.ast.length).toBe(1);
   await run.evaluateAll();
-  expect(unParse(run.ast[0])).toBe(`<t1><t2>
+  expect(run.ast.unParse()).toBe(`<t1><t2>
       <t3 />
     </t2>
     <t4 />

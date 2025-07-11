@@ -3,24 +3,48 @@ import { defaultCfg } from './config.ts';
 import { isDoubleTag, isFullDoubleTag, isRawText, isSingleTag } from './tags.ts';
 import { type DoubleTag, type ParseToken } from './types.ts';
 import Lexer from './lexer.ts';
+import { log } from './logger.ts';
 
 /**
  * AST (Abstract Syntax Tree) class for parsing text into a structured format.
  */
 export default class AST {
   config: T.Config;
-  ast: ParseToken[] = [];
+  nodes: ParseToken[] = [];
 
   constructor(cfg: T.Config = {}) {
     this.config = { ...defaultCfg, ...cfg };
   }
 
-  parse(text: string): ParseToken[] {
-    const tokens = new Lexer(this.config).lex(text);
-    return this.parseTokens(tokens);
+  get length(): number {
+    return this.nodes.length;
   }
 
-  parseTokens(tokens: T.LexToken[]): ParseToken[] {
+  /**
+   * Returns the node at the specified index.
+   */
+  at(index: number): ParseToken | undefined {
+    return this.nodes.at(index);
+  }
+
+  /**
+   * Makes AST iterable, yielding from parsed nodes.
+   */
+  [Symbol.iterator](): Iterator<ParseToken> {
+    return this.nodes[Symbol.iterator]();
+  }
+
+  parse(input: string | T.LexToken[]): ParseToken[] {
+    let tokens: T.LexToken[] = [];
+    if (typeof input === 'string') {
+      tokens = new Lexer(this.config).lex(input);
+    } else if (Array.isArray(input)) {
+      tokens = input as T.LexToken[];
+    } else {
+      log.error('AST parse input must be a string or an array of tokens!');
+      return [];
+    }
+
     const { openTag, lastStopper } = this.config;
     // (optional) This RegExp can be used to match the first character of a tag
     const RE_FIRST_START = new RegExp(
@@ -31,39 +55,27 @@ export default class AST {
       `^[${openTag as string}][${lastStopper as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
     );
 
-    const ast: ParseToken[] = [];
+    const tree: ParseToken[] = [];
     const stack: ParseToken[] = [];
-    const getTopAst = (): ParseToken => ast[ast.length - 1];
+    const getTopAst = (): ParseToken => tree[tree.length - 1];
     const getTopStack = (): ParseToken => stack[stack.length - 1];
 
-    // Helper to assign path to a node
-    const assignPathToNode = function (node: ParseToken, parent: ParseToken | undefined, index: number): void {
-      if (node.name && (node.single || node.double)) {
-        if (!parent) {
-          node.path = index.toString();
-        } else {
-          node.path = parent.path + '.children.' + index;
-        }
-      }
-    };
-
     const commitToken = function (token: ParseToken): void {
-      const topNode = getTopStack() || getTopAst();
-      if (isDoubleTag(topNode)) {
-        topNode.children ||= [];
+      const topStack = getTopStack();
+      const topNode = topStack || getTopAst();
+      if (isDoubleTag(topStack)) {
+        topStack.children ||= [];
         // Add a child node to a D-tag parent, merging rawText if needed
-        const topChild = topNode.children.at(-1)!;
+        const topChild = topStack.children.at(-1)!;
         if (isRawText(topChild) && isRawText(token)) {
           topChild.rawText += token.rawText;
         } else {
-          assignPathToNode(token, topNode, topNode.children.length);
-          topNode.children.push(token);
+          topStack.children.push(token);
         }
       } else if (isRawText(topNode) && isRawText(token)) {
         topNode.rawText += token.rawText;
       } else {
-        assignPathToNode(token, undefined, ast.length);
-        ast.push(token);
+        tree.push(token);
       }
     };
 
@@ -73,46 +85,9 @@ export default class AST {
       // A valid double tag doesn't have raw text
       // @ts-ignore Shut up, TS
       delete topStack.rawText;
-
-      // Remove the tag from the stack
-      const doubleTag = stack.pop()!;
-      const parentNode = getTopStack();
-
-      // First add the double tag to its parent
-      if (parentNode && isDoubleTag(parentNode)) {
-        parentNode.children ||= [];
-        const index = parentNode.children.length;
-        parentNode.children.push(doubleTag);
-        // Assign path to the double tag
-        if (doubleTag.name && doubleTag.double) {
-          doubleTag.path = parentNode.path + '.children.' + index;
-        }
-      } else {
-        const index = ast.length;
-        ast.push(doubleTag);
-        // Assign path to the double tag
-        if (doubleTag.name && doubleTag.double) {
-          doubleTag.path = index.toString();
-        }
-      }
-
-      // Process all nodes within the double tag hierarchy
-      if (doubleTag.children && doubleTag.children.length > 0) {
-        // Use a queue to process all nodes breadth-first without recursion
-        const queue = [...doubleTag.children.entries()].map(([i, child]) => ({ node: child, parent: doubleTag, index: i }));
-
-        while (queue.length > 0) {
-          const { node, parent, index } = queue.shift()!;
-          // Assign path to the current node
-          if (node.name && (node.single || node.double)) {
-            node.path = parent.path + '.children.' + index;
-          }
-          // Add any children to the queue for processing
-          if (node.children && node.children.length > 0) {
-            queue.push(...node.children.entries().map(([i, child]) => ({ node: child, parent: node, index: i })));
-          }
-        }
-      }
+      // Remove the tag from the stack and commit
+      // @ts-ignore Top stack exists
+      commitToken(stack.pop());
     };
 
     for (const token of tokens) {
@@ -135,6 +110,7 @@ export default class AST {
           const topStack = getTopStack();
           if (topStack && topStack.name === token.name) {
             commitDouble(token);
+            continue;
           } else {
             // Search up the stack if the closing tag matches anything
             let unwindNo = -1;
@@ -180,17 +156,16 @@ export default class AST {
       if (isRawText(topAst) && isRawText(token)) {
         topAst.rawText += token.rawText;
       } else if (isSingleTag(token) || isFullDoubleTag(token)) {
-        assignPathToNode(token, undefined, ast.length);
-        ast.push(token);
+        tree.push(token);
       } else if (isRawText(topAst)) {
         topAst.rawText += token.rawText;
       } else {
         // Unknown type of tag, convert to raw text
-        ast.push({ index: token.index, rawText: token.rawText });
+        tree.push({ index: token.index, rawText: token.rawText });
       }
     };
 
-    // Empty the stack
+    // Empty the leftover stack
     for (const token of stack) {
       // If there's an incomplete double tag on the stack
       if (isDoubleTag(token) && token.children) {
@@ -204,12 +179,18 @@ export default class AST {
       }
     }
 
-    this.ast = ast;
-    return ast;
+    // Add paths to all nodes in the AST
+    AST.addPaths(tree);
+
+    this.nodes = tree;
+    return tree;
   }
 
+  /**
+   * Deeply convert the tree and all its children into text.
+   */
   unParse(): string {
-    return this.ast.map(node => this.__unParse(node)).join('');
+    return this.nodes.map(node => this.__unParse(node)).join('');
   }
 
   __unParse(node: ParseToken): string {
@@ -229,5 +210,23 @@ export default class AST {
       text = node.rawText;
     }
     return text;
+  }
+
+  /**
+   * Recursively adds dot-notation paths to tag nodes in the AST.
+   * Raw text nodes are ignored.
+   */
+  private static addPaths(nodes: ParseToken[], currentPath = ''): void {
+    for (const [index, node] of nodes.entries()) {
+      // Only add paths to single or double tags, not raw text
+      if (node.name && (node.single || node.double)) {
+        // Calculate the path based on whether it's a root node or a child node
+        node.path = currentPath ? `${currentPath}.children.${index}` : index.toString();
+        // If the node is a double tag and has children, recurse
+        if (isDoubleTag(node) && node.children) {
+          AST.addPaths(node.children, node.path);
+        }
+      }
+    }
   }
 }

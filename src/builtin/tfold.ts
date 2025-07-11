@@ -130,6 +130,7 @@ export function increment(s: string, { plus = 1 } = {}, _m: any): number {
    * Very silly DEV tag, increment the input with a number.
    * The increment can be any integer, or float, positive or negative.
    */
+  // @ts-ignore It's OK
   return parseNumber(s) + parseNumber(plus);
 }
 

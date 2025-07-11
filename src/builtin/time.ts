@@ -15,36 +15,36 @@ function getDate(text: string | Date): Date {
   return text;
 }
 
-export function now(txtDate: string, { date = null } = {}): string {
+export function now(txtDate: string, args: any): string {
   /**
    * Returns the current date and time as a string.
    * The format is YYYY-MM-DD HH:MM:SS ;
    * Example: <now>2019-10-23 12:34:56</now> ;
    */
-  date = getDate(txtDate || date);
+  const date = getDate(txtDate || args.date);
   return date.toISOString().split('.')[0].replace('T', ' ');
 }
 
-export function date(txtDate: string, { date = null } = {}): string {
+export function date(txtDate: string, args: any): string {
   /**
    * Returns the current date as a string.
    * The format is YYYY-MM-DD ;
    * Example: <date>2019-10-23</date> ;
    */
-  date = getDate(txtDate || date);
+  const date = getDate(txtDate || args.date);
   return date.toISOString().split('T')[0];
 }
 
-export function dayOrNight(txtDate: string, { date = null, splitHour = 6 } = {}): string {
+export function dayOrNight(txtDate: string, args: any): string {
   /**
    * Returns the text: day or night.
    */
-  date = getDate(txtDate || date);
+  const date = getDate(txtDate || args.date);
   const h = date.getHours();
+  const splitHour = parseInt(args.splitHour) || 6;
   if (h > splitHour && h <= splitHour + 12) {
     return 'day';
   }
-
   return 'night';
 }
 
@@ -58,7 +58,6 @@ export function emojiSunMoon(txtDate: string, { date = null, splitHour = 6 } = {
   if (dn === 'day') {
     return '☀️';
   }
-
   return '🌙';
 }
 
@@ -72,12 +71,11 @@ export function emojiDayNight(txtDate: string, { date = null, splitHour = 6 } = 
   if (dn === 'day') {
     return '🏙';
   }
-
   return '🌃';
 }
 
 // Full hours
-const fixHours = {
+const fixHours: Record<number, string> = {
   0: '🕛',
   1: '🕐',
   2: '🕑',
@@ -93,7 +91,7 @@ const fixHours = {
   12: '🕛',
 };
 // ... and a half
-const halfHours = {
+const halfHours: Record<number, string> = {
   0: '🕧',
   1: '🕜',
   2: '🕝',
@@ -109,18 +107,19 @@ const halfHours = {
   12: '🕧',
 };
 
-export function emojiClock(txtDate: string, { date = null, showHalf = true } = {}): string {
+export function emojiClock(txtDate: string, args: any): string {
   /**
    * Returns the current time as emoji clock.
    * Example: <emojiClock>🕦</emojiClock> ;
    */
-  date = getDate(txtDate || date);
+  const date = getDate(txtDate || args.date);
   let h = date.getHours();
   if (h > 12) {
     h -= 12;
   }
 
   const m = date.getMinutes();
+  const showHalf = args.half;
   let result = fixHours[h];
   if (m >= 15 && m <= 45) {
     if (showHalf) {
@@ -131,14 +130,13 @@ export function emojiClock(txtDate: string, { date = null, showHalf = true } = {
     if (h > 12) {
       h = 0;
     }
-
     result = fixHours[h];
   }
 
   return result;
 }
 
-const zodiacSigns = [
+const zodiacSigns: Array<any> = [
   ['♒', 'Aquarius', 20], // Aquarius starts jan
   ['♓', 'Pisces', 19], // Pisces starts feb
   ['♈', 'Aries', 21], // Aries starts mar 21
@@ -153,15 +151,16 @@ const zodiacSigns = [
   ['♑', 'Capricorn', 21], // Capricorn starts dec 21
 ];
 
-export function zodiacSign(txtDate: string, { date = null, emoji = true } = {}): string {
+export function zodiacSign(txtDate: string, args: any): string {
   /**
    * Returns a zodiac sign as emoji, or text.
    * Example: <zodiacSign>♒</zodiacSign> ;
    * Example: <zodiacSign emoji="false">Aquarius</zodiacSign> ;
    */
-  date = getDate(txtDate || date);
+  const date = getDate(txtDate || args.date);
   const day = date.getDate();
   const month = date.getMonth();
+  const emoji = args.emoji;
 
   const [nextEmoji, nextName, nextDate] = zodiacSigns[month];
   if (day > nextDate) {
