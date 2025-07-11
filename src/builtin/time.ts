@@ -119,7 +119,7 @@ export function emojiClock(txtDate: string, args: any): string {
   }
 
   const m = date.getMinutes();
-  const showHalf = args.half;
+  const showHalf = args.showHalf === undefined ? true : args.showHalf;
   let result = fixHours[h];
   if (m >= 15 && m <= 45) {
     if (showHalf) {
@@ -160,7 +160,7 @@ export function zodiacSign(txtDate: string, args: any): string {
   const date = getDate(txtDate || args.date);
   const day = date.getDate();
   const month = date.getMonth();
-  const emoji = args.emoji;
+  const emoji = args.emoji === undefined ? true : args.emoji;
 
   const [nextEmoji, nextName, nextDate] = zodiacSigns[month];
   if (day > nextDate) {
