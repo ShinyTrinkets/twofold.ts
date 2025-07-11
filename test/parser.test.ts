@@ -465,7 +465,7 @@ const TESTS = [
           { index: 34, rawText: '<sort x=t>\n<//>' },
         ],
       },
-      { index: 54, rawText: '\n' },
+      { index: 53, rawText: '\n' },
     ],
   ],
   // The parser should work with HTML-like tags

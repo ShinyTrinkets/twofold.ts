@@ -111,7 +111,7 @@ export default class Lexer {
        * Commit old state in the processed list
        * and transition to a new state.
        */
-      // log.info('Commit STATE:', this.state, pending, 'processed:', this._processed)
+      // log.info('Commit STATE:', this.state, pending)
       if (pending.name) {
         pending.name = toCamelCase(pending.name);
       }
@@ -127,9 +127,8 @@ export default class Lexer {
             rawText: lastProcessed.rawText,
           };
         } else {
-          const indexAdded = pending.rawText.length;
           this._processed.push(this._pendingState);
-          this.index += indexAdded;
+          this.index = pending.index + pending.rawText.length;
           this._pendingState = { index: this.index, rawText: '' };
         }
         pending = this._pendingState;
@@ -143,7 +142,7 @@ export default class Lexer {
        * and delete the temporary variables.
        * quote=t is for wrapping in a JSON compatible quote.
        */
-      // log.info('Commit TAG:', quote, this.state, pending)
+      // log.info('Commit TAG:', this.state, pending)
       const key = pending.param_key!;
       const origValue = pending.param_value!;
       let value = origValue;

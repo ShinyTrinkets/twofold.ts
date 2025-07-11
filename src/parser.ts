@@ -34,6 +34,14 @@ export default class AST {
     return this.nodes[Symbol.iterator]();
   }
 
+  /**
+   * Transform an unstructured stream of tokens (coming from the Lexer)
+   * into a valid tree-like structure.
+   * If the tag is double, it will have children of type raw text,
+   * or other single or double tags.
+   * Because the Lexer cannot peek, there may be double tags that don't match,
+   * so they have to be matched and fixed here.
+   */
   parse(input: string | T.LexToken[]): ParseToken[] {
     let tokens: T.LexToken[] = [];
     if (typeof input === 'string') {
@@ -46,11 +54,9 @@ export default class AST {
     }
 
     const { openTag, lastStopper } = this.config;
-    // (optional) This RegExp can be used to match the first character of a tag
     const RE_FIRST_START = new RegExp(
       `^[${openTag as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
     );
-    // (optional) This RegExp can be used to match the end of a double tag
     const RE_SECOND_START = new RegExp(
       `^[${openTag as string}][${lastStopper as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
     );
@@ -210,6 +216,40 @@ export default class AST {
       text = node.rawText;
     }
     return text;
+  }
+
+  /**
+   * Sync indexes of all nodes in the AST.
+   * Indexes are used to track the position of nodes in the original input.
+   * They can be desynced when new nodes are added or removed,
+   * so this method should be called after any modifications.
+   */
+  syncIndexes(): void {
+    let currentIndex = 0;
+    for (const node of this.nodes) {
+      currentIndex = this.__syncIndex(node, currentIndex);
+    }
+  }
+
+  private __syncIndex(node: ParseToken, currentIndex = 0): number {
+    if (node.children) {
+      // Double tag with children
+      node.index = currentIndex;
+      let idx = currentIndex + (node as DoubleTag).firstTagText.length;
+      for (const child of node.children) {
+        idx = this.__syncIndex(child, idx);
+      }
+      idx += (node as DoubleTag).secondTagText.length;
+      return idx;
+    } else if (isDoubleTag(node)) {
+      // Empty double tag
+      node.index = currentIndex;
+      return currentIndex + (node as DoubleTag).firstTagText.length + (node as DoubleTag).secondTagText.length;
+    } else {
+      // Single tag or raw text
+      node.index = currentIndex;
+      return currentIndex + node.rawText.length;
+    }
   }
 
   /**
