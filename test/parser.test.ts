@@ -630,3 +630,128 @@ test('weird parse tests', () => {
   ast = new AST().parse(lex);
   expect(ast).toEqual([{ index: 0, rawText: '12</a><b>' }]);
 });
+
+test('traverse BFS and DFS', () => {
+  const ast = new AST();
+  ast.parse(`
+<html>
+  <head><title>Hello world</title>
+  </head>
+  <body>
+    <h1 class="large"><i>Hi</i> there!</h1>
+  </body>
+</html>
+`);
+  const expected = [
+    {
+      index: 0,
+      rawText: '\n',
+    },
+    {
+      index: 1,
+      path: '1',
+      name: 'html',
+      double: true,
+      firstTagText: '<html>',
+      secondTagText: '</html>',
+      children: [
+        {
+          index: 7,
+          rawText: '\n  ',
+        },
+        {
+          index: 10,
+          path: '1.children.1',
+          name: 'head',
+          double: true,
+          firstTagText: '<head>',
+          secondTagText: '</head>',
+          children: [
+            {
+              index: 16,
+              path: '1.children.1.children.0',
+              name: 'title',
+              double: true,
+              firstTagText: '<title>',
+              secondTagText: '</title>',
+              children: [{ index: 23, rawText: 'Hello world' }],
+            },
+            {
+              index: 42,
+              rawText: '\n  ',
+            },
+          ],
+        },
+        {
+          index: 52,
+          rawText: '\n  ',
+        },
+        {
+          index: 55,
+          double: true,
+          name: 'body',
+          path: '1.children.3',
+          firstTagText: '<body>',
+          secondTagText: '</body>',
+          children: [
+            {
+              index: 61,
+              rawText: '\n    ',
+            },
+            {
+              index: 66,
+              double: true,
+              name: 'h1',
+              path: '1.children.3.children.1',
+              params: { class: 'large' },
+              rawParams: { class: '"large"' },
+              firstTagText: '<h1 class="large">',
+              secondTagText: '</h1>',
+              children: [
+                {
+                  index: 84,
+                  path: '1.children.3.children.1.children.0',
+                  double: true,
+                  name: 'i',
+                  firstTagText: '<i>',
+                  secondTagText: '</i>',
+                  children: [{ index: 87, rawText: 'Hi' }],
+                },
+                { index: 93, rawText: ' there!' },
+              ],
+            },
+            {
+              index: 105,
+              rawText: '\n  ',
+            },
+          ],
+        },
+        {
+          index: 115,
+          rawText: '\n',
+        },
+      ],
+    },
+    {
+      index: 123,
+      rawText: '\n',
+    },
+  ];
+  expect(ast.length).toBe(3);
+  expect(ast.nodes).toEqual(expected);
+
+  // test syncIndexes
+  ast.nodes[0].index = 999;
+  ast.nodes[1].index = 999;
+  ast.nodes[2].index = 999;
+  ast.syncIndexes();
+  expect(ast.nodes).toEqual(expected);
+
+  const path: string[] = [];
+  ast.traverse(node => {
+    if (node.name || node.rawText.trim()) {
+      path.push(node.name || node.rawText);
+    }
+  });
+  expect(path).toEqual(['html', 'head', 'title', 'Hello world', 'body', 'h1', 'i', 'Hi', ' there!']);
+});

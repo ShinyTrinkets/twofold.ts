@@ -35,6 +35,24 @@ export default class AST {
   }
 
   /**
+   * Traverse all nodes in the AST in depth-first order,
+   * calling cb(node) for each.
+   */
+  traverse(cb: (node: ParseToken) => void): void {
+    const visit = (node: ParseToken) => {
+      cb(node);
+      if (node.children) {
+        for (const child of node.children) {
+          visit(child);
+        }
+      }
+    };
+    for (const node of this.nodes) {
+      visit(node);
+    }
+  }
+
+  /**
    * Transform an unstructured stream of tokens (coming from the Lexer)
    * into a valid tree-like structure.
    * If the tag is double, it will have children of type raw text,
