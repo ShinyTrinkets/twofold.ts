@@ -274,7 +274,7 @@ export default class AST {
    * Recursively adds dot-notation paths to tag nodes in the AST.
    * Raw text nodes are ignored.
    */
-  private static addPaths(nodes: ParseToken[], currentPath = ''): void {
+  static addPaths(nodes: ParseToken[], currentPath = ''): void {
     for (const [index, node] of nodes.entries()) {
       // Only add paths to single or double tags, not raw text
       if (node.name && (node.single || node.double)) {

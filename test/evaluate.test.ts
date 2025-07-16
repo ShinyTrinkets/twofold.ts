@@ -23,6 +23,7 @@ test('simple evaluate', async () => {
     path: '1',
     firstTagText: '<main>',
     secondTagText: '</main>',
+    childCtx: {},
     children: [
       {
         rawText: '9',
@@ -58,12 +59,14 @@ test('evaluate custom tags', async () => {
     t1: (_s, _a, meta) => {
       expect(meta.node.children.length).toBe(5);
       expect(meta.node.parent).toEqual({});
+      expect(meta.node.childCtx).toEqual({ t4: 23 });
       meta.node.params.x = 'x';
       return meta.node;
     },
     t2: (_s, _a, meta) => {
       expect(meta.node.children.length).toBe(3);
       expect(meta.node.parent.name).toBe('t1');
+      expect(meta.node.childCtx).toEqual({ t3: 12 });
       meta.node.params = { z: 'z' };
       return meta.node;
     },
@@ -71,6 +74,7 @@ test('evaluate custom tags', async () => {
       expect(meta.node.rawText).toBe('<t3 "a" b=1 />');
       expect(meta.node.parent.name).toBe('t2');
       meta.node.params.b = 2;
+      meta.globalCtx.t3 = 12;
       return meta.node;
     },
     t4: (_s, _a, meta) => {
@@ -79,6 +83,7 @@ test('evaluate custom tags', async () => {
       expect(meta.node.parent.name).toBe('t1');
       meta.node.params.d = true;
       meta.node.params.e = 'e';
+      meta.globalCtx.t4 = 23;
       return meta.node;
     },
   });

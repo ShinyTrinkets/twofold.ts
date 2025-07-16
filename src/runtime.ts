@@ -158,6 +158,9 @@ export default class Runtime {
     return true; // Indicate that the file was changed
   }
 
+  /**
+   * Evaluate all tags in the AST and return the final text.
+   */
   async evaluateAll(customCtx: Record<string, any> = {}): Promise<string> {
     if (this.state.running) {
       // Should I return an error here?
@@ -190,6 +193,10 @@ export default class Runtime {
     return text;
   }
 
+  /**
+   * Evaluate a specific tag and its children.
+   * This is a lower-level method, use `evaluateAll` for the whole AST.
+   */
   async evaluateTag(tag: T.ParseToken, customCtx: Record<string, any> = {}): Promise<void> {
     if (!tag.name) {
       return; // Raw text or invalid tag
@@ -260,6 +267,9 @@ export default class Runtime {
         const children = new AST(this.config).parse(result);
         if (children.length) {
           tag.children = children;
+          // Sync indexes and paths after parsing children
+          this.ast.syncIndexes();
+          AST.addPaths(this.ast.nodes);
         }
       }
     }
@@ -286,7 +296,8 @@ export default class Runtime {
       // a separate variable scope for the children
       // At this point, the parent props are interpolated
       if (evalChildren) {
-        const childrenCtx = deepClone(customCtx);
+        // The children scope is also saved in the parent tag
+        (tag as T.DoubleTag).childCtx = deepClone(customCtx);
         for (const c of tag.children) {
           if (c.name && (c.single || c.double)) {
             c.parent = { name: tag.name, index: tag.index, params: tag.params, rawText: '' };
@@ -302,7 +313,7 @@ export default class Runtime {
             }
           }
 
-          await this.evaluateTag(c, childrenCtx);
+          await this.evaluateTag(c, (tag as T.DoubleTag).childCtx);
         }
       }
     }

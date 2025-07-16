@@ -48,6 +48,7 @@ export type DoubleTag = {
   firstTagText: string;
   secondTagText: string;
   children?: ParseToken[];
+  childCtx?: Record<string, any>;
   params?: Record<string, any>;
   rawParams?: Record<string, string>;
   parent?: ParseToken;
