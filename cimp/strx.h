@@ -275,6 +275,19 @@ bool str_read_file(String8 *fs, const char *filename) {
 // ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
 //
 
+/*
+ * Calculates the length of a null-terminated uint32_t string.
+ */
+static inline size_t u32_strlen(const uint32_t *s) {
+    if (!s) {
+        return 0;
+    }
+    const uint32_t *p = s;
+    while (*p)
+        p++;
+    return p - s;
+}
+
 static inline size_t utf8_len_byte0(unsigned char c) {
     if (c < 0x80) return 1;
     if (c < 0xE0) return 2;

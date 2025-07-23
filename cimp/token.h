@@ -123,13 +123,12 @@ LexToken *token_create(void) {
     LexToken *tok = (LexToken *)calloc(1, sizeof(LexToken));
     if (!tok) {
         fprintf(stderr, "[Token_create] Failed to allocate memory for LexToken\n");
-        return NULL;
+        exit(EXIT_FAILURE);
     }
     tok->param_cap = 4;  // Initial capacity
     tok->params = (LexParam *)calloc(tok->param_cap, sizeof(LexParam));
     if (!tok->params) {
-        free(tok);
-        return NULL;
+        exit(EXIT_FAILURE);
     }
     tok->name[0] = '\0';
     tok->name[1] = '\0';
@@ -203,6 +202,23 @@ static inline bool token_grow_params(LexToken *tok) {
 }
 
 /*
+ * Get the Token's name as a UTF-8 string.
+ */
+static inline const char *token_name_utf8(const LexToken *tok) {
+    if (!tok || tok->name_len == 0) return NULL;  // No name
+    static char utf8_name[MAX_NAME_LEN * 4];  // Enough for UTF-8 encoding
+    size_t pos = 0;
+    for (size_t i = 0; i < tok->name_len && pos < sizeof(utf8_name) - 1; i++) {
+        char temp[4];
+        size_t bytes = utf8_encode(tok->name[i], temp);
+        memcpy(utf8_name + pos, temp, bytes);
+        pos += bytes;
+    }
+    utf8_name[pos] = '\0';  // Null-terminate
+    return utf8_name;
+}
+
+/*
  * Append a character to a Token's name.
  */
 static inline bool token_name_append(LexToken *tok, uint32_t codepoint) {
@@ -222,6 +238,8 @@ static inline bool token_param_append(LexToken *tok, LexParam *p) {
     if (tok->param_len >= tok->param_cap) {
         if (!token_grow_params(tok)) return false;  // Allocation failed
     }
+    // printf("[Token_param_append] Appending param: key_len=%zu, val_len=%zu\n",
+    //        p->key_len, p->val.len);
     tok->params[tok->param_len++] = *p;  // Copy the Param
     return true;
 }

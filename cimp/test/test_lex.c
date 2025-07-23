@@ -27,48 +27,46 @@ void test_reset(void) {
 
 void test_simple_single(void) {
     lexer_init(&lexer);
-    // lexer_parse_text(&lexer, L"a<b/>");
-    // lexer_display(&lexer);
-    // TEST_ASSERT_EQUAL(5, lexer.index);
-    // TEST_ASSERT_EQUAL(2, lexer.processed_len);
+    lexer_parse_chunk(&lexer, L"a<b/>", 0);
+    TEST_ASSERT_EQUAL(5, lexer.index);
+    TEST_ASSERT_EQUAL(2, lexer.processed_len);
 
-    // TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[0].type);
-    // TEST_ASSERT_EQUAL(0, lexer.processed[0].pos_start);
-    // TEST_ASSERT_EQUAL(1, lexer.processed[0].pos_end);
+    TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[0].type);
+    TEST_ASSERT_EQUAL(0, lexer.processed[0].pos_start);
+    TEST_ASSERT_EQUAL(1, lexer.processed[0].pos_end);
 
-    // TEST_ASSERT_EQUAL(TYPE_SINGLE_TAG, lexer.processed[1].type);
-    // TEST_ASSERT_EQUAL(1, lexer.processed[1].pos_start);
-    // TEST_ASSERT_EQUAL(5, lexer.processed[1].pos_end);
-    // TEST_ASSERT_EQUAL_STRING("b", (const char *)lexer.processed[1].name);
+    TEST_ASSERT_EQUAL(TYPE_SINGLE_TAG, lexer.processed[1].type);
+    TEST_ASSERT_EQUAL(1, lexer.processed[1].pos_start);
+    TEST_ASSERT_EQUAL(5, lexer.processed[1].pos_end);
+    TEST_ASSERT_EQUAL_STRING("b", token_name_utf8(&lexer.processed[1]));
     lexer_reset(&lexer);
 }
 
-// void test_simple_double(void) {
-//     lexer_init(&lexer);
-//     lexer_parse_text(&lexer, L"a<b>c</b>");
-//     lexer_display(&lexer);
-//     TEST_ASSERT_EQUAL(lexer.index, 9);
-//     TEST_ASSERT_EQUAL(lexer.processed_len, 4);
+void test_simple_double(void) {
+    lexer_init(&lexer);
+    lexer_parse_chunk(&lexer, L"a<b>c</b>", 0);
+    TEST_ASSERT_EQUAL(lexer.index, 9);
+    TEST_ASSERT_EQUAL(lexer.processed_len, 4);
 
-//     TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[0].type);
-//     TEST_ASSERT_EQUAL(0, lexer.processed[0].pos_start);
-//     TEST_ASSERT_EQUAL(1, lexer.processed[0].pos_end);
+    TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[0].type);
+    TEST_ASSERT_EQUAL(0, lexer.processed[0].pos_start);
+    TEST_ASSERT_EQUAL(1, lexer.processed[0].pos_end);
 
-//     TEST_ASSERT_EQUAL(TYPE_DOUBLE_TAG, lexer.processed[1].type);
-//     TEST_ASSERT_EQUAL(1, lexer.processed[1].pos_start);
-//     TEST_ASSERT_EQUAL(4, lexer.processed[1].pos_end);
-//     TEST_ASSERT_EQUAL_STRING("b", (const char *)lexer.processed[1].name);
+    TEST_ASSERT_EQUAL(TYPE_DOUBLE_TAG, lexer.processed[1].type);
+    TEST_ASSERT_EQUAL(1, lexer.processed[1].pos_start);
+    TEST_ASSERT_EQUAL(4, lexer.processed[1].pos_end);
+    TEST_ASSERT_EQUAL_STRING("b", token_name_utf8(&lexer.processed[1]));
 
-//     TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[2].type);
-//     TEST_ASSERT_EQUAL(4, lexer.processed[2].pos_start);
-//     TEST_ASSERT_EQUAL(5, lexer.processed[2].pos_end);
+    TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[2].type);
+    TEST_ASSERT_EQUAL(4, lexer.processed[2].pos_start);
+    TEST_ASSERT_EQUAL(5, lexer.processed[2].pos_end);
 
-//     TEST_ASSERT_EQUAL(TYPE_DOUBLE_TAG, lexer.processed[3].type);
-//     TEST_ASSERT_EQUAL(5, lexer.processed[3].pos_start);
-//     TEST_ASSERT_EQUAL(9, lexer.processed[3].pos_end);
-//     TEST_ASSERT_EQUAL_STRING("b", (const char *)lexer.processed[3].name);
-//     lexer_reset(&lexer);
-// }
+    TEST_ASSERT_EQUAL(TYPE_DOUBLE_TAG, lexer.processed[3].type);
+    TEST_ASSERT_EQUAL(5, lexer.processed[3].pos_start);
+    TEST_ASSERT_EQUAL(9, lexer.processed[3].pos_end);
+    TEST_ASSERT_EQUAL_STRING("b", token_name_utf8(&lexer.processed[3]));
+    lexer_reset(&lexer);
+}
 
 // void test_unicode_chars(void) {
 //     lexer_init(&lexer);
@@ -103,8 +101,8 @@ int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_reset);
     // RUN_TEST(test_input_output);
-    // RUN_TEST(test_simple_single);
-    // RUN_TEST(test_simple_double);
+    RUN_TEST(test_simple_single);
+    RUN_TEST(test_simple_double);
     // RUN_TEST(test_unicode_chars);
     // RUN_TEST(test_parse_file);
     return UNITY_END();
