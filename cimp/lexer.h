@@ -75,7 +75,7 @@ typedef struct {
 // Initialize the lexer with default values
 void lexer_init(Lexer *lexer) {
     if (!lexer) {
-        fprintf(stderr, "Lexer pointer is NULL\n");
+        fprintf(stderr, "[Lexer_init] Lexer pointer is NULL\n");
         return;
     }
     printf("[Lexer_init] Initializing lexer\n");
@@ -87,12 +87,11 @@ void lexer_init(Lexer *lexer) {
     lexer->pendParam = *param_create();
     lexer->pendNode = *token_create();
     lexer->processed = (LexToken *)calloc(lexer->processed_cap, sizeof(LexToken));
-    // lexer->processed = (LexToken *)malloc(sizeof(LexToken) * lexer->processed_cap);
 }
 
 void lexer_free(Lexer *lexer) {
     if (!lexer) {
-        fprintf(stderr, "Lexer pointer is NULL\n");
+        fprintf(stderr, "[Lexer_free] Lexer pointer is NULL\n");
         return;
     }
     free(lexer->processed);
@@ -105,7 +104,7 @@ void lexer_free(Lexer *lexer) {
 
 void lexer_reset(Lexer *lexer) {
     if (!lexer) {
-        fprintf(stderr, "Lexer pointer is NULL\n");
+        fprintf(stderr, "[Lexer_reset] Lexer pointer is NULL\n");
         return;
     }
     printf("\n[Lexer__reset] Resetting lexer state\n\n");

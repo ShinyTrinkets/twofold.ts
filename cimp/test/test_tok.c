@@ -11,9 +11,11 @@ void test_param_create(void) {
     TEST_ASSERT_NOT_NULL(param);
     TEST_ASSERT_EQUAL(0, param->key_len);
     TEST_ASSERT_EQUAL(0, param->val.len);
-    TEST_ASSERT_EQUAL(0, param->val.byte_len);
     TEST_ASSERT_EQUAL(0, param_key_first_char(param));
     TEST_ASSERT_EQUAL(0, param_val_first_char(param));
+    char out[4];
+    param_to_js(param, out, sizeof(out));
+    TEST_ASSERT_EQUAL_STRING("{}", out);
     free(param);
 }
 
@@ -28,8 +30,11 @@ void test_param_kv(void) {
     // Test value append
     TEST_ASSERT_EQUAL(true, param_val_append(param, 'v'));
     TEST_ASSERT_EQUAL(1, param->val.len);
-    TEST_ASSERT_EQUAL(1, param->val.byte_len);
     TEST_ASSERT_EQUAL('v', param_val_first_char(param));
+
+    char out[10];
+    param_to_js(param, out, sizeof(out));
+    TEST_ASSERT_EQUAL_STRING("k:'v'", out);
 
     free(param);
 }
@@ -55,6 +60,10 @@ void test_simple_param(void) {
     TEST_ASSERT_EQUAL('W', param_val_first_char(param));
     TEST_ASSERT_EQUAL('d', param_val_last_char(param));
 
+    char out[20];
+    param_to_js(param, out, sizeof(out));
+    TEST_ASSERT_EQUAL_STRING("Hello:'World'", out);
+
     free(param);
 }
 
@@ -75,6 +84,9 @@ void test_token_create(void) {
     TEST_ASSERT_EQUAL(0, token->name_len);
     TEST_ASSERT_EQUAL(0, token->param_len);
     TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, token->type);
+    char out[4];
+    token_to_js(token, out, sizeof(out));
+    TEST_ASSERT_EQUAL_STRING("{}", out);
     token_free(token);
 }
 
@@ -106,12 +118,21 @@ void test_token_param_append(void) {
     LexParam *param = param_create();
     TEST_ASSERT_NOT_NULL(param);
 
-    TEST_ASSERT_EQUAL(true, param_key_append(param, 'a'));
-    TEST_ASSERT_EQUAL(true, param_val_append(param, 'b'));
+    TEST_ASSERT_TRUE(token_name_append(token, 'a'));
+    TEST_ASSERT_TRUE(param_key_append(param, 'a'));
+    TEST_ASSERT_TRUE(param_val_append(param, 'b'));
 
     TEST_ASSERT_EQUAL(true, token_param_append(token, param));
     TEST_ASSERT_EQUAL(1, token->param_len);
     free(param);
+
+    char out[64];
+    token_to_js(token, out, sizeof(out));
+    TEST_ASSERT_EQUAL_STRING("{type:0,pos_start:0,pos_end:0}", out);
+    token->type = TYPE_SINGLE_TAG;  // Set type for testing
+    token->pos_end = 10;
+    token_to_js(token, out, sizeof(out));
+    TEST_ASSERT_EQUAL_STRING("{type:1,pos_start:0,pos_end:10,name:'a',params:[{a:'b'}]}", out);
 
     TEST_ASSERT_EQUAL(1, token->params[0].key_len);
     TEST_ASSERT_EQUAL('a', token->params[0].key[0]);
