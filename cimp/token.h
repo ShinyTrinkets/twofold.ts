@@ -1,10 +1,16 @@
 #include <stdlib.h>
 
-#include "str8.h"
-
 // ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲
 // Lexical Analysis Token and Parameter Structures ┃
 // ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼
+
+#include "strx.h"
+
+//
+// ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
+// Param
+// ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
+//
 
 #define MAX_NAME_LEN 42
 
@@ -66,7 +72,7 @@ static inline bool param_val_append(LexParam *param, uint32_t codepoint) {
 }
 
 //
-// ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
+// ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
 // Token
 // ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
 //

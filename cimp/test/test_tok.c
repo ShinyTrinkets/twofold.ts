@@ -1,4 +1,4 @@
-#include "token.h"
+#include "../token.h"
 #include "unity.h"
 
 #undef NANO_PREALLOCATE_BAND_VM
