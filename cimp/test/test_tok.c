@@ -32,6 +32,9 @@ void test_param_kv(void) {
     TEST_ASSERT_EQUAL(1, param->val.len);
     TEST_ASSERT_EQUAL('v', param_val_first_char(param));
 
+    TEST_ASSERT_EQUAL(1, u32_strlen(param->key));
+    TEST_ASSERT_EQUAL(1, u32_strlen(param->val.data));
+
     char out[10];
     param_to_js(param, out, sizeof(out));
     TEST_ASSERT_EQUAL_STRING("k:'v'", out);

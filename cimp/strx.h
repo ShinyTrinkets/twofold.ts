@@ -6,6 +6,7 @@
 static inline size_t utf8_len_byte0(unsigned char c);
 static inline uint32_t utf8_decode(const char *s, size_t *bytes);
 static inline size_t utf8_encode(uint32_t cp, char bytes[4]);
+uint32_t read_utf8_codepoint(FILE *fp, int *eof);
 
 #define STR_MIN_CAPACITY 24
 
@@ -105,175 +106,61 @@ void str32_to_utf8(const String32 *s32, char *out, size_t out_size) {
 
 //
 // ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
-// String8
-// ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
-//
-
-// String8 struct
-// ▰ ▰ ▰ ▰ ▰ ▰ ▰
-typedef struct {
-    char *data;       // UTF-8 bytes
-    size_t len;       // number of codepoints (not bytes!)
-    size_t cap;       // allocated bytes
-    size_t byte_len;  // current number of bytes used
-} String8;
-// ▰ ▰ ▰ ▰
-
-String8 *str_new(size_t initial_capacity) {
-    if (initial_capacity < STR_MIN_CAPACITY)
-        initial_capacity = STR_MIN_CAPACITY;
-    String8 *s8 = calloc(1, sizeof(String8));
-    if (!s8)
-        return NULL;
-    s8->cap = initial_capacity;
-    s8->data = calloc(s8->cap, sizeof(char));
-    if (!s8->data) {
-        free(s8);
-        return NULL;
-    }
-    return s8;
-}
-
-void str_free(String8 *s8) {
-    if (s8) {
-        free(s8->data);
-        // Do NOT free s itself. The caller is responsible for that,
-        // as s might be on the stack or part of another struct.
-    }
-}
-
-void str_clear(String8 *s8) {
-    if (s8) {
-        s8->data[0] = '\0';
-        s8->byte_len = 0;
-        s8->len = 0;
-    }
-}
-
-static inline size_t str_length(const String8 *s8) {
-    return s8->len;
-}
-
-static inline uint32_t str_first_codepoint(const String8 *s8) {
-    if (s8->len == 0) return 0;
-    size_t len = s8->byte_len;
-    return utf8_decode(s8->data, &len);
-}
-
-static uint32_t str_last_codepoint(const String8 *s8) {
-    if (s8->len == 0) return 0;
-    size_t pos = s8->byte_len;
-    while (pos > 0) {
-        unsigned char b = s8->data[pos - 1];
-        if ((b & 0xC0) != 0x80) {  // not a continuation byte
-            size_t len = s8->byte_len - (pos - 1);
-            return utf8_decode(s8->data + pos - 1, &len);
-        }
-        pos--;
-    }
-    return 0xFFFD;
-}
-
-static bool str_ensure_capacity(String8 *s8, size_t needed) {
-    // +1 for the null terminator
-    if (s8->byte_len + needed + 1 <= s8->cap) return true;
-    size_t new_cap = s8->cap;
-    while (new_cap < s8->byte_len + needed + 1) {
-        new_cap *= 2;
-    }
-    char *new_data = realloc(s8->data, new_cap);
-    if (!new_data) return false;
-    s8->data = new_data;
-    s8->cap = new_cap;
-    return true;
-}
-
-static bool str_append_uint32(String8 *s8, uint32_t cp) {
-    char temp[4];
-    size_t bytes = utf8_encode(cp, temp);
-    if (bytes == 0) return false;  // invalid codepoint
-    if (!str_ensure_capacity(s8, bytes)) return false;
-    // Copy the bytes to the end of the string
-    memcpy(s8->data + s8->byte_len, temp, bytes);
-    s8->byte_len += bytes;
-    s8->data[s8->byte_len] = '\0';
-    s8->len++;
-    return true;
-}
-
-// static
-bool str_equal(const String8 *a, const String8 *b) {
-    if (!a || !b) {
-        return (a == b);  // both NULL → equal, one NULL → not
-    }
-    if (a->len != b->len) {
-        return false;  // different number of codepoints
-    }
-    if (a->byte_len != b->byte_len) {
-        return false;  // different byte length → can't be equal
-    }
-    // If byte lengths are same and codepoint counts are same,
-    // do byte comparison — because UTF-8 is deterministic.
-    // Same codepoints → same encoding → same bytes.
-    return memcmp(a->data, b->data, a->byte_len) == 0;
-}
-
-// void str_append_utf8(String8 *s8, const char *utf8_str) {
-//     if (!utf8_str) return;
-//     const char *p = utf8_str;
-//     while (*p) {
-//         size_t len = strlen(p);
-//         uint32_t cp = utf8_decode(p, &len);
-//         if (cp == 0xFFFD) len = 1;  // skip invalid
-//         str_append_uint32(s8, cp);
-//         p += len;
-//     }
-// }
-
-bool str_read_file(String8 *fs, const char *filename) {
-    FILE *f = fopen(filename, "rb");  // binary: UTF-8 has no BOM issues
-    if (!f) return false;
-
-    // Check file size
-    fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    if (fsize <= 0) {
-        fclose(f);
-        return true;  // empty file is OK
-    }
-    if (!str_ensure_capacity(fs, fsize)) {
-        fclose(f);
-        return false;  // allocation failed
-    }
-
-    size_t bytes_read = fread(fs->data + fs->byte_len, 1, fsize, f);
-    fclose(f);
-
-    // Decode byte-by-byte to update length
-    const char *p = fs->data + fs->byte_len;
-    size_t remaining = bytes_read;
-    while (remaining > 0) {
-        size_t len = remaining;
-        uint32_t cp = utf8_decode(p, &len);
-        if (cp == 0xFFFD) len = 1;
-        fs->len++;
-        p += len;
-        remaining -= len;
-    }
-
-    fs->byte_len += bytes_read;
-    fs->data[fs->byte_len] = '\0';
-
-    return true;
-}
-
-//
-// ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
 // Helper functions
 // ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
 //
+
+// Read the next UTF-8 code point from the file
+uint32_t read_utf8_codepoint(FILE *fp, int *eof) {
+    int c1 = fgetc(fp);  // Grab the first byte
+    if (c1 == EOF) {
+        *eof = 1;
+        return 0;  // Caller can decide what to do
+    }
+    *eof = 0;
+
+    // Single-byte sequence (ASCII)
+    if ((c1 & 0x80) == 0) {
+        return c1;
+    }
+
+    // Two-byte sequence
+    if ((c1 & 0xE0) == 0xC0) {
+        int c2 = fgetc(fp);
+        if (c2 == EOF || (c2 & 0xC0) != 0x80) {
+            return 0xFFFD;  // Unicode replacement character for errors
+        }
+        return ((c1 & 0x1F) << 6) | (c2 & 0x3F);
+    }
+
+    // Three-byte sequence
+    if ((c1 & 0xF0) == 0xE0) {
+        int c2 = fgetc(fp);
+        int c3 = fgetc(fp);
+        if (c2 == EOF || (c2 & 0xC0) != 0x80 ||
+            c3 == EOF || (c3 & 0xC0) != 0x80) {
+            return 0xFFFD;
+        }
+        return ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+    }
+
+    // Four-byte sequence
+    if ((c1 & 0xF8) == 0xF0) {
+        int c2 = fgetc(fp);
+        int c3 = fgetc(fp);
+        int c4 = fgetc(fp);
+        if (c2 == EOF || (c2 & 0xC0) != 0x80 ||
+            c3 == EOF || (c3 & 0xC0) != 0x80 ||
+            c4 == EOF || (c4 & 0xC0) != 0x80) {
+            return 0xFFFD;
+        }
+        return ((c1 & 0x07) << 18) | ((c2 & 0x3F) << 12) |
+               ((c3 & 0x3F) << 6) | (c4 & 0x3F);
+    }
+
+    // Invalid first byte
+    return 0xFFFD;
+}
 
 /*
  * Calculates the length of a null-terminated uint32_t string.
@@ -295,6 +182,7 @@ static inline size_t utf8_len_byte0(unsigned char c) {
     return 4;
 }
 
+// Decodes a UTF-8 string into a code point.
 static inline uint32_t utf8_decode(const char *s, size_t *bytes) {
     unsigned char c = *s;
     if (c < 0x80) {
