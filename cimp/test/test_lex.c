@@ -40,6 +40,17 @@ void test_simple_single(void) {
     TEST_ASSERT_EQUAL(5, lexer.processed[1].pos_end);
     TEST_ASSERT_EQUAL_STRING("b", token_name_utf8(&lexer.processed[1]));
     lexer_reset(&lexer);
+
+    lexer_parse_chunk(&lexer, U"<div id=\"main\"/>", 0);
+    TEST_ASSERT_EQUAL(16, lexer.index);
+    TEST_ASSERT_EQUAL(1, lexer.processed_len);
+    TEST_ASSERT_EQUAL(TYPE_SINGLE_TAG, lexer.processed[0].type);
+    TEST_ASSERT_EQUAL(0, lexer.processed[0].pos_start);
+    TEST_ASSERT_EQUAL(16, lexer.processed[0].pos_end);
+
+    char out[96];
+    lexer_to_js(&lexer, out, sizeof(out));
+    printf("Lexer output: %s\n", out);
 }
 
 void test_simple_double(void) {
@@ -71,7 +82,6 @@ void test_simple_double(void) {
 void test_unicode_chars(void) {
     lexer_init(&lexer);
     lexer_parse_text(&lexer, (const uint32_t *)U"French <àéìòùÀÉÌÒÙ/> German <äöüßÄÖÜ/>\0");
-    // lexer_display(&lexer);
     TEST_ASSERT_EQUAL(38, lexer.index);
     TEST_ASSERT_EQUAL(4, lexer.processed_len);
     TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[0].type);
@@ -100,9 +110,12 @@ void test_unicode_chars(void) {
 void test_parse_file(void) {
     lexer_init(&lexer);
     lexer_parse_file(&lexer, "fixtures/menu.xml");
-    // lexer_display(&lexer);
     TEST_ASSERT_EQUAL(250, lexer.index);
     TEST_ASSERT_EQUAL(27, lexer.processed_len);
+
+    // char out[1200];
+    // lexer_to_js(&lexer, out, sizeof(out));
+    // printf("Lexer output: %s\n", out);
 
     TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[0].type);
     TEST_ASSERT_EQUAL(TYPE_DOUBLE_TAG, lexer.processed[1].type);
@@ -122,8 +135,8 @@ void test_parse_file(void) {
 
 //
 // ▰ ▰ ▰ ▰ ▰ ▰ ▰
-// Serious testss
-// ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
+// Serious testz
+// ▰ ▰ ▰ ▰ ▰ ▰ ▰
 //
 
 typedef struct {
@@ -279,6 +292,6 @@ int main(void) {
     RUN_TEST(test_simple_double);
     RUN_TEST(test_unicode_chars);
     RUN_TEST(test_parse_file);
-    // RUN_TEST(test_input_output);
+    RUN_TEST(test_input_output);
     return UNITY_END();
 }

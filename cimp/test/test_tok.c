@@ -131,7 +131,7 @@ void test_token_param_append(void) {
 
     char out[64];
     token_to_js(token, out, sizeof(out));
-    TEST_ASSERT_EQUAL_STRING("{type:0,pos_start:0,pos_end:0}", out);
+    TEST_ASSERT_EQUAL_STRING("{}", out);
     token->type = TYPE_SINGLE_TAG;  // Set type for testing
     token->pos_end = 10;
     token_to_js(token, out, sizeof(out));

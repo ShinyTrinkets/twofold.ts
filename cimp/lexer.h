@@ -121,8 +121,61 @@ void lexer_reset(Lexer *lexer) {
     lexer->processed_len = 0;
 }
 
-// void lexer_to_js(const Lexer *lexer, ...)
-// TODO
+/*
+ * Convert the lexer state to a JavaScript array of tokens.
+ */
+static inline void lexer_to_js(const Lexer *lexer, char *out, size_t out_size) {
+    if (!lexer || !out || out_size == 0) {
+        if (out && out_size > 0) {
+            out[0] = '\0';
+        }
+        return;
+    }
+
+    // Initialize an empty string in case there are no tokens
+    out[0] = '\0';
+    size_t current_len = 0;
+    size_t remaining_size = out_size;
+
+    // Start the JavaScript array
+    int written = snprintf(out, remaining_size, "[\n");
+    if (written < 0 || (size_t)written >= remaining_size) {
+        // Not enough space, out is now truncated but null-terminated.
+        return;
+    }
+    current_len += written;
+    remaining_size -= written;
+
+    // Iterate over each processed token
+    for (size_t i = 0; i < lexer->processed_len; ++i) {
+        // Convert the current token to its JS representation
+        // We pass the pointer to the current end of the output string
+        token_to_js(&lexer->processed[i], out + current_len, remaining_size);
+
+        // Update current length and remaining size
+        size_t token_len = strlen(out + current_len);
+        current_len += token_len;
+
+        if (current_len >= out_size - 1) {
+            // Buffer is full, we can't add a comma or the closing bracket.
+            return;
+        }
+        remaining_size = out_size - current_len;
+
+        // Add a comma if this is not the last token
+        if (i < lexer->processed_len - 1) {
+            written = snprintf(out + current_len, remaining_size, ",\n");
+            if (written < 0 || (size_t)written >= remaining_size) {
+                return;  // Not enough space for comma
+            }
+            current_len += written;
+            remaining_size -= written;
+        }
+    }
+
+    // Close the JavaScript array
+    snprintf(out + current_len, remaining_size, "\n]");
+}
 
 /*
  * Transition to a new lexer state.
@@ -166,8 +219,8 @@ static void lexer__commit(Lexer *lexer) {
                last_pos - token->pos_start, token->pos_start, last_pos);
     } else {
         const char *name = token_name_utf8(token);
-        printf("[Lexer__commit] Commit token: name=%s, type: %d, pos: %zu-%zu\n",
-               name, token->type, token->pos_start, last_pos);
+        printf("[Lexer__commit] Commit token type: %d: name=%s, params: %zu, pos: %zu-%zu\n",
+               token->type, name, token->param_len, token->pos_start, last_pos);
     }
 
     // Check if we need to reallocate the processed tokens array
@@ -181,13 +234,11 @@ static void lexer__commit(Lexer *lexer) {
         }
     }
 
-    // Add the pending token to the processed tokens
-    // This creates a copy, so the pending token must
-    // be freed or reset later
+    // Shallow copy the pending token to the processed tokens
     lexer->processed[lexer->processed_len++] = *token;
-    // Re-create the pending token
-    token_reset(&lexer->pendNode);
-    // lexer->pendNode = *token_create();
+    // Create a new pending token for the next cycle
+    // TODO :: check if this causes memory leaks !!
+    lexer->pendNode = *token_create();
     lexer->pendNode.pos_start = last_pos;
     lexer->pendNode.pos_end = last_pos;
 }
@@ -195,13 +246,13 @@ static void lexer__commit(Lexer *lexer) {
 static inline void lexer__commit_param(Lexer *lexer) {
     token_param_append(&lexer->pendNode, &lexer->pendParam);
     // Re-create the pending parameter
-    // Maybe is should be reset instead?
+    // TODO :: check if this causes memory leaks !!
     lexer->pendParam = *param_create();
 }
 
 static inline void lexer__parse_one(Lexer *lexer, uint32_t curr, uint32_t prev) {
-    // printf("i=%ld - STATE :: %u ;; new CHAR :: (%d) ;; prev CHAR :: (%d)\n",
-    //        lexer->index, lexer->state, (int)curr, (int)prev);
+    printf("i=%ld - STATE :: %u ;; new CHAR :: (%d) ;; prev CHAR :: (%d)\n",
+           lexer->index, lexer->state, (int)curr, (int)prev);
 
     if (lexer->state == STATE_RAW_TEXT) {
         // Could this be the beginning of a new tag?
@@ -389,6 +440,7 @@ static inline void lexer__parse_one(Lexer *lexer, uint32_t curr, uint32_t prev) 
         }
         // Is this a valid closing quote?
         else if (curr == value_0 && is_quote(curr) && value_z != '\\') {
+            param_val_append(&lexer->pendParam, curr);
             lexer__commit_param(lexer);
             lexer__transition(lexer, STATE_INSIDE_TAG);
         }

@@ -72,7 +72,7 @@ static inline bool param_val_append(LexParam *param, uint32_t codepoint) {
 
 static inline void param_to_js(const LexParam *param, char *out, size_t out_size) {
     if (!param || !out || out_size == 0) return;
-    if (param->key_len == 0 && param->val.len == 0) {
+    if (param->key_len == 0 || param->val.len == 0) {
         snprintf(out, out_size, "{}");
         return;  // Empty param
     }
@@ -206,7 +206,7 @@ static inline bool token_grow_params(LexToken *tok) {
  */
 static inline const char *token_name_utf8(const LexToken *tok) {
     if (!tok || tok->name_len == 0) return NULL;  // No name
-    static char utf8_name[MAX_NAME_LEN * 4];  // Enough for UTF-8 encoding
+    static char utf8_name[MAX_NAME_LEN * 4];      // Enough for UTF-8 encoding
     size_t pos = 0;
     for (size_t i = 0; i < tok->name_len && pos < sizeof(utf8_name) - 1; i++) {
         char temp[4];
@@ -238,8 +238,6 @@ static inline bool token_param_append(LexToken *tok, LexParam *p) {
     if (tok->param_len >= tok->param_cap) {
         if (!token_grow_params(tok)) return false;  // Allocation failed
     }
-    // printf("[Token_param_append] Appending param: key_len=%zu, val_len=%zu\n",
-    //        p->key_len, p->val.len);
     tok->params[tok->param_len++] = *p;  // Copy the Param
     return true;
 }
@@ -253,7 +251,7 @@ static inline void token_to_js(const LexToken *tok, char *out, size_t out_size) 
     // Example double tag:
     //   {type: 2, pos_start: 0, pos_end: 10, name: 'name2', params: [{param_key: 'param_value'}]}
     if (!tok || !out || out_size == 0) return;
-    if (tok->name_len == 0 && tok->param_len == 0) {
+    if (tok->pos_end <= tok->pos_start) {
         snprintf(out, out_size, "{}");
         return;  // Empty token
     }
@@ -273,7 +271,8 @@ static inline void token_to_js(const LexToken *tok, char *out, size_t out_size) 
         if (tok->param_len > 0) {
             pos += snprintf(out + pos, out_size - pos, ",params:[{");
             for (size_t i = 0; i < tok->param_len; ++i) {
-                char param_js[256];  // Buffer for a single parameter's JS representation
+                // Limited buffer for a single parameter's JS representation
+                char param_js[1024];
                 param_to_js(&tok->params[i], param_js, sizeof(param_js));
                 pos += snprintf(out + pos, out_size - pos, "%s", param_js);
                 if (i < tok->param_len - 1) {
