@@ -74,13 +74,12 @@ void test_from_file(void) {
     String32* s2 = str32_new(0);
 
     FILE* fp = fopen("fixtures/greek.txt", "r");
-    int eof = 0;
     uint32_t curr;
-    while ((curr = read_utf8_codepoint(fp, &eof)) != 0xFFFD && !eof) {
-        char buff[5];
-        size_t len = utf8_encode(curr, buff);
-        buff[len] = '\0';
-        printf("Read codepoint: %u = %s\n", curr, buff);
+    while ((curr = utf8_getc(fp)) != 0) {
+        // char buff[5];
+        // size_t len = utf8_encode(curr, buff);
+        // buff[len] = '\0';
+        // printf("Read codepoint: %u = %s\n", curr, buff);
         str32_append_uint32(s1, curr);
     }
     fclose(fp);
@@ -88,8 +87,7 @@ void test_from_file(void) {
     TEST_ASSERT_EQUAL(L'Κ', str32_first_codepoint(s1));
 
     fp = fopen("fixtures/cyril.txt", "r");
-    eof = 0;
-    while ((curr = read_utf8_codepoint(fp, &eof)) != 0xFFFD && !eof) {
+    while ((curr = utf8_getc(fp)) != 0) {
         str32_append_uint32(s2, curr);
     }
     fclose(fp);

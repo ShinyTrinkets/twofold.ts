@@ -6,7 +6,7 @@
 static inline size_t utf8_len_byte0(unsigned char c);
 static inline uint32_t utf8_decode(const char *s, size_t *bytes);
 static inline size_t utf8_encode(uint32_t cp, char bytes[4]);
-uint32_t read_utf8_codepoint(FILE *fp, int *eof);
+static inline uint32_t utf8_getc(FILE *fp);
 
 #define STR_MIN_CAPACITY 24
 
@@ -110,42 +110,49 @@ void str32_to_utf8(const String32 *s32, char *out, size_t out_size) {
 // ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
 //
 
-// Read the next UTF-8 code point from the file
-uint32_t read_utf8_codepoint(FILE *fp, int *eof) {
-    int c1 = fgetc(fp);  // Grab the first byte
-    if (c1 == EOF) {
-        *eof = 1;
-        return 0;  // Caller can decide what to do
-    }
-    *eof = 0;
+/*
+ * Read the next UTF-8 code point.
+ */
+static inline uint32_t utf8_getc(FILE *fp) {
+    int c = fgetc(fp);
+    if (c == EOF) return 0;
 
     // Single-byte sequence (ASCII)
-    if ((c1 & 0x80) == 0) {
-        return c1;
+    if ((c & 0x80) == 0) {
+        return (uint8_t)c;
     }
 
     // Two-byte sequence
-    if ((c1 & 0xE0) == 0xC0) {
+    if ((c & 0xE0) == 0xC0) {
         int c2 = fgetc(fp);
         if (c2 == EOF || (c2 & 0xC0) != 0x80) {
             return 0xFFFD;  // Unicode replacement character for errors
         }
-        return ((c1 & 0x1F) << 6) | (c2 & 0x3F);
+        uint32_t result = ((c & 0x1F) << 6) | (c2 & 0x3F);
+
+        // Validate range
+        if (result < 0x80) return 0xFFFD;  // Overlong encoding
+        return result;
     }
 
     // Three-byte sequence
-    if ((c1 & 0xF0) == 0xE0) {
+    if ((c & 0xF0) == 0xE0) {
         int c2 = fgetc(fp);
         int c3 = fgetc(fp);
         if (c2 == EOF || (c2 & 0xC0) != 0x80 ||
             c3 == EOF || (c3 & 0xC0) != 0x80) {
             return 0xFFFD;
         }
-        return ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+        uint32_t result = ((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+
+        // Validate range
+        if (result < 0x800) return 0xFFFD;                        // Overlong encoding
+        if (result >= 0xD800 && result <= 0xDFFF) return 0xFFFD;  // Surrogate
+        return result;
     }
 
     // Four-byte sequence
-    if ((c1 & 0xF8) == 0xF0) {
+    if ((c & 0xF8) == 0xF0) {
         int c2 = fgetc(fp);
         int c3 = fgetc(fp);
         int c4 = fgetc(fp);
@@ -154,11 +161,16 @@ uint32_t read_utf8_codepoint(FILE *fp, int *eof) {
             c4 == EOF || (c4 & 0xC0) != 0x80) {
             return 0xFFFD;
         }
-        return ((c1 & 0x07) << 18) | ((c2 & 0x3F) << 12) |
-               ((c3 & 0x3F) << 6) | (c4 & 0x3F);
+        uint32_t result = ((c & 0x07) << 18) | ((c2 & 0x3F) << 12) |
+                          ((c3 & 0x3F) << 6) | (c4 & 0x3F);
+
+        // Validate range
+        if (result < 0x10000) return 0xFFFD;   // Overlong encoding
+        if (result > 0x10FFFF) return 0xFFFD;  // Beyond Unicode range
+        return result;
     }
 
-    // Invalid first byte
+    // Invalid UTF-8 lead byte
     return 0xFFFD;
 }
 
