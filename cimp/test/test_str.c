@@ -32,6 +32,7 @@ void test_simple_string32(void) {
     TEST_ASSERT_EQUAL(0, s32->len);
     TEST_ASSERT_EQUAL('\0', s32->data[0]);
     str32_free(s32);
+    free(s32);
 }
 
 void test_intl_string32(void) {
@@ -67,6 +68,7 @@ void test_intl_string32(void) {
     printf("String 32: %s\n", buffer);
 
     str32_free(s32);
+    free(s32);
 }
 
 void test_from_file(void) {
@@ -96,6 +98,8 @@ void test_from_file(void) {
 
     str32_free(s1);
     str32_free(s2);
+    free(s1);
+    free(s2);
 }
 
 int main(void) {

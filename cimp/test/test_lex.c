@@ -51,6 +51,7 @@ void test_simple_single(void) {
     char out[96];
     lexer_to_js(&lexer, out, sizeof(out));
     printf("Lexer output: %s\n", out);
+    lexer_free(&lexer);
 }
 
 void test_simple_double(void) {
@@ -107,7 +108,7 @@ void test_unicode_chars(void) {
     lexer_reset(&lexer);
 }
 
-void test_parse_file(void) {
+void test_parse_xml(void) {
     lexer_init(&lexer);
     lexer_parse_file(&lexer, "fixtures/menu.xml");
     TEST_ASSERT_EQUAL(250, lexer.index);
@@ -131,6 +132,24 @@ void test_parse_file(void) {
     TEST_ASSERT_EQUAL(TYPE_DOUBLE_TAG, lexer.processed[9].type);
     TEST_ASSERT_EQUAL_STRING(U"name", lexer.processed[9].name);
     lexer_free(&lexer);
+}
+
+void test_parse_html(void) {
+    lexer_init(&lexer);
+    lexer_parse_file(&lexer, "fixtures/crlf.link.html");
+    TEST_ASSERT_EQUAL(5723, lexer.index);
+
+    TEST_ASSERT_EQUAL(TYPE_RAW_TEXT, lexer.processed[0].type);
+    TEST_ASSERT_EQUAL(0, lexer.processed[0].pos_start);
+    TEST_ASSERT_EQUAL(16, lexer.processed[0].pos_end);
+
+    TEST_ASSERT_EQUAL(TYPE_DOUBLE_TAG, lexer.processed[1].type);
+    TEST_ASSERT_EQUAL(16, lexer.processed[1].pos_start);
+    TEST_ASSERT_EQUAL(32, lexer.processed[1].pos_end);
+
+    // char out[1024 * 1024];
+    // lexer_to_js(&lexer, out, sizeof(out));
+    // printf("Lexer output: %s\n", out);
 }
 
 //
@@ -291,7 +310,8 @@ int main(void) {
     RUN_TEST(test_simple_single);
     RUN_TEST(test_simple_double);
     RUN_TEST(test_unicode_chars);
-    RUN_TEST(test_parse_file);
+    RUN_TEST(test_parse_xml);
+    RUN_TEST(test_parse_html);
     RUN_TEST(test_input_output);
     return UNITY_END();
 }

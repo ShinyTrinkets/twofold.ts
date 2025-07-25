@@ -84,8 +84,12 @@ void lexer_init(Lexer *lexer) {
     lexer->priorState = STATE_RAW_TEXT;
     lexer->processed_len = 0;
     lexer->processed_cap = 96;
-    lexer->pendParam = *param_create();
-    lexer->pendNode = *token_create();
+    LexParam *param = param_create();
+    lexer->pendParam = *param;  // Copy param contents
+    free(param);                // Free temp container
+    LexToken *token = token_create();
+    lexer->pendNode = *token;  // Copy token contents
+    free(token);               // Free temp container
     lexer->processed = (LexToken *)calloc(lexer->processed_cap, sizeof(LexToken));
 }
 
@@ -96,7 +100,7 @@ void lexer_free(Lexer *lexer) {
     }
     free(lexer->processed);
     // pend param val vas allocated: param->val = *str32_new
-    str32_free(&lexer->pendParam.val);
+    param_free(&lexer->pendParam);
     // free the params array, allocated with: calloc(tok->param_cap...
     token_free(&lexer->pendNode);
     // Note: Do NOT free lexer itself, as it might be
@@ -181,7 +185,7 @@ static inline void lexer_to_js(const Lexer *lexer, char *out, size_t out_size) {
  * Transition to a new lexer state.
  */
 static inline void lexer__transition(Lexer *lexer, LexerState new_state) {
-    printf("[Lexer__transition] Transition from state %d to %d\n", lexer->state, new_state);
+    // printf("[Lexer__transition] Transition from state %d to %d\n", lexer->state, new_state);
     lexer->priorState = lexer->state;
     lexer->state = new_state;
 }
@@ -194,7 +198,7 @@ static void lexer__commit(Lexer *lexer) {
 
     // If the token is empty, don't commit it
     if (token->type == TYPE_RAW_TEXT && token->pos_start == token->pos_end) {
-        printf("[Lexer__commit] Skipping empty token\n");
+        // printf("[Lexer__commit] Skipping empty token\n");
         return;
     }
     // Fix the type of the token if the name is empty
@@ -208,20 +212,20 @@ static void lexer__commit(Lexer *lexer) {
     if (token->type == TYPE_RAW_TEXT && lexer->processed_len > 0 &&
         lexer->processed[lexer->processed_len - 1].type == TYPE_RAW_TEXT) {
         LexToken *last_token = &lexer->processed[lexer->processed_len - 1];
-        printf("[Lexer__commit] Merging raw text tokens: %zu characters\n",
-               last_pos - token->pos_start);
+        // printf("[Lexer__commit] Merging raw text tokens: %zu characters\n",
+        //        last_pos - token->pos_start);
         last_token->pos_end = last_pos;  // Extend the last raw text token
         return;                          // No need to add a new token
     }
 
-    if (token->type == TYPE_RAW_TEXT) {
-        printf("[Lexer__commit] Commit raw-text: %zu chars, pos: %zu-%zu\n",
-               last_pos - token->pos_start, token->pos_start, last_pos);
-    } else {
-        const char *name = token_name_utf8(token);
-        printf("[Lexer__commit] Commit token type: %d: name=%s, params: %zu, pos: %zu-%zu\n",
-               token->type, name, token->param_len, token->pos_start, last_pos);
-    }
+    // if (token->type == TYPE_RAW_TEXT) {
+    //     // printf("[Lexer__commit] Commit raw-text: %zu chars, pos: %zu-%zu\n",
+    //     //        last_pos - token->pos_start, token->pos_start, last_pos);
+    // } else {
+    //     // const char *name = token_name_utf8(token);
+    //     // printf("[Lexer__commit] Commit token type: %d: name=%s, params: %zu, pos: %zu-%zu\n",
+    //     //        token->type, name, token->param_len, token->pos_start, last_pos);
+    // }
 
     // Check if we need to reallocate the processed tokens array
     if (lexer->processed_len >= lexer->processed_cap) {
@@ -251,8 +255,8 @@ static inline void lexer__commit_param(Lexer *lexer) {
 }
 
 static inline void lexer__parse_one(Lexer *lexer, uint32_t curr, uint32_t prev) {
-    printf("i=%ld - STATE :: %u ;; new CHAR :: (%d) ;; prev CHAR :: (%d)\n",
-           lexer->index, lexer->state, (int)curr, (int)prev);
+    // printf("i=%ld - STATE :: %u ;; new CHAR :: (%d) ;; prev CHAR :: (%d)\n",
+    //        lexer->index, lexer->state, (int)curr, (int)prev);
 
     if (lexer->state == STATE_RAW_TEXT) {
         // Could this be the beginning of a new tag?

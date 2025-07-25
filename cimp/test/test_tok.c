@@ -16,6 +16,7 @@ void test_param_create(void) {
     char out[4];
     param_to_js(param, out, sizeof(out));
     TEST_ASSERT_EQUAL_STRING("{}", out);
+    param_free(param);
     free(param);
 }
 
@@ -39,6 +40,7 @@ void test_param_kv(void) {
     param_to_js(param, out, sizeof(out));
     TEST_ASSERT_EQUAL_STRING("k:'v'", out);
 
+    param_free(param);
     free(param);
 }
 
@@ -67,6 +69,7 @@ void test_simple_param(void) {
     param_to_js(param, out, sizeof(out));
     TEST_ASSERT_EQUAL_STRING("Hello:'World'", out);
 
+    param_free(param);
     free(param);
 }
 
@@ -91,6 +94,7 @@ void test_token_create(void) {
     token_to_js(token, out, sizeof(out));
     TEST_ASSERT_EQUAL_STRING("{}", out);
     token_free(token);
+    free(token);
 }
 
 void test_token_name_append(void) {
@@ -113,6 +117,7 @@ void test_token_name_append(void) {
     TEST_ASSERT_EQUAL('t', token->name[0]);
 
     token_free(token);
+    free(token);
 }
 
 void test_token_param_append(void) {
@@ -141,6 +146,7 @@ void test_token_param_append(void) {
     TEST_ASSERT_EQUAL('a', token->params[0].key[0]);
     TEST_ASSERT_EQUAL('b', token->params[0].val.data[0]);
     token_free(token);
+    free(token);
 }
 
 int main(void) {

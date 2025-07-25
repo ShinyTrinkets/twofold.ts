@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +44,7 @@ String32 *str32_new(size_t initial_capacity) {
 void str32_free(String32 *s32) {
     if (s32) {
         free(s32->data);
+        s32->data = NULL;  // Avoid dangling pointer
         // Do NOT free s itself. The caller is responsible for that,
         // as s might be on the stack or part of another struct.
     }

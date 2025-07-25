@@ -1,10 +1,8 @@
-#include <stdlib.h>
+#include "strx.h"
 
 // ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲
 // Lexical Analysis Token and Parameter Structures ┃
 // ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼ ▼
-
-#include "strx.h"
 
 //
 // ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰
@@ -24,14 +22,28 @@ typedef struct {
 // ▰ ▰ ▰ ▰
 
 LexParam *param_create(void) {
-    size_t size = sizeof(LexParam) + sizeof(String32) + sizeof(uint32_t) * MAX_NAME_LEN;
-    LexParam *param = (LexParam *)calloc(1, size);
+    LexParam *param = (LexParam *)calloc(1, sizeof(LexParam));
     if (!param) {
-        fprintf(stderr, "[Param_create] Failed to allocate memory for LexParam\n");
+        fprintf(stderr, "[Param_create] Failed to alloc memory for LexParam\n");
         return NULL;
     }
-    param->val = *str32_new(0);
+    String32 *temp_s32 = str32_new(0);
+    if (!temp_s32) {
+        fprintf(stderr, "[Param_create] Failed to alloc memory for String32\n");
+        free(param);
+        return NULL;
+    }
+    param->val = *temp_s32;  // Copy object contents
+    free(temp_s32);          // Free temp container
     return param;
+}
+
+void param_free(LexParam *param) {
+    if (param) {
+        str32_free(&param->val);
+        // Note: Do NOT free param itself, as it might be
+        // on the stack or part of another struct.
+    }
 }
 
 static inline void param_reset(LexParam *param) {
@@ -122,12 +134,13 @@ typedef struct {
 LexToken *token_create(void) {
     LexToken *tok = (LexToken *)calloc(1, sizeof(LexToken));
     if (!tok) {
-        fprintf(stderr, "[Token_create] Failed to allocate memory for LexToken\n");
+        fprintf(stderr, "[Token_create] Failed to alloc memory for LexToken\n");
         exit(EXIT_FAILURE);
     }
     tok->param_cap = 4;  // Initial capacity
     tok->params = (LexParam *)calloc(tok->param_cap, sizeof(LexParam));
     if (!tok->params) {
+        fprintf(stderr, "[Token_create] Failed to alloc memory for params\n");
         exit(EXIT_FAILURE);
     }
     tok->name[0] = '\0';
@@ -138,7 +151,7 @@ LexToken *token_create(void) {
 void token_free(LexToken *tok) {
     if (tok) {
         for (size_t i = 0; i < tok->param_len; i++) {
-            str32_free(&tok->params[i].val);
+            param_free(&tok->params[i]);
         }
         free(tok->params);
         // Note: Do NOT free token itself, as it might be
@@ -193,7 +206,7 @@ static inline bool token_grow_params(LexToken *tok) {
     size_t new_capacity = tok->param_cap * 2;
     LexParam *new_params = (LexParam *)realloc(tok->params, new_capacity * sizeof(LexParam));
     if (!new_params) {
-        fprintf(stderr, "[Token_grow_params] Failed to allocate memory for params\n");
+        fprintf(stderr, "[Token_grow_params] Failed to alloc memory for params\n");
         return false;  // Allocation failed
     }
     tok->params = new_params;
