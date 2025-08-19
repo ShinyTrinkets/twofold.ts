@@ -272,21 +272,23 @@ export async function loadAll(_t: string, args: Record<string, any> = {}, meta: 
    */
   const patt = args['0'] || args.src || args.from || args.path;
   if (!patt) return;
+  const root = path.join(meta.file.dname || '.', path.dirname(patt));
   const files = getDirList(patt, meta.file?.dname!).sort((a, b) => a.localeCompare(b));
 
   for (const fname of files) {
+    const fullName = path.resolve(root, fname);
     let text = '';
     try {
       if (typeof Bun !== 'undefined') {
-        const file = Bun.file(fname);
+        const file = Bun.file(fullName);
         text = await file.text();
       } else if (typeof Deno !== 'undefined') {
-        text = Deno.readTextFileSync(fname);
+        text = Deno.readTextFileSync(fullName);
       } else {
-        text = fs.readFileSync(fname, 'utf-8');
+        text = fs.readFileSync(fullName, 'utf-8');
       }
     } catch (err: any) {
-      log.warn(`Cannot read file "${fname}"!`, err.message);
+      log.warn(`Cannot read file "${fullName}"!`, err.message);
       continue;
     }
 

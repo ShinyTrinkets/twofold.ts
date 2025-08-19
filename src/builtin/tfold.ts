@@ -95,6 +95,7 @@ function __duplicate(_: string, args: any, meta: any) {
     }
   }
   if (meta.node!.double) {
+    if (loop.length === 0) return '\n';
     return '\n' + loop.join('\n') + '\n';
   }
   return loop.join(args.sep || '\n');

@@ -24,7 +24,12 @@ export async function evaluateSingleTag(
   } catch (err: any) {
     let info = JSON.stringify(params);
     if (info.length > 120) info = info.slice(0, 120) + '...';
-    log.warn(`Cannot evaluate single tag "${tag.name}" with "${info}"! ERROR:`, err.message);
+    let msg = err.message;
+    if (err.message.length > 200) {
+      msg = err.message.slice(0, 120) + '...' + err.message.slice(-80);
+    }
+    log.warn(`Cannot evaluate single tag "${tag.name}" with "${info}"! ERROR:`, msg);
+    return;
   }
 
   // If the single tag doesn't have a result, DON'T change the tag
@@ -76,8 +81,13 @@ export async function evaluateDoubleTag(
     //
     result = await func(firstParam || innerText, { ...params, innerText }, meta);
   } catch (err: any) {
+    let msg = err.message;
+    if (err.message.length > 200) {
+      msg = err.message.slice(0, 120) + '...' + err.message.slice(-80);
+    }
     // If the function call crashed, DON'T change the tag
-    log.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, err.message);
+    log.warn(`Cannot evaluate double tag "${tag.firstTagText}...${tag.secondTagText}"! ERROR:`, msg);
+    return;
   }
 
   // If the single tag doesn't have a result, DON'T change the tag
