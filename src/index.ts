@@ -5,7 +5,7 @@ import type * as T from './types.ts';
 import Runtime from './runtime.ts';
 import Lexer from './lexer.ts';
 import AST from './parser.ts';
-import { syncTag, unParse } from './tags.ts';
+import { syncTag } from './tags.ts';
 import { deepGet, deepSet, listTree } from './util.ts';
 
 /**
@@ -103,7 +103,7 @@ export async function editSave(meta: Runtime): Promise<T.ParseToken> {
     oldNode = structuredClone(deepGet(ast, node.path!));
     // Apply the changes to the AST, in place
     deepSet(ast, node.path!, node);
-    text = ast.map(unParse).join('');
+    text = parser.unParse();
     // Write the new text to the same file
     file.write(text);
   } else if (typeof Deno !== 'undefined') {
@@ -114,7 +114,7 @@ export async function editSave(meta: Runtime): Promise<T.ParseToken> {
     oldNode = structuredClone(deepGet(ast, node.path!));
     // Apply the changes to the AST, in place
     deepSet(ast, node.path!, node);
-    text = ast.map(unParse).join('');
+    text = parser.unParse();
     await Deno.writeTextFile(meta.file.fname!, text);
   }
 

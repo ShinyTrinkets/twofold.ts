@@ -15,7 +15,7 @@ import * as config from './config.ts';
 import * as A from './addons/types.ts';
 import { MemoCache } from './cache.ts';
 import { log } from './logger.ts';
-import { isDoubleTag, isSingleTag, unParse } from './tags.ts';
+import { isDoubleTag, isSingleTag } from './tags.ts';
 import { evaluateDoubleTag, evaluateSingleTag, interpolate, shouldInterpolate } from './evaluate.ts';
 import { deepClone, isFunction } from './util.ts';
 import './addons/index.ts'; // Trigger all addons
@@ -136,7 +136,7 @@ export default class Runtime {
       return false; // Cannot write to a locked file
     }
 
-    text ||= this.ast.nodes.map(unParse).join('');
+    text ||= this.ast.unParse();
     const resultHash = crypto.createHash('sha224').update(text).digest('hex');
     if (!force && resultHash === this.file.hash) {
       return false; // No changes, nothing to write
@@ -178,7 +178,7 @@ export default class Runtime {
     for (const tag of this.ast) {
       await this.evaluateTag(tag, customCtx);
       this.node = { index: -1, rawText: '' };
-      chunks.push(unParse(tag));
+      chunks.push(this.ast.__unParse(tag));
     }
 
     const text = chunks.join('');

@@ -36,27 +36,6 @@ export function getText(node: ParseToken | SingleTag | DoubleTag): string {
   return text;
 }
 
-/**
- * Deeply convert a node and all its children into text.
- */
-export function unParse(node: ParseToken): string {
-  let text = '';
-  if (node.children) {
-    text = (node as DoubleTag).firstTagText;
-    for (const c of node.children) {
-      text += isDoubleTag(c) ? unParse(c) : c.rawText;
-    }
-    text += node.secondTagText;
-  } // Empty double tag, single tag, or raw text
-  else if (isDoubleTag(node)) {
-    text = (node as DoubleTag).firstTagText;
-    text += (node as DoubleTag).secondTagText;
-  } else {
-    text = node.rawText;
-  }
-  return text;
-}
-
 /*
  * Reform/ restructure a de-synced tag, in place.
  * This can happen when a user changes parts of the tag,

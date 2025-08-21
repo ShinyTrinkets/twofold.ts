@@ -71,7 +71,7 @@ test('Open-Meteo.com should return correct data', async () => {
     location: '',
     temperature: 11.1,
     windSpeed: 9.7,
-    time: '06/05/2025, 21:00 UTC',
+    time: '06/05/2025, 21:00 GMT',
   });
 });
 

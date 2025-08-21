@@ -1,13 +1,16 @@
 # TwoFold (2✂︎f) changelog
 
-## v0.12 WIP
+## v0.12
 
 - completely rewritten tag evaluation. This gives tag functions even more power.
+- the AST tree is now a class with some useful functionality.
 - created "evaluateAll" tag to run more TwoFold files in the same context.
 - created "renderFile" tag to refresh/ render a TwoFold file programatically.
 - created "duplicate" tag to duplicate some content based on a list and a
   template.
 - new addon "intoVar" to store the inner text of a tag into a global variable
+- double tags have a new var called childCtx that contains the global context
+  of its children.
 - BREAKING change: the experimental "import" tag is now called "evaluate". It
   can now evaluate all known tags from a file, not just set and JSON and TOML
   tags, and eval inside eval inside eval is supported.
