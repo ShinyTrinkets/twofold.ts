@@ -1,7 +1,7 @@
 import { testing } from './wrap.ts';
 const { test, expect } = await testing;
 import AST from '../src/parser.ts';
-import { getText, syncTag, unParse } from '../src/tags.ts';
+import { getText, syncTag } from '../src/tags.ts';
 
 test('raw text getText', () => {
   const txt = ' blah blah...';
@@ -19,37 +19,42 @@ test('single tag getText', () => {
 
 test('raw text parse unparse', () => {
   const txt = ' blah blah...';
-  const ast = new AST().parse(txt);
-  const final = unParse(ast[0]);
+  const ast = new AST();
+  ast.parse(txt);
+  const final = ast.unParse();
   expect(final).toBe(txt);
 });
 
 test('single tag parse unparse', () => {
   const txt = '<stuff />';
-  const ast = new AST().parse(txt);
-  const final = unParse(ast[0]);
+  const ast = new AST();
+  ast.parse(txt);
+  const final = ast.unParse();
   expect(final).toBe(txt);
 });
 
 test('double tag parse unparse 1', () => {
   const txt = '<stuff></stuff>';
-  const ast = new AST().parse(txt);
-  const final = unParse(ast[0]);
+  const ast = new AST();
+  ast.parse(txt);
+  const final = ast.unParse();
   expect(final).toBe(txt);
 });
 
 test('double tag parse unparse 2', () => {
   const txt = '<stuff>??? </stuff>';
-  const ast = new AST().parse(txt);
-  const final = unParse(ast[0]);
+  const ast = new AST();
+  ast.parse(txt);
+  const final = ast.unParse();
   expect(final).toBe(txt);
 });
 
 test('parse unparse 1', () => {
   let txt = '<mumu a=b><mumu><mumu><text>0</text>';
   txt += '\n</mumu></mumu></mumu>';
-  const ast = new AST().parse(txt);
-  const final = unParse(ast[0]);
+  const ast = new AST();
+  ast.parse(txt);
+  const final = ast.unParse();
   expect(final).toBe(txt);
 });
 
@@ -57,15 +62,17 @@ test('parse unparse 2', () => {
   let txt = '';
   txt += '<div><span class="title">Hello</span> <br />\n';
   txt += '<span class="text">Workd</span> <br />\n</div>';
-  const ast = new AST().parse(txt);
-  const final = unParse(ast[0]);
+  const ast = new AST();
+  ast.parse(txt);
+  const final = ast.unParse();
   expect(final).toBe(txt);
 });
 
 test('parse unparse 3', () => {
   const txt = '<noop>1<noop>2</noop>3</noop>';
-  const ast = new AST().parse(txt);
-  const final = unParse(ast[0]);
+  const ast = new AST();
+  ast.parse(txt);
+  const final = ast.unParse();
   expect(final).toBe(txt);
 });
 
