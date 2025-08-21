@@ -1,5 +1,9 @@
 # TwoFold (2✂︎f) changelog
 
+## v0.13 WIP
+
+...
+
 ## v0.12
 
 - completely rewritten tag evaluation. This gives tag functions even more power.
