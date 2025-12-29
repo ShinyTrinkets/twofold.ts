@@ -68,12 +68,45 @@ You are a minor.
 test('μTE for loop', () => {
   let x = `
 {% for item in items %}
+{% if !item.draft %}
  - {{ item.title }}
+{% endif %}
 {% else %}
  - No items found :(
 {% endfor %}
 `;
-  expect(new TemplateEngine().render(x.trim(), { items: [{ title: 'One' }, { title: 'Two' }] })).toBe('\n - One\n - Two');
+  expect(
+    new TemplateEngine().render(x.trim(), {
+      items: [{ title: 'One' }, { title: 'Two' }, { title: 'Three', draft: true }],
+    })
+  ).toBe('\n\n - One\n\n - Two');
+
+  x = `
+{% for item in items %}
+{% if item.draft %}
+ - IGNORE
+{% else %}
+ - {{ item.title }}
+{% endif %}
+{% endfor %}
+`;
+  expect(
+    new TemplateEngine().render(x.trim(), {
+      items: [{ title: 'One' }, { title: 'Two' }, { title: 'Three', draft: true }],
+    })
+  ).toBe('\n\n - One\n\n - Two\n\n - IGNORE');
+
+  x = `
+{% for tag in tags %}
+- {{ tag }}: {{ tags[tag] }}
+{% else %}
+ - No items found :(
+{% endfor %}
+`;
+  // Test with object iteration
+  expect(new TemplateEngine().render(x.trim(), { tags: { javascript: 10, typescript: 7, python: 5 } })).toBe(
+    '\n- javascript: 10\n- typescript: 7\n- python: 5'
+  );
 
   expect(new TemplateEngine().render(x.trim(), {})).toBe('\n - No items found :(');
 });

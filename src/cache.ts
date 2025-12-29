@@ -8,7 +8,7 @@ type Timer = ReturnType<typeof setTimeout>;
 
 type MemoEntry = {
   value: Any;
-  born: number; // Epoch ms at insertion
+  date: number; // When the cache was set (in ms)
   ttl: number; // Original TTL (ms)
   timer: Timer; // Auto-deletion handle
 };
@@ -23,41 +23,9 @@ export class MemoCache {
   //   });
   // }
 
-  setCache(key: string, value: Any, ttl: number): void {
-    if (ttl <= 0) {
-      throw new RangeError('TTL must be > 0 ms');
-    }
-
-    // If key already exists, clear old timer
-    const old = this.bucket.get(key);
-    if (old) {
-      clearTimeout(old.timer);
-    }
-
-    const born = Date.now();
-    const timer = setTimeout(() => this.bucket.delete(key), ttl);
-    this.bucket.set(key, {
-      value,
-      born,
-      ttl,
-      timer,
-    });
-  }
-
-  delCache(key: string): boolean {
-    const e = this.bucket.get(key);
-    if (e) {
-      clearTimeout(e.timer);
-      this.bucket.delete(key);
-      return true;
-    }
-
-    return false;
-  }
-
   private alive(e: MemoEntry, ttlOvr: number): boolean {
     const ttl = ttlOvr > 0 ? ttlOvr : e.ttl;
-    return Date.now() - e.born < ttl;
+    return Date.now() - e.date < ttl;
   }
 
   hasCache(key: string, ttlOvr = -1): boolean {
@@ -89,6 +57,38 @@ export class MemoCache {
     this.bucket.delete(key);
   }
 
+  setCache(key: string, value: Any, ttl: number): void {
+    if (ttl <= 0) {
+      throw new RangeError('TTL must be > 0 ms');
+    }
+
+    // If key already exists, clear old timer
+    const old = this.bucket.get(key);
+    if (old) {
+      clearTimeout(old.timer);
+    }
+
+    const date = Date.now();
+    const timer = setTimeout(() => this.bucket.delete(key), ttl);
+    this.bucket.set(key, {
+      value,
+      date,
+      ttl,
+      timer,
+    });
+  }
+
+  delCache(key: string): boolean {
+    const e = this.bucket.get(key);
+    if (e) {
+      clearTimeout(e.timer);
+      this.bucket.delete(key);
+      return true;
+    }
+
+    return false;
+  }
+
   empty(): void {
     // Clear all entries and cancel the timers
     for (const entry of this.bucket.values()) {
@@ -105,8 +105,8 @@ export class MemoCache {
 
 type DiskEntry = {
   value: any;
-  date: number; // When the cache was set (in milliseconds)
-  ttl: number; // Time-to-live value (in milliseconds)
+  date: number; // When the cache was set (in mss)
+  ttl: number; // Time-to-live value (in ms)
 };
 
 export class DiskCache {
@@ -125,31 +125,6 @@ export class DiskCache {
       .trim()
       .replaceAll(/[:.*?!"| ]/g, '_');
     return path.resolve(this.folder, `${saneName}.json`);
-  }
-
-  /**
-   * Save a cache entry for a specific key within a cache file.
-   */
-  setCache(fname: string, key: string, value: any, ttl: number): void {
-    const filePath = this.getCacheFilePath(fname);
-    let fileContent: Record<string, DiskEntry> = {};
-    try {
-      if (fs.existsSync(filePath)) {
-        const dataString = fs.readFileSync(filePath, 'utf8');
-        fileContent = JSON.parse(dataString) as Record<string, DiskEntry>;
-      }
-    } catch (error) {
-      // If file is corrupt or not valid JSON, start fresh
-      log.warn(`Cannot read cache file ${filePath}, initializing new cache. ERR: ${error}`);
-      fileContent = {};
-    }
-
-    fileContent[key] = {
-      value,
-      date: Date.now(),
-      ttl,
-    };
-    fs.writeFileSync(filePath, JSON.stringify(fileContent), 'utf8');
   }
 
   /**
@@ -220,6 +195,31 @@ export class DiskCache {
   }
 
   /**
+   * Save a cache entry for a specific key within a cache file.
+   */
+  setCache(fname: string, key: string, value: any, ttl: number): void {
+    const filePath = this.getCacheFilePath(fname);
+    let fileContent: Record<string, DiskEntry> = {};
+    try {
+      if (fs.existsSync(filePath)) {
+        const dataString = fs.readFileSync(filePath, 'utf8');
+        fileContent = JSON.parse(dataString) as Record<string, DiskEntry>;
+      }
+    } catch (error) {
+      // If file is corrupt or not valid JSON, start fresh
+      log.warn(`Cannot read cache file ${filePath}, initializing new cache. ERR: ${error}`);
+      fileContent = {};
+    }
+
+    fileContent[key] = {
+      value,
+      date: Date.now(),
+      ttl,
+    };
+    fs.writeFileSync(filePath, JSON.stringify(fileContent), 'utf8');
+  }
+
+  /**
    * Delete a specific cache key from a file.
    */
   delCache(fname: string, key: string): void {
@@ -281,6 +281,7 @@ export class DiskCache {
     }
   }
 
+  /** Delete all cache entries in a specific cache file. */
   empty(fname: string): void {
     const filePath = this.getCacheFilePath(fname);
     if (fs.existsSync(filePath)) {
@@ -296,7 +297,6 @@ export class DiskCache {
     if (!fs.existsSync(this.folder)) {
       return; // Folder doesn't exist, nothing to clear
     }
-
     for (const file of fs.readdirSync(this.folder)) {
       const filePath = path.join(this.folder, file);
       if (fs.statSync(filePath).isFile()) {

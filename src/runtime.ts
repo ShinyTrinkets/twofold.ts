@@ -138,7 +138,7 @@ export default class Runtime {
 
     text ||= this.ast.unParse();
     const resultHash = crypto.createHash('sha224').update(text).digest('hex');
-    if (!force && resultHash === this.file.hash) {
+    if (!force && this.file.size === text.length && resultHash === this.file.hash) {
       return false; // No changes, nothing to write
     }
 
