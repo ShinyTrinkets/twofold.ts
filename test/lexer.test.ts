@@ -17,6 +17,13 @@ const TESTS = [
   ['<x 1 />', [{ index: 0, rawText: '<x 1 />' }]],
   ['<A B />', [{ index: 0, rawText: '<A B />' }]],
   ['<ha/ >', [{ index: 0, rawText: '<ha/ >' }]],
+  ['<-- />', [{ index: 0, rawText: '<-- />' }]],
+  ['<--/>', [{ index: 0, rawText: '<--/>' }]],
+  ['<-->', [{ index: 0, rawText: '<-->' }]],
+  ['<-a />', [{ index: 0, rawText: '<-a />' }]],
+  ['<a- />', [{ index: 0, rawText: '<a- />' }]],
+  ['<a-/>', [{ index: 0, rawText: '<a-/>' }]],
+  ['<a->', [{ index: 0, rawText: '<a->' }]],
   ['<1tag />', [{ index: 0, rawText: '<1tag />' }]], // tag cannot start with Number
   ['<tag X=0 />', [{ index: 0, rawText: '<tag X=0 />' }]], // prop cannot start with Upper
   ['<tag 1=2 />', [{ index: 0, rawText: '<tag 1=2 />' }]], // prop cannot start with Number
@@ -72,6 +79,7 @@ const TESTS = [
   ['<x >', [{ index: 0, rawText: '<x >', name: 'x', double: true }]],
   ['<xY1/>', [{ index: 0, rawText: '<xY1/>', name: 'xY1', single: true }]],
   ['< x/>', [{ index: 0, rawText: '< x/>', name: 'x', single: true }]],
+  ['<x-y/>', [{ index: 0, rawText: '<x-y/>', name: 'xY', single: true }]],
   ['<x />', [{ index: 0, rawText: '<x />', name: 'x', single: true }]],
   ['<x  />', [{ index: 0, rawText: '<x  />', name: 'x', single: true }]],
   [

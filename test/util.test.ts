@@ -4,6 +4,7 @@ import { testing } from "./wrap.ts";
 const { test, expect } = await testing;
 
 test('camel case', () => {
+  expect(toCamelCase('a-boo--')).toBe('aBoo');
   expect(toCamelCase('blah_blah')).toBe('blahBlah');
   expect(toCamelCase('blah blah ')).toBe('blahBlah');
   expect(toCamelCase(' blah-blah')).toBe('blahBlah');

@@ -6,19 +6,20 @@ import { sleep } from '../src/util.ts';
 
 // Test MemoCache class
 //
-test('MemoCache basic set/get/has', () => {
+test('MemoCache basic set/get/has', async () => {
   const cache = new MemoCache();
-  cache.setCache('foo', 123, 100);
+  cache.setCache('foo', 123, 20);
   expect(cache.hasCache('foo')).toBe(true);
   expect(cache.getCache('foo')).toBe(123);
   expect(cache.hasCache('foo')).toBe(true); // still alive
+  await sleep(20); // let timer run
 });
 
 test('MemoCache TTL expiration', async () => {
   const cache = new MemoCache();
   cache.setCache('bar', 'baz', 10);
   expect(cache.hasCache('bar')).toBe(true);
-  await sleep(15); // wait for expiration
+  await sleep(11); // wait for expiration
   expect(cache.hasCache('bar')).toBe(false);
   expect(cache.getCache('bar')).toBeUndefined();
 });

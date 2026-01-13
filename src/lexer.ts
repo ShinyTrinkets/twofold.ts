@@ -35,10 +35,14 @@ const isAllowedAlpha = (code: number) => {
     (code >= 48 && code <= 57) || // 0-9
     (code >= 65 && code <= 90) || // A-Z
     (code >= 97 && code <= 122) || // a-z
-    code === 95 || // _
+    code === 45 || // - hyphen
+    code === 95 || // _ underscore
     (code >= 192 && code <= 255) || // À-Ÿ à-ÿ
     (code >= 940 && code <= 974) // ά-ω
   );
+};
+const isValidName = (text: string) => {
+  return text.endsWith('-') === false && text.endsWith('_') === false;
 };
 const MAX_NAME_LEN = 42;
 
@@ -251,17 +255,17 @@ export default class Lexer {
           pending.rawText += char;
           pending.name += char;
         } // Is this a space after the tag name?
-        else if (isSpace(char)) {
+        else if (isSpace(char) && isValidName(pending.name)) {
           pending.rawText += char;
           transition(STATE_INSIDE_TAG);
         } // Is this a tag stopper?
         // In this case, it's a single tag
-        else if (char === lastStopperChar) {
+        else if (char === lastStopperChar && isValidName(pending.name)) {
           pending.rawText += char;
           pending.single = true;
           transition(STATE_CLOSE_TAG);
         } // Is this the end of the First tag from a Double tag?
-        else if (char === closeTagChar) {
+        else if (char === closeTagChar && isValidName(pending.name)) {
           pending.rawText += char;
           pending.double = true;
           commitAndTransition(STATE_RAW_TEXT);
@@ -320,7 +324,7 @@ export default class Lexer {
           pending.param_key += char;
         } // Is this the equal between key and value?
         // Only "=" allowed between param & value
-        else if (char === '=') {
+        else if (char === '=' && isValidName(pending.param_key)) {
           pending.rawText += char;
           transition(STATE_EQUAL);
         } else {

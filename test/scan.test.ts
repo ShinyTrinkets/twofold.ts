@@ -17,7 +17,7 @@ test('scan: no blocks found', async () => {
 test('scan: some blocks found', async () => {
   const { validTags, invalidTags } = await scanFile(DIR + '/fixtures/text1.md');
   expect(validTags).toBe(0);
-  expect(invalidTags).toBe(3);
+  expect(invalidTags).toBe(4);
 });
 
 test('scan XML no tags', async () => {

@@ -5,6 +5,8 @@ import { type DoubleTag, type ParseToken } from './types.ts';
 import Lexer from './lexer.ts';
 import { log } from './logger.ts';
 
+const LETTERS = 'a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω';
+
 /**
  * AST (Abstract Syntax Tree) class for parsing text into a structured format.
  */
@@ -72,12 +74,9 @@ export default class AST {
     }
 
     const { openTag, lastStopper } = this.config;
-    const RE_FIRST_START = new RegExp(
-      `^[${openTag as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
-    );
-    const RE_SECOND_START = new RegExp(
-      `^[${openTag as string}][${lastStopper as string}][ ]*[a-zàáâãäæçèéêëìíîïñòóôõöùúûüýÿœάαβγδεζηθικλμνξοπρστυφχψω]`
-    );
+    // These regexes have to be calculated in place, because the config is dynamic
+    const RE_FIRST_START = new RegExp(`^[${openTag as string}][ ]*[${LETTERS}]`);
+    const RE_SECOND_START = new RegExp(`^[${openTag as string}][${lastStopper as string}][ ]*[${LETTERS}]`);
 
     const tree: ParseToken[] = [];
     const stack: ParseToken[] = [];

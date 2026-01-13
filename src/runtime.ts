@@ -53,9 +53,11 @@ export default class Runtime {
   static fromText(
     text: string,
     customTags: Record<string, Function> = {},
-    cfg: T.ConfigFull = config.defaultCfg
+    cfg: T.ConfigFull = config.defaultCfg,
+    memoCache: MemoCache = new MemoCache()
   ): Runtime {
     const runtime = new Runtime(customTags, cfg);
+    runtime.memoCache = memoCache;
     runtime.file = {
       size: text.length,
       hash: crypto.createHash('sha224').update(text).digest('hex'),
@@ -71,9 +73,11 @@ export default class Runtime {
   static async fromFile(
     file: string | T.RuntimeFile,
     customTags: Record<string, Function> = {},
-    cfg: T.ConfigFull = config.defaultCfg
+    cfg: T.ConfigFull = config.defaultCfg,
+    memoCache: MemoCache = new MemoCache()
   ): Promise<Runtime> {
     const runtime = new Runtime(customTags, cfg);
+    runtime.memoCache = memoCache;
     const fname: string = typeof file === 'string' ? path.resolve(file) : file.fname!;
     let dname = '';
     if (typeof file === 'string') {
