@@ -30,7 +30,7 @@ test('cat command', async () => {
 
 test('dirList command', () => {
   let text = dirList('', { d: 'test/fixtures/*.x*', sep: ' ' }, {});
-  expect(text).toBe('* menu.xml * xmlStyles.xml');
+  expect(text).toBe('* menu.xml * xmlStyles.xml * zoo.xml');
 
   text = dirList('', { d: 'test/fixtures/t*', li: '', sep: '' }, {});
   expect(text).toBe(' text0.md text1.md');

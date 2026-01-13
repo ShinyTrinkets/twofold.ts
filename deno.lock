@@ -14,7 +14,7 @@
     "npm:@types/node@22": "22.15.24",
     "npm:@types/picomatch@4": "4.0.0",
     "npm:@types/shell-quote@1": "1.7.5",
-    "npm:chokidar@4": "4.0.3",
+    "npm:chokidar@5": "5.0.0",
     "npm:lilconfig@3": "3.1.3",
     "npm:mri@1": "1.2.0",
     "npm:picomatch@4": "4.0.2",
@@ -91,8 +91,8 @@
         "@types/node@22.15.15"
       ]
     },
-    "chokidar@4.0.3": {
-      "integrity": "sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==",
+    "chokidar@5.0.0": {
+      "integrity": "sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==",
       "dependencies": [
         "readdirp"
       ]
@@ -110,8 +110,8 @@
       "integrity": "sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==",
       "bin": true
     },
-    "readdirp@4.1.2": {
-      "integrity": "sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg=="
+    "readdirp@5.0.0": {
+      "integrity": "sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ=="
     },
     "shell-quote@1.8.2": {
       "integrity": "sha512-AzqKpGKjrj7EM6rKVQEPpB288oCfnrEIuyoT9cyF4nmGa7V8Zk6f7RRqYisX8X9m+Q7bd632aZW4ky7EhbQztA=="
@@ -135,7 +135,7 @@
         "npm:@types/node@22",
         "npm:@types/picomatch@4",
         "npm:@types/shell-quote@1",
-        "npm:chokidar@4",
+        "npm:chokidar@5",
         "npm:lilconfig@3",
         "npm:mri@1",
         "npm:picomatch@4",

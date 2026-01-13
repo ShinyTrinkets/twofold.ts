@@ -39,7 +39,7 @@
     "tfold": "./src/cli.ts"
   },
   "dependencies": {
-    "chokidar": "4.x",
+    "chokidar": "5.x",
     "lilconfig": "3.x",
     "mri": "1.x",
     "picomatch": "4.x",

@@ -144,6 +144,6 @@ lastStopper = "."
   });
 
   afterAll(() => {
-    fs.rmdirSync(CONFIG, { recursive: true });
+    fs.rmSync(CONFIG, { recursive: true });
   });
 });
