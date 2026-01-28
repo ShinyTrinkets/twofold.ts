@@ -44,6 +44,8 @@ test('μTE basic object', () => {
   expect(x).toBe('Hello, {{name}}!');
   expect(y).toEqual({ name: 'world' });
 
+  expect(new TemplateEngine().render('{{in}} - {{out}}!', { in: 'A', out: 'B' })).toBe('A - B!');
+
   // Test with missing key and default value
   expect(new TemplateEngine().render('Hello, {{name || "X"}}!', { name: null })).toBe('Hello, X!');
 });

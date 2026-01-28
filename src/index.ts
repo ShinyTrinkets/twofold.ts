@@ -26,6 +26,7 @@ export async function renderText(
  */
 export async function renderFile(
   file: string | T.RuntimeFile,
+  customData: Record<string, any> = {},
   customTags: Record<string, Function> = {},
   cfg: T.ConfigFull = config.defaultCfg,
   persist = false
@@ -41,7 +42,7 @@ export async function renderFile(
   }
 
   const initialHash = engine.file.hash;
-  const text = await engine.evaluateAll();
+  const text = await engine.evaluateAll(customData);
   const changed = initialHash !== engine.file.hash;
 
   if (persist && changed) {
@@ -70,7 +71,7 @@ export async function renderFolder(
     }
 
     stats.found++;
-    const { changed } = await renderFile({ fname, dname, size: 0 }, customTags || {}, cfg, persist);
+    const { changed } = await renderFile({ fname, dname, size: 0 }, {}, customTags || {}, cfg, persist);
     if (changed) {
       stats.rendered++;
     }

@@ -239,7 +239,7 @@ export default class AST {
    * Sync indexes of all nodes in the AST.
    * Indexes are used to track the position of nodes in the original input.
    * They can be desynced when new nodes are added or removed,
-   * so this method should be called after any modifications.
+   * so this method should be called after the tree is modified.
    */
   syncIndexes(): void {
     let currentIndex = 0;
@@ -271,7 +271,9 @@ export default class AST {
 
   /**
    * Recursively adds dot-notation paths to tag nodes in the AST.
+   * Paths are used for deeply accessing and manipulating nodes.
    * Raw text nodes are ignored.
+   * Example of a path: "2.children.1.children.3"
    */
   static addPaths(nodes: ParseToken[], currentPath = ''): void {
     for (const [index, node] of nodes.entries()) {

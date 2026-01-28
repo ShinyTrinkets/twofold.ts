@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 /*
  * μTE is a minimal template engine implementation in TypeScript,
  * inspired by Jinja2, Django and Nunjucks template engines.
@@ -25,6 +27,11 @@ type TemplateContext = Record<string, any>;
 export class TemplateEngine {
   render(template: string, context: TemplateContext = {}): string {
     // console.log("Rendering template with context:", context);
+    return this.processTemplate(template, context);
+  }
+
+  renderFile(path: string, context: TemplateContext = {}): string {
+    const template = fs.readFileSync(path, 'utf-8');
     return this.processTemplate(template, context);
   }
 
@@ -115,7 +122,10 @@ export class TemplateEngine {
 
   private evaluate(expression: string, context: TemplateContext): any {
     try {
-      return new Function(...Object.keys(context), `return (${expression});`)(...Object.values(context));
+      if (expression in context) {
+        return context[expression];
+      }
+      return new Function('context', `with(context) { return (${expression}); }`)(context);
     } catch {
       return '';
     }

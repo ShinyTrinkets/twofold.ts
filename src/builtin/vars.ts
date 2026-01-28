@@ -417,7 +417,7 @@ async function __evaluateAll(t: string, args: Record<string, any> = {}, meta: T.
     if (args.src) args.src = fullName;
     else if (args.from) args.from = fullName;
     else if (args.path) args.path = fullName;
-    log.info(`Evaluating "${patt}" file "${fname}"...`);
+    log.info(`Evaluating file "${fname}" from "${patt}"...`);
     await __evaluate(t, args, meta);
   }
 }

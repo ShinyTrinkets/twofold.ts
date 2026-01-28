@@ -36,7 +36,7 @@ export async function renderFile(_: string, args: any, meta: any) {
   if (meta.file.dname) {
     fname = path.resolve(meta.file.dname, fname);
   }
-  await refreshFile(fname, meta.customTags, meta.cfg, true);
+  await refreshFile(fname, args, meta.customTags, meta.cfg, true);
 }
 
 function __duplicate(_: string, args: any, meta: any) {

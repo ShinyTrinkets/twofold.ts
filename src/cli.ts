@@ -154,7 +154,7 @@ export async function main(arvg = process.argv.slice(2)) {
 
       locks[fname] = true;
       while (true) {
-        const { changed } = await twofold.renderFile(fname, funcs, config, true);
+        const { changed } = await twofold.renderFile(fname, {}, funcs, config, true);
         if (!changed) {
           log.info(`file :: ${fname} is stable`);
           break;
@@ -196,7 +196,7 @@ export async function main(arvg = process.argv.slice(2)) {
 
       if (fstat.isFile()) {
         log.info('::', fname);
-        await twofold.renderFile(fname, funcs, config, true);
+        await twofold.renderFile(fname, {}, funcs, config, true);
       } else if (fstat.isDirectory()) {
         await twofold.renderFolder(fname, funcs, config, true);
       } else {
